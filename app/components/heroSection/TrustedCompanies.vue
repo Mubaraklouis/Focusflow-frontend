@@ -9,50 +9,50 @@
             <div class="flex animate-scroll gap-x-10 md:gap-x-16 items-center justify-center">
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/google.png"
+                         src="~/assets/images/google.png"
                          alt="Google"
                          loading="lazy">
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                        src="/assets/images/udemy-Logo.wine.png"
+                        src="~/assets/images/Udemy-Logo.wine.png"
                          alt="Udemy"
                          loading="lazy">
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/62a4c8c5fdee15d2905007ca.png"
+                         src="~/assets/images/62a4c8c5fdee15d2905007ca.png"
                          alt="Company"
                          loading="lazy">
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/codecademy-logo-vector.png"
+                         src="~/assets/images/codecademy-logo-vector.png"
                          alt="Codecademy"
                          loading="lazy">
                 </div>
                 <!-- Duplicate logos for seamless animation -->
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/google.png"
+                         src="~/assets/images/google.png"
                          alt="Google"
                          loading="lazy">
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/udemy-Logo.wine.png"
+                         src="~/assets/images/Udemy-Logo.wine.png"
                          alt="Udemy"
                          loading="lazy">
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/62a4c8c5fdee15d2905007ca.png"
+                         src="~/assets/images/62a4c8c5fdee15d2905007ca.png"
                          alt="Company"
                          loading="lazy">
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/codecademy-logo-vector.png"
+                         src="~/assets/images/codecademy-logo-vector.png"
                          alt="Codecademy"
                          loading="lazy">
                 </div>
