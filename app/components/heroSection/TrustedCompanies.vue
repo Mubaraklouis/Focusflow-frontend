@@ -15,7 +15,7 @@
                 </div>
                 <div class="flex-shrink-0">
                     <img class="w-20 md:w-24 h-auto object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                         src="/assets/images/udemy-Logo.wine.png"
+                        src="/assets/images/udemy-Logo.wine.png"
                          alt="Udemy"
                          loading="lazy">
                 </div>
