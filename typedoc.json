@@ -1,0 +1,15 @@
+{
+    "entryPoints": ["server"],
+    "entryPointStrategy": "expand",
+    "out": "docs/api",
+    "tsconfig": "./tsconfig.json",
+    "exclude": [
+      "**/*.spec.ts", 
+      "node_modules/**", 
+      "server/index.ts"
+    ],
+    "name": "FocusFlow Server Documentation",
+    "includeVersion": true,
+    "searchInComments": true,
+    "cleanOutputDir": true
+  }

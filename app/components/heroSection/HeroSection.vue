@@ -1,35 +1,43 @@
 <template>
-      <div>
-    <div>
-        <section class="pt-20 md:pt-40">
-
-
-
-    <div class="container mx-auto px-8 lg:flex">
-
-
+  <div>
+    <section class="pt-20 md:pt-40">
+      <div class="container mx-auto px-8 lg:flex">
+        <!-- Left side content -->
         <div class="text-center lg:text-left lg:w-1/2">
-            <newFeature class="mb-8"/>
-            <h1 class="text-3xl lg:text-5xl xl:text-4xl  leading-none">Track Your <br><span class="font-bold">Learning Progress</span></h1>
-            <p class="text-md lg:text-md mt-6 font-light">Stay on top of your  courses assignments <br>quizes and project
-                with real world insights and productivity tools </p>
-            <p class="mt-8 md:mt-12 flex gap-4">
-             <Link href="/login">    <Button>Get Started</Button></Link>
-               <Link href="/about"> <Button variant="outline">Learn More</Button></Link>
-            </p>
-            <div class="flex mt-8 items-center justify-center lg:justify-start gap-3">
-                <div class="flex items-center gap-2 text-sm">
-                    <div class="flex text-yellow-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                    </div>
-                    <span class="font-semibold">4.9</span>
-                    <span class="text-muted-foreground">(10+ reviews)</span>
-                </div>
-                <AvatarStack />
+          <NewFeatureBadge class="mb-8" />
+          
+          <h1 class="text-3xl lg:text-5xl xl:text-4xl leading-none">
+            Track Your <br>
+            <span class="font-bold">Learning Progress</span>
+          </h1>
+          
+          <p class="text-md lg:text-md mt-6 font-light">
+            Stay on top of your courses assignments <br>
+            quizzes and project with real world insights and productivity tools
+          </p>
+          
+          <p class="mt-8 md:mt-12 flex gap-4">
+            <NuxtLink to="/login">
+              <Button>Get Started</Button>
+            </NuxtLink>
+            <NuxtLink to="/about">
+              <Button variant="outline">Learn More</Button>
+            </NuxtLink>
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mt-8">
+            <div class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span class="font-semibold">4.9</span>
+              <span class="text-muted-foreground">(10+ reviews)</span>
             </div>
+            <AvatarStack />
+          </div>
         </div>
+
+        <!-- Right side illustration -->
         <div class="lg:w-1/2"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"
                 xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1167.52 754.06">
                 <defs>
@@ -410,18 +418,16 @@
                     d="M224.23 553.03a2.3 2.3 0 011.94.47 5.2 5.2 0 011.26 2.17 20.8 20.8 0 004.47 6.82M222.26 555.47a2.74 2.74 0 012.59.85 7.9 7.9 0 011.1 2.19 13.06 13.06 0 003.39 4.36"
                     opacity=".1"></path>
             </svg></div>
-    </div>
-</section>
+      </div>
+    </section>
 
-
-<TrustedCompanies/>
-    </div>
+    <TrustedCompanies/>
   </div>
 </template>
 
 <script setup>
 import TrustedCompanies from './TrustedCompanies.vue';
-
-
-
+import NewFeatureBadge from './NewFeatureBadge.vue';
+import AvatarStack from './AvatarStack.vue';
+import Button from '../ui/button/Button.vue';
 </script>

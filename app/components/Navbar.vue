@@ -1,5 +1,5 @@
 <script setup lang="ts">
-
+import { ref } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 
@@ -11,11 +11,12 @@ const toggleMobileMenu = () => {
 </script>
 
 <template>
-    <nav class="bg-background border-border py-2.5">
+    <nav class="sticky top-0 z-50 bg-background/75 backdrop-blur-sm py-2.5">
         <div class="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between px-4">
             <NuxtLink to="/" class="flex items-center">
                 <span class="self-center whitespace-nowrap text-xl font-extrabold text-primary">FocusFlow</span>
             </NuxtLink>
+            
             <div class="flex items-center lg:order-2">
                 <div class="mr-4 mt-2 hidden sm:inline-block">
                     <span></span>
@@ -29,7 +30,7 @@ const toggleMobileMenu = () => {
                             Sign Up
                         </Button>
                     </NuxtLink>
-                    <NuxtLink to="/register">
+                    <NuxtLink to="/login">
                         <Button>Get Started</Button>
                     </NuxtLink>
                 </div>
@@ -52,6 +53,7 @@ const toggleMobileMenu = () => {
                     </svg>
                 </button>
             </div>
+            
             <div class="w-full items-center justify-between lg:order-1 lg:flex lg:w-auto"
                 :class="{ hidden: !isMobileMenuOpen }" id="mobile-menu-2">
                 <ul class="mt-4 flex flex-col font-medium lg:mt-0 lg:flex-row lg:space-x-8">
@@ -85,7 +87,7 @@ const toggleMobileMenu = () => {
                                     Sign Up
                                 </Button>
                             </NuxtLink>
-                            <NuxtLink to="/register">
+                            <NuxtLink to="/login">
                                 <Button class="w-full button-hover">
                                     Get started
                                 </Button>
