@@ -1,19 +1,14 @@
 import useGetCRSFToken from "~~/server/composables/global/useGetCRSFToken"
 import useConfig from "../../util/useConfig"
+import useForwardCookies from "~~/server/composables/global/useForwardCookies"
 
 export default defineEventHandler(async (event) => {
-
-
 const { baseUrl } = useConfig()
 
-  const { name, email, password, password_confirmation } = await readBody(event)
+const { name, email, password, password_confirmation } = await readBody(event)
 
   try {
-    
-    //get the cookies and xrsfToken
     const {xsrfToken,cookieString,csrfCookies} = await useGetCRSFToken()
-    //want this route to only contain registeration logic
-    // Step 2: Register the user with CSRF token
     console.log('Step 2: Sending registration request...')
     const registerResponse = await $fetch.raw(`${baseUrl}/register`, {
       method: 'POST',
@@ -26,50 +21,20 @@ const { baseUrl } = useConfig()
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        // Include the CSRF token in the header (required by Laravel Sanctum)
         'X-XSRF-TOKEN': xsrfToken,
-        // Forward all cookies to Laravel
         'Cookie': cookieString
       },
       credentials: 'include'
     })
 
-    console.log('Registration Response Status:', registerResponse.status)
-
-    //global function to forward all the cookies to the browser 
-    
-
-    // Step 3: Forward all cookies to the browser (both CSRF and session cookies)
     const allCookies = registerResponse.headers.getSetCookie?.() || []
     const combinedCookies = [...csrfCookies, ...allCookies]
+    useForwardCookies(combinedCookies,event)
 
-    // Remove duplicates (keep the latest)
-    const uniqueCookies = new Map()
-    combinedCookies.forEach((cookie: string) => {
-      const cookieName = cookie.split('=')[0]
-      uniqueCookies.set(cookieName, cookie)
-    })
-
-    // Forward all unique cookies to the browser
-    uniqueCookies.forEach((cookie: string) => {
-      appendResponseHeader(event, 'Set-Cookie', cookie)
-    })
-
-    console.log(`Successfully forwarded ${uniqueCookies.size} cookie(s) to browser`)
-    console.log('Registration successful!')
-
-    // Return the response data from Laravel
     return registerResponse._data
 
   } catch (error: any) {
-    console.error('Registration error:', error)
-    console.error('Error status:', error.statusCode || error.response?.status)
-    console.error('Error data:', error.data)
-    console.error('Error message:', error.message)
-
-    // Handle validation errors
     if (error.data?.errors) {
-      console.error('Validation errors:', JSON.stringify(error.data.errors, null, 2))
       throw createError({
         statusCode: 422,
         message: 'Validation failed',
