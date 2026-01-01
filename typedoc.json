@@ -1,10 +1,15 @@
 {
-    "entryPoints": ["server/api", "server/utils", "server/middleware"],
+    "entryPoints": ["server"],
+    "entryPointStrategy": "expand",
     "out": "docs/api",
-    "plugin": [],
-    "exclude": ["**/*.spec.ts", "node_modules/**"],
-    "theme": "default",
-    "name": "Nuxt Server API Reference",
+    "tsconfig": "./tsconfig.json",
+    "exclude": [
+      "**/*.spec.ts", 
+      "node_modules/**", 
+      "server/index.ts"
+    ],
+    "name": "FocusFlow Server Documentation",
     "includeVersion": true,
-    "readme": "none"
+    "searchInComments": true,
+    "cleanOutputDir": true
   }
