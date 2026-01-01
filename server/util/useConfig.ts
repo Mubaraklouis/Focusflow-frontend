@@ -1,12 +1,12 @@
 
 /*
 * Return environment specific configuration values inform of variables 
-* @returns {baseUrl: string}
+* @returns {usersApiUrl: string}
 */
 
 const useConfig = () => {
     const config = useRuntimeConfig()
-    const baseUrl = config.laravelApiUrl
+    const baseUrl = config.usersApiUrl
 
     return {
         baseUrl

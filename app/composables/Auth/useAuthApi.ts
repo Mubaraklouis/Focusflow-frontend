@@ -30,11 +30,6 @@ const submit = async () => {
       },
     });
 
-    console.log('Registration API call succeeded:', response)
-
-    console.log('User registered successfully')
-
-    // Redirect to dashboard
     await navigateTo('/dashboard');
   } catch (error: any) {
     console.error('Registration failed in useAuthApi:', error)

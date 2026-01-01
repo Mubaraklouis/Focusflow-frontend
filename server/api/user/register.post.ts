@@ -4,12 +4,9 @@ import useForwardCookies from "~~/server/composables/global/useForwardCookies"
 
 export default defineEventHandler(async (event) => {
 const { baseUrl } = useConfig()
-
 const { name, email, password, password_confirmation } = await readBody(event)
-
   try {
     const {xsrfToken,cookieString,csrfCookies} = await useGetCRSFToken()
-    console.log('Step 2: Sending registration request...')
     const registerResponse = await $fetch.raw(`${baseUrl}/register`, {
       method: 'POST',
       body: {
@@ -26,7 +23,6 @@ const { name, email, password, password_confirmation } = await readBody(event)
       },
       credentials: 'include'
     })
-
     const allCookies = registerResponse.headers.getSetCookie?.() || []
     const combinedCookies = [...csrfCookies, ...allCookies]
     useForwardCookies(combinedCookies,event)
@@ -41,7 +37,6 @@ const { name, email, password, password_confirmation } = await readBody(event)
         data: { errors: error.data.errors }
       })
     }
-
     throw createError({
       statusCode: error.response?.status || error.statusCode || 500,
       message: error.data?.message || error.message || 'Registration failed',
