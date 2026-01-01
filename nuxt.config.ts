@@ -3,5 +3,19 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss'],
-  css: ['~/assets/css/main.css']
+  css: ['~/assets/css/main.css'],
+
+
+  runtimeConfig: {
+    // Step 1: Define keys with empty strings or defaults
+    laravelApiUrl: '',        // Nuxt looks for NUXT_LARAVEL_API_URL
+    laravelApiKey: '',        // Nuxt looks for NUXT_LARAVEL_API_KEY
+    
+    public: {
+      stripeKey: ''           // Nuxt looks for NUXT_PUBLIC_STRIPE_KEY
+    }
+  }
+
+
+  
 })

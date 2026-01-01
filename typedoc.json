@@ -1,0 +1,10 @@
+{
+    "entryPoints": ["server/api", "server/utils", "server/middleware"],
+    "out": "docs/api",
+    "plugin": [],
+    "exclude": ["**/*.spec.ts", "node_modules/**"],
+    "theme": "default",
+    "name": "Nuxt Server API Reference",
+    "includeVersion": true,
+    "readme": "none"
+  }

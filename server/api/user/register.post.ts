@@ -1,10 +1,21 @@
+import useConfig from "../util/useConfig"
+
+/*
+*
+*/
+
 export default defineEventHandler(async (event) => {
 
-  const baseUrl = 'http://localhost:8000'
+
+const { baseUrl } = useConfig()
+
+
 
   const { name, email, password, password_confirmation } = await readBody(event)
 
   try {
+
+    //create a compsable to separate the santum code into deffent composable because they are globally used 
     // Step 1: Get CSRF cookie from Laravel Sanctum
     console.log('Step 1: Fetching CSRF cookie...')
     const csrfResponse = await $fetch.raw(`${baseUrl}/sanctum/csrf-cookie`, {
@@ -29,6 +40,7 @@ export default defineEventHandler(async (event) => {
       console.log('Extracted XSRF-TOKEN for registration request')
     }
 
+    //want this route to only contain registeration logic
     // Step 2: Register the user with CSRF token
     console.log('Step 2: Sending registration request...')
     const registerResponse = await $fetch.raw(`${baseUrl}/register`, {
@@ -51,6 +63,9 @@ export default defineEventHandler(async (event) => {
     })
 
     console.log('Registration Response Status:', registerResponse.status)
+
+    //global function to forward all the cookies to the browser 
+    
 
     // Step 3: Forward all cookies to the browser (both CSRF and session cookies)
     const allCookies = registerResponse.headers.getSetCookie?.() || []
