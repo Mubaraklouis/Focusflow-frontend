@@ -7,57 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
-import { reactive } from 'vue';
+import useLogin from '~/composables/Auth/useLogin';
 
-defineProps<{
-    status?: string;
-    canResetPassword?: boolean; // Made optional as it might not be passed from Inertia props anymore
-}>();
+const {form,submit,status} = await useLogin()
 
-const form = reactive({
-    email: '',
-    password: '',
-    remember: false,
-    processing: false,
-    errors: {
-        email: '',
-        password: '',
-    } as Record<string, string>,
-});
-
-const submit = async () => {
-    form.processing = true;
-    form.errors = { email: '', password: '' };
-
-    try {
-        await $fetch('/api/login', {
-            method: 'POST',
-            body: {
-                email: form.email,
-                password: form.password,
-                remember: form.remember,
-            },
-        });
-        
-        // Redirect on success
-        await navigateTo('/dashboard'); // or /
-    } catch (error: any) {
-        if (error.data && error.data.errors) {
-            form.errors = error.data.errors;
-        } else {
-            console.error('Login failed', error);
-        }
-    } finally {
-        form.processing = false;
-        form.password = '';
-    }
-};
 
 useHead({
     title: 'Log in',
 });
 </script>
-
 <template>
     <AuthBase
         title="Welcome Back"

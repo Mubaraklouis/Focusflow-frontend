@@ -17,16 +17,6 @@ useHead({
 
 const { data,Form,submit } = await useAuthApi()
 
-
-
-// console.log(Form.value)
-
-// console.log(data.value)
-
-
-
-
-
 </script>
 
 <template>
