@@ -22,9 +22,29 @@ export default defineEventHandler(async (event) => {
 
     // 3. Extract the expired/cleared cookies from Laravel
     const allCookies = logoutResponse.headers.getSetCookie?.() || []
-    
+
     // 4. Forward the "expired" cookies to the browser to clear them locally
     useForwardCookies(allCookies, event)
+
+    // 5. Explicitly clear all Nuxt/app session cookies (HttpOnly cookies can only be cleared server-side)
+    const cookiesToClear = [
+      'focusflow-session',
+      'focusflow_session',
+      'focus-session',
+      'laravel_session',
+      'XSRF-TOKEN'
+    ]
+
+    cookiesToClear.forEach(cookieName => {
+      // Set cookie with expired date to clear it
+      setCookie(event, cookieName, '', {
+        expires: new Date(0),
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+    })
 
     return { success: true, message: 'Logged out successfully' }
 

@@ -14,6 +14,7 @@ import {
     PanelLeftOpen,
     ChevronRight
 } from 'lucide-vue-next';
+import { useLogout } from '~/composables/Auth/useLogout';
 
 interface NavItem {
     title: string;
@@ -60,6 +61,13 @@ const userInitials = computed(() => {
     const name = props.user?.name || 'User';
     return name.substring(0, 2).toUpperCase();
 });
+
+// Logout functionality
+const { logout, isLoggingOut } = useLogout();
+
+const handleLogout = async () => {
+    await logout();
+};
 </script>
 
 <template>
@@ -164,14 +172,18 @@ const userInitials = computed(() => {
 
             <!-- Logout -->
             <button
-                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-red-500/10 hover:text-red-500"
+                @click="handleLogout"
+                :disabled="isLoggingOut"
+                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 :class="isCollapsed ? 'justify-center' : ''"
                 :title="isCollapsed ? 'Logout' : undefined"
             >
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/70 transition-all duration-200 group-hover:bg-red-500/20 group-hover:text-red-500">
                     <LogOut class="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
                 </div>
-                <span v-if="!isCollapsed" class="whitespace-nowrap">Logout</span>
+                <span v-if="!isCollapsed" class="whitespace-nowrap">
+                    {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
+                </span>
             </button>
 
             <!-- User Profile Card -->

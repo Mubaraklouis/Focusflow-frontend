@@ -47,6 +47,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+     
     throw createError({
       statusCode: error.response?.status || 500,
       message: error.data?.message || error.message || 'Login failed',
