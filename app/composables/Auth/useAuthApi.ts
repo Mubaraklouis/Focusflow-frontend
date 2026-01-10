@@ -1,4 +1,3 @@
-import { useAuth } from './useAuth'
 
 const Form = ref({
   name: '',
