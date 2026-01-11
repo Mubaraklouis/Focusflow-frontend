@@ -1,32 +1,56 @@
-import useGetCRSFToken from "~~/server/composables/global/useGetCRSFToken"
 import useConfig from "../../util/useConfig"
 import useForwardCookies from "~~/server/composables/global/useForwardCookies"
 
+/**
+ * POST /api/user/logout
+ * 
+ * Handles user logout by invalidating the session on Laravel backend
+ * and clearing all authentication cookies.
+ * 
+ * Flow:
+ * 1. Extract cookies from the incoming browser request (contains user's session)
+ * 2. Extract the XSRF token from the cookies for CSRF protection
+ * 3. Send logout request to Laravel with the user's session cookies
+ * 4. Forward Laravel's response cookies (which invalidate the session) to browser
+ * 5. Explicitly clear any remaining session cookies
+ * 
+ * @returns {Object} { success: boolean, message: string }
+ * @throws {Error} 401 if session invalid, 500 for server errors
+ */
 export default defineEventHandler(async (event) => {
   const { baseUrl } = useConfig()
 
   try {
-    // 1. Get the current CSRF token from the browser/existing session
-    const { xsrfToken, cookieString } = await useGetCRSFToken()
+    // Get the cookies from the incoming request (the user's actual session cookies)
+    // This is crucial - we must forward the user's existing authenticated session
+    const incomingCookies = getHeader(event, 'cookie') || ''
 
-    // 2. Tell Laravel to invalidate the session
+    // Extract the XSRF token from the incoming cookies for CSRF protection
+    const xsrfMatch = incomingCookies.match(/XSRF-TOKEN=([^;]+)/)
+    let xsrfToken = ''
+    if (xsrfMatch) {
+      xsrfToken = decodeURIComponent(xsrfMatch[1])
+    }
+
+    // Send logout request to Laravel with the user's session cookies
     const logoutResponse = await $fetch.raw(`${baseUrl}/logout`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'X-XSRF-TOKEN': xsrfToken,
-        'Cookie': cookieString
+        'Cookie': incomingCookies
       },
       credentials: 'include'
     })
 
-    // 3. Extract the expired/cleared cookies from Laravel
+    // Extract cookies from Laravel's response (these invalidate/replace the session)
     const allCookies = logoutResponse.headers.getSetCookie?.() || []
 
-    // 4. Forward the "expired" cookies to the browser to clear them locally
+    // Forward Laravel's response cookies to the browser
     useForwardCookies(allCookies, event)
 
-    // 5. Explicitly clear all Nuxt/app session cookies (HttpOnly cookies can only be cleared server-side)
+    // Explicitly clear all Nuxt/app session cookies as a fallback
+    // HttpOnly cookies can only be cleared server-side
     const cookiesToClear = [
       'focusflow-session',
       'focusflow_session',
@@ -36,7 +60,6 @@ export default defineEventHandler(async (event) => {
     ]
 
     cookiesToClear.forEach(cookieName => {
-      // Set cookie with expired date to clear it
       setCookie(event, cookieName, '', {
         expires: new Date(0),
         path: '/',
