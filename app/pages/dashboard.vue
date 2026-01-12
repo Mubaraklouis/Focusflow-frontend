@@ -16,6 +16,7 @@ const breadcrumbs = [
     { title: 'Home', href: '/' },
     { title: 'Dashboard', href: '/dashboard', current: true },
 ];
+
 </script>
 
 <template>
@@ -23,6 +24,9 @@ const breadcrumbs = [
         <!-- Empty dashboard - content will be implemented later -->
         <div class="flex h-full flex-1 flex-col p-6 lg:p-8">
             <!-- Placeholder for future content -->
+             <div>
+                <h1>welcome to dashboard</h1>
+             </div>
         </div>
     </NuxtLayout>
 </template>

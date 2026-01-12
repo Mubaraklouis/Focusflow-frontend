@@ -11,6 +11,11 @@ import useLogin from '~/composables/Auth/useLogin';
 
 const {form,submit,status} = await useLogin()
 
+const loginWithGoogle = ()=>{
+  window.location.href = 'http://localhost:8000/api/v1/auth/google';
+}
+
+
 
 useHead({
     title: 'Log in',
@@ -24,7 +29,8 @@ useHead({
     >
         <!-- Social Log-in Buttons -->
         <div class="flex flex-col gap-3 mb-8">
-            <a href="/api/auth/google/redirect" class="w-full">
+            <a href="http://localhost:8000/api/v1/auth/google/redirect" 
+            class="w-full">
                 <Button 
                     class="w-full bg-gray-800 hover:bg-gray-700 text-white dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:border dark:border-neutral-600 transition-colors"
                 >

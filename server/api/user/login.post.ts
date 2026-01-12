@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     // 1. Get the CSRF token and initial cookies from Laravel Sanctum
     const { xsrfToken, cookieString, csrfCookies } = await useGetCRSFToken()
 
-    // 2. Perform the Login request
+    // 2. Perform the Login request 
     const loginResponse = await $fetch.raw(`${baseUrl}/login`, {
       method: 'POST',
       body: {

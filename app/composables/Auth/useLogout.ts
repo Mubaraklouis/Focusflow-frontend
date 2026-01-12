@@ -3,6 +3,7 @@
  * Makes a POST request to the Nuxt server logout endpoint which 
  * communicates with Laravel to invalidate the session.
  */
+
 export const useLogout = () => {
     const isLoggingOut = ref(false)
     const error = ref<string | null>(null)
