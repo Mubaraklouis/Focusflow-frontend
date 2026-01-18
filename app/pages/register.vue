@@ -27,7 +27,7 @@ const { data,Form,submit } = await useAuthApi()
     >
         <!-- Social Sign-up Buttons -->
         <div class="flex flex-col gap-3 mb-6">
-            <a href="http://localhost:8000/api/v1/auth/google/redirect" class="w-full">
+            <a href="http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com/api/v1/auth/google/redirect" class="w-full">
                 <Button 
                     class="w-full bg-gray-800 hover:bg-gray-700 text-white dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
                 >

@@ -38,7 +38,7 @@
         </div>
 
         <!-- Right side illustration -->
-        <div class="lg:w-1/2"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"
+        <div class="lg:w-1/2 transition-opacity duration-300 dark:opacity-70"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"
                 xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1167.52 754.06">
                 <defs>
                     <linearGradient id="a" x1="588.17" y1="805.69" x2="588.17" y2="186.69"
