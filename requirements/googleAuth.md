@@ -1,0 +1,1 @@
+I have created google auth functionality api from the backend i want to integrate it with the frontend  i just added the link in signup with google in form it it only authenicates the backend i mean the token is set to backend instead i want the cookies of the fronted to be setted if the user sign in with google 
