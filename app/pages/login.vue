@@ -8,12 +8,15 @@ import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 import useLogin from '~/composables/Auth/useLogin';
+import {useForgetPassword} from "~/composables/Auth/useForgetPassword";
 
 const {form,submit,status} = await useLogin()
 
 const loginWithGoogle = ()=>{
   window.location.href = 'http://localhost:8000/api/v1/auth/google';
 }
+
+
 
 
 
@@ -79,6 +82,7 @@ useHead({
                     <div class="flex items-center justify-between">
                         <Label class="text-sm font-medium text-foreground" for="password">Password</Label>
                         <TextLink
+                            @click="useForgetPassword()"
                             href="/forgot-password"
                             class="text-sm text-muted-foreground hover:text-primary"
                         >
@@ -87,7 +91,7 @@ useHead({
                         <!-- Assuming canResetPassword will handle showing/hiding logic if passed as prop, or we just show it for now -->
                     </div>
                     <Input
-                        id="password"
+                        id="password"        
                         type="password"
                         required
                         autocomplete="current-password"

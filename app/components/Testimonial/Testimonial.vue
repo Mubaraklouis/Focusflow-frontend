@@ -1,10 +1,5 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue';
-    // 1. Importing YOUR dynamic useTheme composable
-   import { useTheme } from '#imports';
-    
-    // 2. Initializing the dynamic theme tracking
-    const { isDark } = useTheme(); 
     
     // --- STATIC TESTIMONIAL DATA (13 Items for 4/5/4 layout) ---
     const testimonials = ref([
@@ -38,21 +33,19 @@
     };
     </script>
     
-    ---
-    
     <template>
         <div>
-            <section id="testimonies" class="py-20" :class="isDark ? 'bg-[#0F1729]' : 'bg-[#FBF2E5]'">
+            <section id="testimonies" class="py-20 transition-colors duration-300 bg-[#FBF2E5] dark:bg-[#0F1729]">
                 <div class="max-w-6xl mx-8 md:mx-10 lg:mx-20 xl:mx-auto">
                     <div class="transition duration-500 ease-in-out transform scale-100 translate-x-0 translate-y-0 opacity-100">
                         <div class="mb-12 space-y-5 md:mb-16 md:text-center">
                             <div class="inline-block px-3 py-1 text-sm font-semibold rounded-lg md:text-center text-cn hover:cursor-pointer bg-accent text-accent-foreground hover:bg-accent/80">
                                 Words from Others
                             </div>
-                            <h1 class="mb-5 text-3xl font-semibold md:text-center md:text-5xl" :class="isDark ? 'text-primary' : 'text-primary'">
+                            <h1 class="mb-5 text-3xl font-semibold md:text-center md:text-5xl text-primary">
                                 It's not just us.
                             </h1>
-                            <p class="text-xl md:text-center md:text-2xl" :class="isDark ? 'text-gray-100' : 'text-foreground/80'">
+                            <p class="text-xl md:text-center md:text-2xl text-foreground/80 dark:text-gray-100">
                                 Here's what others have to say about us.
                             </p>
                         </div>
@@ -65,7 +58,7 @@
                                 <div class="relative group">
                                     <div class="absolute transition rounded-lg opacity-15 -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 blur duration-400 group-hover:opacity-80 group-hover:duration-200"></div>
                                     <a :href="testimonial.url || '#'" :target="testimonial.url ? '_blank' : '_self'" class="cursor-pointer">
-                                        <div class="relative p-6 space-y-6 leading-none rounded-lg" :class="isDark ? 'bg-[#1E293B] ring-1 ring-gray-900/5' : 'bg-[#F5EDE2] border border-primary/30'">
+                                        <div class="relative p-6 space-y-6 leading-none rounded-lg bg-[#F5EDE2] border border-primary/30 dark:bg-[#1E293B] dark:border-none dark:ring-1 dark:ring-gray-900/5 transition-colors duration-300">
                                             <div class="flex items-center space-x-4">
                                                 <img
                                                     :src="testimonial.photo || getInitialsPlaceholder(testimonial.name)"
@@ -73,11 +66,11 @@
                                                     :alt="testimonial.name"
                                                 >
                                                 <div>
-                                                    <h3 class="text-lg font-semibold" :class="isDark ? 'text-white' : 'text-foreground'">{{ testimonial.name }}</h3>
-                                                    <p class="text-md" :class="isDark ? 'text-gray-400' : 'text-muted-foreground'">{{ testimonial.position || 'Customer' }}</p>
+                                                    <h3 class="text-lg font-semibold text-foreground dark:text-white">{{ testimonial.name }}</h3>
+                                                    <p class="text-md text-muted-foreground dark:text-gray-400">{{ testimonial.position || 'Customer' }}</p>
                                                 </div>
                                             </div>
-                                            <p class="leading-normal text-md" :class="isDark ? 'text-gray-300' : 'text-foreground/80'">{{ testimonial.feedback }}</p>
+                                            <p class="leading-normal text-md text-foreground/80 dark:text-gray-300">{{ testimonial.feedback }}</p>
                                             <div v-if="testimonial.rating !== undefined && testimonial.rating !== null && testimonial.rating > 0" class="flex items-center">
                                                 <span v-for="n in 5" :key="n" class="w-4 h-4" :class="n <= testimonial.rating ? 'text-yellow-400' : 'text-gray-300'">
                                                     &#9733;
@@ -94,7 +87,7 @@
                                 <div class="relative group">
                                     <div class="absolute transition rounded-lg opacity-15 -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 blur duration-400 group-hover:opacity-80 group-hover:duration-200"></div>
                                     <a :href="testimonial.url || '#'" :target="testimonial.url ? '_blank' : '_self'" class="cursor-pointer">
-                                        <div class="relative p-6 space-y-6 leading-none rounded-lg" :class="isDark ? 'bg-[#1E293B] ring-1 ring-gray-900/5' : 'bg-[#F5EDE2] border border-primary/30'">
+                                        <div class="relative p-6 space-y-6 leading-none rounded-lg bg-[#F5EDE2] border border-primary/30 dark:bg-[#1E293B] dark:border-none dark:ring-1 dark:ring-gray-900/5 transition-colors duration-300">
                                             <div class="flex items-center space-x-4">
                                                 <img
                                                     :src="testimonial.photo || getInitialsPlaceholder(testimonial.name)"
@@ -102,11 +95,11 @@
                                                     :alt="testimonial.name"
                                                 >
                                                 <div>
-                                                    <h3 class="text-lg font-semibold" :class="isDark ? 'text-white' : 'text-foreground'">{{ testimonial.name }}</h3>
-                                                    <p class="text-md" :class="isDark ? 'text-gray-400' : 'text-muted-foreground'">{{ testimonial.position || 'Customer' }}</p>
+                                                    <h3 class="text-lg font-semibold text-foreground dark:text-white">{{ testimonial.name }}</h3>
+                                                    <p class="text-md text-muted-foreground dark:text-gray-400">{{ testimonial.position || 'Customer' }}</p>
                                                 </div>
                                             </div>
-                                            <p class="leading-normal text-md" :class="isDark ? 'text-gray-300' : 'text-foreground/80'">{{ testimonial.feedback }}</p>
+                                            <p class="leading-normal text-md text-foreground/80 dark:text-gray-300">{{ testimonial.feedback }}</p>
                                             <div v-if="testimonial.rating !== undefined && testimonial.rating !== null && testimonial.rating > 0" class="flex items-center">
                                                 <span v-for="n in 5" :key="n" class="w-4 h-4" :class="n <= testimonial.rating ? 'text-yellow-400' : 'text-gray-300'">
                                                     &#9733;
@@ -123,7 +116,7 @@
                                 <div class="relative group">
                                     <div class="absolute transition rounded-lg opacity-15 -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 blur duration-400 group-hover:opacity-80 group-hover:duration-200"></div>
                                     <a :href="testimonial.url || '#'" :target="testimonial.url ? '_blank' : '_self'" class="cursor-pointer">
-                                        <div class="relative p-6 space-y-6 leading-none rounded-lg" :class="isDark ? 'bg-[#1E293B] ring-1 ring-gray-900/5' : 'bg-[#F5EDE2] border border-primary/30'">
+                                        <div class="relative p-6 space-y-6 leading-none rounded-lg bg-[#F5EDE2] border border-primary/30 dark:bg-[#1E293B] dark:border-none dark:ring-1 dark:ring-gray-900/5 transition-colors duration-300">
                                             <div class="flex items-center space-x-4">
                                                 <img
                                                     :src="testimonial.photo || getInitialsPlaceholder(testimonial.name)"
@@ -131,11 +124,11 @@
                                                     :alt="testimonial.name"
                                                 >
                                                 <div>
-                                                    <h3 class="text-lg font-semibold" :class="isDark ? 'text-white' : 'text-foreground'">{{ testimonial.name }}</h3>
-                                                    <p class="text-md" :class="isDark ? 'text-gray-400' : 'text-muted-foreground'">{{ testimonial.position || 'Customer' }}</p>
+                                                    <h3 class="text-lg font-semibold text-foreground dark:text-white">{{ testimonial.name }}</h3>
+                                                    <p class="text-md text-muted-foreground dark:text-gray-400">{{ testimonial.position || 'Customer' }}</p>
                                                 </div>
                                             </div>
-                                            <p class="leading-normal text-md" :class="isDark ? 'text-gray-300' : 'text-foreground/80'">{{ testimonial.feedback }}</p>
+                                            <p class="leading-normal text-md text-foreground/80 dark:text-gray-300">{{ testimonial.feedback }}</p>
                                             <div v-if="testimonial.rating !== undefined && testimonial.rating !== null && testimonial.rating > 0" class="flex items-center">
                                                 <span v-for="n in 5" :key="n" class="w-4 h-4" :class="n <= testimonial.rating ? 'text-yellow-400' : 'text-gray-300'">
                                                     &#9733;

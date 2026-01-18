@@ -1,18 +1,11 @@
 <script setup lang="ts">
-    // 1. Import the useTheme composable (assuming it's available globally in Nuxt or via explicit path)
-    import { useTheme } from '#imports'; 
-    
-    // 2. Initialize the dynamic theme state
-    const { isDark } = useTheme();
-    
     // 3. Simple function to get the current year for the copyright notice
     const currentYear = new Date().getFullYear(); 
     </script>
     
     <template>
         <footer 
-            class="border-t border-border pt-16 pb-8 px-6 md:px-8"
-            :class="isDark ? 'bg-muted text-muted-foreground' : 'bg-[#fff0e8] text-foreground'"
+            class="border-t border-border pt-16 pb-8 px-6 md:px-8 bg-[#fff0e8] text-foreground dark:bg-muted dark:text-muted-foreground transition-colors duration-300"
         >
             <div class="max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-y-12 md:gap-x-8 mb-16">
