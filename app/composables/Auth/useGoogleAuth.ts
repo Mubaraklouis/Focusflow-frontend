@@ -11,7 +11,7 @@ export const useGoogleAuth = () => {
     const initiateGoogleAuth = () => {
         // Redirect to our Nuxt server endpoint which will handle the OAuth flow
         // This ensures cookies are set on the frontend domain
-        window.location.href = '/api/auth/google/redirect'
+        window.location.href = '/api/v1/auth/google/redirect'
     }
 
     return {
