@@ -7,13 +7,20 @@ export default defineEventHandler(async (event) => {
     // Get query parameters from the OAuth callback (code, state, etc.)
     const query = getQuery(event)
 
+    // Get cookies from the browser request to forward to Laravel
+    // This is CRITICAL - Laravel needs the same session to validate OAuth state
+    const browserCookies = getHeader(event, 'cookie') || ''
+
     try {
         // Forward the callback to Laravel's Google callback endpoint with all query params
         const callbackResponse = await $fetch.raw(`${baseUrl}/api/v1/auth/google/callback`, {
             method: 'GET',
             query: query,
             credentials: 'include',
-            redirect: 'manual'
+            redirect: 'manual',
+            headers: {
+                'Cookie': browserCookies
+            }
         })
 
         // Extract authentication cookies from Laravel

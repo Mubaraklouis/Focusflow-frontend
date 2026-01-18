@@ -6,11 +6,18 @@ export default defineEventHandler(async (event) => {
     try {
         const backendUrl = `${baseUrl}/api/v1/auth/google/redirect`
 
+        // Get cookies from the browser request to forward to Laravel
+        // This is CRITICAL for OAuth - Laravel needs the same session for state validation
+        const browserCookies = getHeader(event, 'cookie') || ''
+
         // Forward the request to Laravel's Google redirect endpoint
         const response = await $fetch.raw(backendUrl, {
             method: 'GET',
             credentials: 'include',
-            redirect: 'manual'
+            redirect: 'manual',
+            headers: {
+                'Cookie': browserCookies
+            }
         })
 
         // Extract any cookies from the response
