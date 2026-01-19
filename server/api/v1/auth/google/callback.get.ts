@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Forward the callback to Laravel's Google callback endpoint with all query params
-        const callbackResponse = await $fetch.raw(`${baseUrl}/api/v1/auth/google/callback`, {
+        const callbackResponse = await $fetch.raw(`http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com/api/v1/auth/google/callback`, {
             method: 'GET',
             query: query,
             credentials: 'include',

@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
     const { baseUrl } = useConfig()
 
     try {
-        const backendUrl = `${baseUrl}/api/v1/auth/google/redirect`
+        const backendUrl = `http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com/api/v1/auth/google/redirect`
 
         // Get cookies from the browser request to forward to Laravel
         // This is CRITICAL for OAuth - Laravel needs the same session for state validation
