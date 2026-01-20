@@ -8,7 +8,8 @@ useHead({
 
 // Define page layout
 definePageMeta({
-    layout: false
+    layout: false,
+    middleware: 'auth'
 });
 
 // Breadcrumbs for the dashboard page

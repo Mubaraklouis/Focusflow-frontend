@@ -38,28 +38,55 @@
 
 <script setup lang="ts">
 import { useAuth } from '~/composables/Auth/useAuth'
+import { useLogout } from '~/composables/Auth/useLogout'
 
-const { user, isAuthenticated, fetchUser, logout } = useAuth()
+const { isAuthenticated, checkAuth } = useAuth()
+const { logout } = useLogout()
+
+// Store user data separately since useAuth only handles authentication status
+const user = ref<{ id?: number; name?: string; email?: string } | null>(null)
+
+// Fetch user data from the API
+const fetchUser = async () => {
+  try {
+    const data = await $fetch('/api/user', { credentials: 'include' })
+    user.value = data as { id?: number; name?: string; email?: string }
+    return data
+  } catch (error) {
+    user.value = null
+    throw error
+  }
+}
 
 // Check authentication status on mount
 onMounted(async () => {
-  try {
-    await fetchUser()
-  } catch (error) {
-    console.log('User not authenticated')
+  const isAuth = await checkAuth()
+  if (isAuth) {
+    try {
+      await fetchUser()
+    } catch (error) {
+      console.log('Failed to fetch user data')
+    }
   }
 })
 
 const checkAuthStatus = async () => {
-  try {
-    await fetchUser()
-    console.log('User is authenticated:', user.value)
-  } catch (error) {
+  const isAuth = await checkAuth()
+  if (isAuth) {
+    try {
+      await fetchUser()
+      console.log('User is authenticated:', user.value)
+    } catch (error) {
+      console.log('Failed to fetch user data')
+    }
+  } else {
     console.log('User is not authenticated')
   }
 }
 
 const handleLogout = async () => {
   await logout()
+  user.value = null
 }
 </script>
+

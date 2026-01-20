@@ -1,15 +1,22 @@
 {
-    "entryPoints": ["server"],
-    "entryPointStrategy": "expand",
-    "out": "docs/api",
-    "tsconfig": "./tsconfig.json",
-    "exclude": [
-      "**/*.spec.ts", 
-      "node_modules/**", 
-      "server/index.ts"
-    ],
-    "name": "FocusFlow Server Documentation",
-    "includeVersion": true,
-    "searchInComments": true,
-    "cleanOutputDir": true
-  }
+  "entryPoints": [
+    "server/api",
+    "server/controller",
+    "server/types",
+    "server/util"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "docs/api",
+  "tsconfig": "./tsconfig.typedoc.json",
+  "plugin": [
+    "typedoc-material-theme"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "node_modules/**"
+  ],
+  "name": "FocusFlow Server Documentation",
+  "includeVersion": true,
+  "searchInComments": true,
+  "cleanOutputDir": true
+}

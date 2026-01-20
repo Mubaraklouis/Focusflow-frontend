@@ -1,4 +1,5 @@
 
+import { useAuth } from '~/composables/Auth/useAuth'
 
 const status = ref('')
 const canResetPassword = ref(true)
@@ -30,9 +31,14 @@ const submit = async () => {
                 remember: form.remember,
             },
         });
-        
-        // Redirect on success
-        await navigateTo('/dashboard'); // or /
+
+        // Set authenticated state before redirecting
+        const { setAuthenticated } = useAuth()
+        setAuthenticated(true)
+
+        // Use external: true to force a full browser redirect
+        // This ensures the newly set cookies are included in the HTTP request
+        await navigateTo('/dashboard', { external: true });
     } catch (error: any) {
         if (error.data && error.data.errors) {
             form.errors = error.data.errors;
@@ -47,14 +53,14 @@ const submit = async () => {
 
 
 const useLogin = async () => {
-    return{
+    return {
         form,
         submit,
         status,
         canResetPassword: true
     }
 
-    
+
 }
 
 export default useLogin

@@ -1,4 +1,6 @@
 
+import { useAuth } from '~/composables/Auth/useAuth'
+
 const Form = ref({
   name: '',
   email: '',
@@ -29,7 +31,13 @@ const submit = async () => {
       },
     });
 
-    await navigateTo('/dashboard');
+    // Set authenticated state before moving to dashboard
+    const { setAuthenticated } = useAuth()
+    setAuthenticated(true)
+
+    // Use external: true to force a full browser redirect
+    // This ensures the newly set cookies are included in the HTTP request
+    await navigateTo('/dashboard', { external: true });
   } catch (error: any) {
     console.error('Registration failed in useAuthApi:', error)
     console.error('Error status:', error.statusCode)
