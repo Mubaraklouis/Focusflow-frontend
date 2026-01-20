@@ -1,8 +1,44 @@
 {
-    "extends": "./.nuxt/tsconfig.server.json",
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "lib": [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "types": [
+            "node"
+        ],
+        "paths": {
+            "~/*": [
+                "./app/*"
+            ],
+            "~/composables/*": [
+                "./app/composables/*"
+            ],
+            "#imports": [
+                "./.nuxt/imports.d.ts"
+            ]
+        },
+        "baseUrl": "."
+    },
     "include": [
         ".nuxt/types/nitro-nuxt.d.ts",
         ".nuxt/types/nitro.d.ts",
-        "server/**/*"
+        "server/**/*",
+        "app/composables/**/*",
+        "app/middleware/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
     ]
 }

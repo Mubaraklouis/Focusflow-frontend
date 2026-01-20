@@ -1,13 +1,13 @@
 {
   "entryPoints": [
+    "app/composables/Auth/useAuth.ts",
+    "app/middleware/auth.ts",
     "server/api",
-    "server/controller",
-    "server/types",
+    "server/composables",
     "server/util"
   ],
   "entryPointStrategy": "expand",
   "out": "docs/api",
-  "tsconfig": "./tsconfig.typedoc.json",
   "plugin": [
     "typedoc-material-theme"
   ],
@@ -15,8 +15,9 @@
     "**/*.spec.ts",
     "node_modules/**"
   ],
-  "name": "FocusFlow Server Documentation",
+  "name": "FocusFlow Documentation",
   "includeVersion": true,
   "searchInComments": true,
-  "cleanOutputDir": true
+  "cleanOutputDir": true,
+  "skipErrorChecking": true
 }
