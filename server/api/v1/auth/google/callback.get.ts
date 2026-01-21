@@ -3,6 +3,10 @@ import useForwardCookies from "~~/server/composables/global/useForwardCookies"
 
 export default defineEventHandler(async (event) => {
     const { baseUrl } = useConfig()
+    
+    // Get the frontend URL from the request (handles both development and production)
+    const requestUrl = getRequestURL(event)
+    const frontendUrl = `${requestUrl.protocol}//${requestUrl.host}`
 
     // Get query parameters from the OAuth callback (code, state, etc.)
     const query = getQuery(event)
@@ -32,6 +36,19 @@ export default defineEventHandler(async (event) => {
         // Check if the response contains user data (successful authentication)
         const userData = callbackResponse._data as any
 
+        // Save user_id in cookie for profile retrieval (same as regular login)
+        if (userData?.user_id || userData?.user?.id) {
+            const userId = userData.user_id || userData.user.id
+            
+            setCookie(event, 'focusflow-user-id', String(userId), {
+                path: '/',
+                httpOnly: false,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 24 * 7, // 7 days
+            })
+        }
+
         if (userData && (userData.user || userData.success)) {
             // Successful authentication - redirect to dashboard
             return sendRedirect(event, '/dashboard')
@@ -40,11 +57,17 @@ export default defineEventHandler(async (event) => {
         // If there's a redirect in the response, follow it
         const locationHeader = callbackResponse.headers.get('location')
         if (locationHeader) {
-            // If it's a relative URL, make it absolute
-            if (locationHeader.startsWith('/')) {
-                return sendRedirect(event, locationHeader)
+            // Replace any localhost URLs with the actual frontend URL
+            let redirectUrl = locationHeader
+            if (locationHeader.includes('localhost:3000')) {
+                redirectUrl = locationHeader.replace(/http:\/\/localhost:3000/g, frontendUrl)
             }
-            return sendRedirect(event, locationHeader)
+            
+            // If it's a relative URL, make it absolute
+            if (redirectUrl.startsWith('/')) {
+                return sendRedirect(event, redirectUrl)
+            }
+            return sendRedirect(event, redirectUrl)
         }
 
         // Default success redirect
@@ -58,6 +81,7 @@ export default defineEventHandler(async (event) => {
             error.data?.message || error.message || 'Google authentication failed'
         )
 
+        // Use relative URL to stay on the correct domain
         return sendRedirect(event, `/login?error=${errorMessage}`)
     }
 })
