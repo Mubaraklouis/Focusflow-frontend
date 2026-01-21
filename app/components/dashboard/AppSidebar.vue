@@ -187,20 +187,22 @@ const handleLogout = async () => {
             </button>
 
             <!-- User Profile Card -->
-            <div 
+            <NuxtLink
+                to="/profile"
                 class="group mt-3 flex cursor-pointer items-center gap-3 rounded-xl bg-gradient-to-r from-muted/80 to-muted/50 p-3 transition-all duration-200 hover:from-primary/10 hover:to-primary/5"
                 :class="isCollapsed ? 'justify-center p-2' : ''"
+                :title="isCollapsed ? 'View Profile' : undefined"
             >
                 <div class="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md">
                     <span class="text-sm font-bold">{{ userInitials }}</span>
                     <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500 shadow-sm" />
                 </div>
                 <div v-if="!isCollapsed" class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-semibold text-foreground">{{ user?.name || 'User' }}</p>
-                    <p class="truncate text-xs text-muted-foreground">{{ user?.email || 'user@example.com' }}</p>
+                    <p class="truncate text-sm font-semibold text-foreground">{{ user?.name || 'Loading...' }}</p>
+                    <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
                 </div>
                 <ChevronRight v-if="!isCollapsed" class="h-4 w-4 text-muted-foreground transition-all duration-200 group-hover:text-primary group-hover:translate-x-1" />
-            </div>
+            </NuxtLink>
         </div>
     </aside>
 </template>

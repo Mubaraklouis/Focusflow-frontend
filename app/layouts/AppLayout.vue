@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AppSidebar from '@/components/dashboard/AppSidebar.vue';
 import AppHeader from '@/components/dashboard/AppHeader.vue';
+import { useProfile, useProfileApi } from '~/composables/Profile';
 
 interface Breadcrumb {
     title: string;
@@ -19,12 +20,21 @@ const isMobileSidebarOpen = ref(false);
 // Sidebar collapsed state
 const isSidebarCollapsed = ref(false);
 
-// Mock user data (in real app, this would come from auth store/composable)
-const user = ref({
-    name: 'User',
-    email: 'user@example.com',
-    avatar: undefined
-});
+// Get user data from profile composable
+const { profile } = useProfile();
+const { fetchProfile } = useProfileApi();
+
+// Fetch profile data - runs immediately on client
+if (import.meta.client) {
+    fetchProfile();
+}
+
+// Computed user object for sidebar
+const user = computed(() => ({
+    name: profile.value.name || 'Loading...',
+    email: profile.value.email,
+    avatar: profile.value.avatar || undefined
+}));
 
 const toggleMobileSidebar = () => {
     isMobileSidebarOpen.value = !isMobileSidebarOpen.value;

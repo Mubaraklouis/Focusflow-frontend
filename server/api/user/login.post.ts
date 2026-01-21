@@ -1,6 +1,20 @@
 import useGetCRSFToken from "~~/server/composables/global/useGetCRSFToken"
-import useConfig from "../../util/useConfig" 
 import useForwardCookies from "~~/server/composables/global/useForwardCookies"
+import useConfig from "~~/server/util/useConfig"
+
+/**
+ * Login response from Laravel backend
+ */
+interface LoginResponse {
+  status: string;
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  user_id: number;
+}
 
 /**
  * # 🛡️ Laravel Sanctum Login Proxy
@@ -16,6 +30,7 @@ import useForwardCookies from "~~/server/composables/global/useForwardCookies"
  * | **3** | **Header Injection** | Attaches `X-XSRF-TOKEN` and the initial `Cookie` string to the request. |
  * | **4** | **Session Capture** | Uses `response.headers.getSetCookie()` to grab the new `laravel_session` cookie. |
  * | **5** | **Cookie Sync** | Combines all cookies and calls `useForwardCookies()` to update the user's browser. |
+ * | **6** | **User ID Cookie** | Saves the user_id in a cookie for profile retrieval. |
  *
  * ## 🚀 Frontend Usage Example
  * ```typescript
@@ -40,7 +55,7 @@ export default defineEventHandler(async (event) => {
     const { xsrfToken, cookieString, csrfCookies } = await useGetCRSFToken()
 
     // --- STEP 2 & 3: Proxy Request ---
-    const loginResponse = await $fetch.raw(`${baseUrl}/login`, {
+    const loginResponse = await $fetch.raw<LoginResponse>(`${baseUrl}/login`, {
       method: 'POST',
       body: { email, password },
       headers: {
@@ -59,7 +74,21 @@ export default defineEventHandler(async (event) => {
     const combinedCookies = [...csrfCookies, ...allCookies]
     useForwardCookies(combinedCookies, event)
 
-    return loginResponse._data
+    // Save user_id in cookie for profile retrieval
+    const responseData = loginResponse._data
+    if (responseData?.user_id || responseData?.user?.id) {
+      const userId = responseData.user_id || responseData.user.id
+      
+      setCookie(event, 'focusflow-user-id', String(userId), {
+        path: '/',
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      })
+    }
+
+    return responseData
 
   } catch (error: any) {
     if (error.response?.status === 422 || error.response?.status === 401) {

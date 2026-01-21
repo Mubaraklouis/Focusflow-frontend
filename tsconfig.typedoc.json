@@ -33,12 +33,13 @@
     "include": [
         ".nuxt/types/nitro-nuxt.d.ts",
         ".nuxt/types/nitro.d.ts",
-        "server/**/*",
-        "app/composables/**/*",
-        "app/middleware/**/*"
+        "server/**/*.ts",
+        "app/composables/**/*.ts",
+        "app/middleware/**/*.ts"
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "**/*.vue"
     ]
 }

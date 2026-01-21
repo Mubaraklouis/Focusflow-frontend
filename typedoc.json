@@ -1,7 +1,7 @@
 {
   "entryPoints": [
-    "app/composables/Auth/useAuth.ts",
-    "app/middleware/auth.ts",
+    "app/composables",
+    "app/middleware",
     "server/api",
     "server/composables",
     "server/util"
@@ -13,11 +13,13 @@
   ],
   "exclude": [
     "**/*.spec.ts",
+    "**/*.vue",
     "node_modules/**"
   ],
   "name": "FocusFlow Documentation",
   "includeVersion": true,
   "searchInComments": true,
   "cleanOutputDir": true,
-  "skipErrorChecking": true
+  "skipErrorChecking": true,
+  "tsconfig": "tsconfig.typedoc.json"
 }

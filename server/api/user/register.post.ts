@@ -1,57 +1,48 @@
 import useGetCRSFToken from "~~/server/composables/global/useGetCRSFToken"
-import useConfig from "../../util/useConfig"
 import useForwardCookies from "~~/server/composables/global/useForwardCookies"
+import useConfig from "~~/server/util/useConfig"
 
 /**
- * # User Registration Endpoint
- *
- * Handles new user registration by proxying the request to the Laravel backend.
- * This endpoint manages the entire registration flow, including CSRF protection,
- * session initialization, and stateful authentication cookie handling.
+ * Register response from Laravel backend
+ */
+interface RegisterResponse {
+  status: string;
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  user_id: number;
+}
+
+/**
+ * # 🛡️ Laravel Sanctum Register Proxy
+ * 
+ * Server-side handler that proxies registration requests to Laravel backend.
+ * Handles CSRF token, cookie forwarding, and saves user_id for profile retrieval.
  *
  * ## 📋 Internal Execution Logic
- * | Step | Operation | Code Logic |
+ * | Step | Operation | Description |
  * | :--- | :--- | :--- |
- * | **1** | **Config Loading** | Retrieves `baseUrl` via `useConfig()`. |
- * | **2** | **Request Parsing** | Extracts registration data (`name`, `email`, etc.) using `readBody(event)`. |
- * | **3** | **CSRF Handshake** | Initiates session and retrieves `XSRF-TOKEN` via `useGetCRSFToken()`. |
- * | **4** | **Proxy Request** | Forwards payload to Laravel `/register` endpoint including CSRF headers. |
- * | **5** | **Cookie Sync** | Captures new session/XSRF cookies and forwards them using `useForwardCookies()`. |
+ * | **1** | **CSRF Handshake** | Gets XSRF-TOKEN from Laravel |
+ * | **2** | **Register Request** | Sends registration data to Laravel |
+ * | **3** | **Cookie Sync** | Forwards session cookies to browser |
+ * | **4** | **User ID Cookie** | Saves user_id for profile retrieval |
  *
- * ## Usage Example
- * ```typescript
- * const { data, error } = await useFetch('/api/user/register', {
- *   method: 'POST',
- *   body: {
- *     name: 'John Doe',
- *     email: 'john@example.com',
- *     password: 'secret-password',
- *     password_confirmation: 'secret-password'
- *   }
- * })
- * ```
- *
- * @param event - The H3 event context.
- * @param body.name - The unique username for the new account.
- * @param body.email - The unique email address for the new account.
- * @param body.password - The password for the new account (min 8 chars).
- * @param body.password_confirmation - Must match the password field logic.
- *
- * @returns {Promise<User>} The registered user object returned by the backend.
- *
- * @throws {H3Error<422>} **Validation Failed** - If the input data is invalid (e.g., email already taken, passwords do not match).
- * @throws {H3Error<500>} **Server Error** - If the registration fails due to backend connectivity or internal errors.
+ * @param event - The H3 event object
+ * @returns Registration response with user data
  */
 export default defineEventHandler(async (event) => {
   const { baseUrl } = useConfig()
   const { name, email, password, password_confirmation } = await readBody(event)
 
   try {
-    // --- STEP 1: Handshake ---
+    // Get CSRF token
     const { xsrfToken, cookieString, csrfCookies } = await useGetCRSFToken()
 
-    // --- STEP 2: Proxy Request ---
-    const registerResponse = await $fetch.raw(`${baseUrl}/register`, {
+    // Send registration request
+    const registerResponse = await $fetch.raw<RegisterResponse>(`${baseUrl}/register`, {
       method: 'POST',
       body: {
         name,
@@ -68,25 +59,40 @@ export default defineEventHandler(async (event) => {
       credentials: 'include'
     })
 
-    // --- STEP 3: Cookie Sync ---
+    // Forward cookies to browser
     const allCookies = registerResponse.headers.getSetCookie?.() || []
     const combinedCookies = [...csrfCookies, ...allCookies]
     useForwardCookies(combinedCookies, event)
 
-    return registerResponse._data
-
-  } catch (error: any) {
-    if (error.data?.errors) {
-      throw createError({
-        statusCode: 422,
-        message: 'Validation failed',
-        data: { errors: error.data.errors }
+    // Save user_id in cookie for profile retrieval
+    const responseData = registerResponse._data
+    if (responseData?.user_id || responseData?.user?.id) {
+      const userId = responseData.user_id || responseData.user.id
+      
+      setCookie(event, 'focusflow-user-id', String(userId), {
+        path: '/',
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
       })
     }
+
+    return responseData
+
+  } catch (error: any) {
+    
+    if (error.response?.status === 422) {
+      throw createError({
+        statusCode: 422,
+        message: error.data?.message || 'Validation failed',
+        data: error.data?.errors
+      })
+    }
+
     throw createError({
-      statusCode: error.response?.status || error.statusCode || 500,
-      message: error.data?.message || error.message || 'Registration failed',
-      data: error.data
+      statusCode: error.response?.status || 500,
+      message: error.data?.message || error.message || 'Registration failed'
     })
   }
 })

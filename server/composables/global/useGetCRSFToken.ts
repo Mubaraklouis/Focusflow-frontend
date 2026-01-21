@@ -1,8 +1,7 @@
 import useConfig from "~~/server/util/useConfig"
 
-const useGetCRSFToken = async () =>{
-
-  const {baseUrl} = useConfig()
+const useGetCRSFToken = async () => {
+  const { baseUrl } = useConfig()
 
     const csrfResponse = await $fetch.raw(`${baseUrl}/sanctum/csrf-cookie`, {
       method: 'GET',

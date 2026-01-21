@@ -56,14 +56,15 @@ export default defineEventHandler(async (event) => {
       'focusflow_session',
       'focus-session',
       'laravel_session',
-      'XSRF-TOKEN'
+      'XSRF-TOKEN',
+      'focusflow-user-id'
     ]
 
     cookiesToClear.forEach(cookieName => {
       setCookie(event, cookieName, '', {
         expires: new Date(0),
         path: '/',
-        httpOnly: true,
+        httpOnly: cookieName !== 'focusflow-user-id', // user-id is not httpOnly
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax'
       })

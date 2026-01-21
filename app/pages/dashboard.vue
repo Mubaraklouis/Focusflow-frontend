@@ -17,7 +17,6 @@ const breadcrumbs = [
     { title: 'Home', href: '/' },
     { title: 'Dashboard', href: '/dashboard', current: true },
 ];
-
 </script>
 
 <template>
