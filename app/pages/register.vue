@@ -10,7 +10,10 @@ import { reactive, ref } from 'vue';
 import useAuthApi from '~/composables/Auth/useAuthApi';
 import useGoogleAuth from '~/composables/Auth/useGoogleAuth';
 
-// Removed the invalid import for `data` from useAuthApi, as 'data' is not exported.
+// Redirect authenticated users to dashboard
+definePageMeta({
+    middleware: 'guest'
+});
 
 useHead({
     title: 'Register',
@@ -54,6 +57,16 @@ const { initiateGoogleAuth } = useGoogleAuth()
         </div>
 
         <form @submit.prevent="submit" class="flex flex-col gap-6">
+            <!-- General Error Alert -->
+            <div v-if="Form.errors.general" class="p-4 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200 text-sm border border-red-200 dark:border-red-800">
+                <div class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ Form.errors.general }}</span>
+                </div>
+            </div>
+
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label class="text-sm font-medium text-foreground" for="name">Name</Label>

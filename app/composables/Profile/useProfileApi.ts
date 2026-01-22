@@ -50,6 +50,29 @@ interface ProfileApiResponse {
 }
 
 /**
+ * API response type for profile update
+ * @internal
+ */
+interface ProfileUpdateResponse {
+    status: string;
+    message: string;
+    data: UserData;
+}
+
+/**
+ * Payload for updating user profile
+ * @internal
+ */
+interface ProfileUpdatePayload {
+    name?: string;
+    username?: string;
+    bio?: string;
+    avatar?: string;
+    location?: string;
+    website?: string;
+}
+
+/**
  * Transforms API response to UserProfile format
  *
  * @param userData - User data from API response
@@ -60,13 +83,21 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
     const email = userData.email || '';
     const username = userData.username || (email ? email.split('@')[0] : '');
     
+    // Handle avatar URL - prepend backend URL if it's a relative path
+    let avatarUrl = userData.avatar || '';
+    if (avatarUrl && !avatarUrl.startsWith('http')) {
+        // TODO: Change to production URL after deployment
+        const backendUrl = 'http://localhost:8000';
+        avatarUrl = `${backendUrl}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}`;
+    }
+    
     return {
         id: String(userData.id || ''),
         name: userData.name || '',
         email: email,
         username: username,
         bio: userData.bio || '',
-        avatar: userData.avatar || '',
+        avatar: avatarUrl,
         location: userData.location || '',
         website: userData.website || '',
         joinedDate: userData.created_at ? userData.created_at.split('T')[0] : '',
@@ -185,9 +216,128 @@ export function useProfileApi() {
      */
     const refreshProfile = fetchProfile;
 
+    /**
+     * Updates the authenticated user's profile on the server (without avatar)
+     *
+     * @description
+     * Makes a PUT request to `/api/user/profile` with JSON data.
+     * For avatar uploads, use uploadAvatar separately.
+     *
+     * @param data - Profile data to update (name, bio, location, website)
+     * @returns Promise resolving to true if successful, false otherwise
+     */
+    const updateProfile = async (data: ProfileUpdatePayload): Promise<boolean> => {
+        isLoading.value = true;
+        error.value = null;
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await $fetch<ProfileUpdateResponse>('/api/user/profile', {
+                method: 'PUT',
+                credentials: 'include',
+                body: data,
+            });
+
+            // Validate response
+            if (!response || typeof response !== 'object') {
+                throw new Error('Invalid response from server');
+            }
+
+            // Check for success status
+            if (response.status !== 'success') {
+                throw new Error(response.message || 'Failed to update profile');
+            }
+
+            // Extract user data from Laravel's response structure
+            const userData = response.data;
+            if (!userData || typeof userData !== 'object') {
+                throw new Error('Invalid user data in response');
+            }
+
+            // Transform and set profile data
+            const profileData = transformApiResponse(userData);
+            setProfile(profileData);
+
+            return true;
+
+        } catch (err: any) {
+            const errorMessage = err.data?.message || err.message || 'Failed to update profile';
+            error.value = errorMessage;
+            setError(errorMessage);
+
+            return false;
+        } finally {
+            isLoading.value = false;
+            setLoading(false);
+        }
+    };
+
+    /**
+     * Uploads avatar image for the authenticated user
+     *
+     * @description
+     * Makes a POST request to `/api/user/profile` with multipart/form-data.
+     * Only handles avatar upload, for other profile updates use updateProfile.
+     *
+     * @param avatarFile - The image file to upload as avatar
+     * @returns Promise resolving to true if successful, false otherwise
+     */
+    const uploadAvatar = async (avatarFile: File): Promise<boolean> => {
+        isLoading.value = true;
+        error.value = null;
+        setLoading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('avatar', avatarFile);
+
+            const response = await $fetch<ProfileUpdateResponse>('/api/user/profile', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData,
+            });
+
+            // Validate response
+            if (!response || typeof response !== 'object') {
+                throw new Error('Invalid response from server');
+            }
+
+            // Check for success status
+            if (response.status !== 'success') {
+                throw new Error(response.message || 'Failed to upload avatar');
+            }
+
+            // Extract user data from Laravel's response structure
+            const userData = response.data;
+            if (!userData || typeof userData !== 'object') {
+                throw new Error('Invalid user data in response');
+            }
+
+            // Transform and set profile data
+            const profileData = transformApiResponse(userData);
+            setProfile(profileData);
+
+            return true;
+
+        } catch (err: any) {
+            const errorMessage = err.data?.message || err.message || 'Failed to upload avatar';
+            error.value = errorMessage;
+            setError(errorMessage);
+
+            return false;
+        } finally {
+            isLoading.value = false;
+            setLoading(false);
+        }
+    };
+
     return {
         fetchProfile,
         refreshProfile,
+        updateProfile,
+        uploadAvatar,
         isLoading,
         error,
         profile,

@@ -29,6 +29,7 @@
 
 import { ref } from 'vue';
 import { useProfile } from './useProfile';
+import { useProfileApi } from './useProfileApi';
 
 /**
  * Editable profile form fields
@@ -107,6 +108,7 @@ const DEFAULT_FORM: Readonly<EditFormData> = Object.freeze({
  */
 export function useProfileEdit() {
     const { profile, setProfile } = useProfile();
+    const { updateProfile, uploadAvatar } = useProfileApi();
 
     /**
      * Whether edit mode is currently active
@@ -119,10 +121,27 @@ export function useProfileEdit() {
     const isSaving = ref<boolean>(false);
 
     /**
+     * Error message from save operation
+     */
+    const saveError = ref<string | null>(null);
+
+    /**
      * Form data for editing
      * @remarks Separate from profile to allow cancellation
      */
     const editForm = ref<EditFormData>({ ...DEFAULT_FORM });
+
+    /**
+     * Avatar file to upload
+     * @remarks Stored separately from form data
+     */
+    const avatarFile = ref<File | null>(null);
+
+    /**
+     * Preview URL for selected avatar
+     * @remarks Generated from avatarFile for display before upload
+     */
+    const avatarPreview = ref<string | null>(null);
 
     /**
      * Synchronizes form data with current profile state
@@ -193,15 +212,48 @@ export function useProfileEdit() {
      */
     const cancelEdit = (): void => {
         syncFormWithProfile();
+        clearAvatarFile();
         isEditMode.value = false;
+    };
+
+    /**
+     * Sets the avatar file for upload
+     *
+     * @param file - The image file to upload as avatar
+     */
+    const setAvatarFile = (file: File | null): void => {
+        avatarFile.value = file;
+        
+        // Revoke previous preview URL to prevent memory leaks
+        if (avatarPreview.value) {
+            URL.revokeObjectURL(avatarPreview.value);
+        }
+        
+        // Create preview URL for the new file
+        if (file) {
+            avatarPreview.value = URL.createObjectURL(file);
+        } else {
+            avatarPreview.value = null;
+        }
+    };
+
+    /**
+     * Clears the avatar file and preview
+     */
+    const clearAvatarFile = (): void => {
+        if (avatarPreview.value) {
+            URL.revokeObjectURL(avatarPreview.value);
+        }
+        avatarFile.value = null;
+        avatarPreview.value = null;
     };
 
     /**
      * Saves form changes to profile
      *
      * @description
-     * Persists the current form data to the profile state.
-     * In the future, this will also make an API call to save to the server.
+     * Persists the current form data to the profile state and
+     * makes an API call to save to the server.
      *
      * @returns Promise resolving to true if save succeeded, false otherwise
      *
@@ -212,20 +264,34 @@ export function useProfileEdit() {
      *   console.log('Profile updated!')
      * }
      * ```
-     *
-     * @todo Add API integration for server-side persistence
      */
     const saveChanges = async (): Promise<boolean> => {
         isSaving.value = true;
+        saveError.value = null;
 
         try {
-            // TODO: Add API call here
-            // await profileApi.updateProfile(editForm.value)
+            // First, upload avatar if there's a new file
+            if (avatarFile.value) {
+                const avatarSuccess = await uploadAvatar(avatarFile.value);
+                if (!avatarSuccess) {
+                    throw new Error('Failed to upload avatar');
+                }
+            }
 
-            setProfile(editForm.value);
+            // Then, update profile data (name, bio, location, website)
+            const profileSuccess = await updateProfile(editForm.value);
+            if (!profileSuccess) {
+                throw new Error('Failed to update profile');
+            }
+
+            // Clear avatar file after successful upload
+            clearAvatarFile();
+            
+            // Profile state is already updated by updateProfile
             isEditMode.value = false;
             return true;
-        } catch (err) {
+        } catch (err: any) {
+            saveError.value = err.message || 'Failed to save changes';
             return false;
         } finally {
             isSaving.value = false;
@@ -259,11 +325,16 @@ export function useProfileEdit() {
     return {
         isEditMode,
         isSaving,
+        saveError,
         editForm,
+        avatarFile,
+        avatarPreview,
         toggleEditMode,
         enableEditMode,
         cancelEdit,
         saveChanges,
         updateField,
+        setAvatarFile,
+        clearAvatarFile,
     };
 }

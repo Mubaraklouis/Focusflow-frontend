@@ -77,3 +77,53 @@ export interface ProfileErrorResponse {
     /** Validation errors (keyed by field name) */
     errors?: Record<string, string[]>;
 }
+
+/**
+ * Payload for updating user profile
+ *
+ * @interface UserUpdatePayload
+ * @description
+ * Data structure for profile update requests.
+ * All fields are optional - only include fields to update.
+ */
+export interface UserUpdatePayload {
+    /** User's full name */
+    name?: string;
+    /** User's username/handle */
+    username?: string;
+    /** User's bio or about text */
+    bio?: string;
+    /** URL to user's avatar image */
+    avatar?: string;
+    /** User's location */
+    location?: string;
+    /** User's website URL */
+    website?: string;
+}
+
+/**
+ * User update response from Laravel backend
+ *
+ * @interface UserUpdateResponse
+ * @description
+ * Represents the response structure from Laravel's user update endpoint.
+ * Returns status, message, and updated user data.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   status: "success",
+ *   message: "User updated successfully",
+ *   data: { id: 1, name: "John Doe", ... }
+ * }
+ * ```
+ */
+export interface UserUpdateResponse {
+    /** Response status */
+    status: string;
+    /** Response message */
+    message: string;
+    /** Updated user data */
+    data: UserData;
+}
+

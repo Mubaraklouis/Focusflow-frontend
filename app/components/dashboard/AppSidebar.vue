@@ -59,6 +59,12 @@ const toggleCollapse = () => {
 
 const userInitials = computed(() => {
     const name = props.user?.name || 'User';
+    // Split name and get first letter of each word (e.g., "John Doe" -> "JD")
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    // If single name, return first two letters
     return name.substring(0, 2).toUpperCase();
 });
 
@@ -193,8 +199,16 @@ const handleLogout = async () => {
                 :class="isCollapsed ? 'justify-center p-2' : ''"
                 :title="isCollapsed ? 'View Profile' : undefined"
             >
-                <div class="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md">
-                    <span class="text-sm font-bold">{{ userInitials }}</span>
+                <div class="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md overflow-hidden">
+                    <!-- Show avatar image if available -->
+                    <img 
+                        v-if="user?.avatar" 
+                        :src="user.avatar" 
+                        :alt="user?.name"
+                        class="h-full w-full object-cover"
+                    />
+                    <!-- Show initials if no avatar -->
+                    <span v-else class="text-sm font-bold">{{ userInitials }}</span>
                     <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500 shadow-sm" />
                 </div>
                 <div v-if="!isCollapsed" class="min-w-0 flex-1">

@@ -4,6 +4,8 @@
  * communicates with Laravel to invalidate the session.
  */
 
+import { useAuth } from '~/composables/Auth/useAuth'
+
 export const useLogout = () => {
     const isLoggingOut = ref(false)
     const error = ref<string | null>(null)
@@ -46,11 +48,16 @@ export const useLogout = () => {
             const user = useState<any>('auth-user')
             user.value = null
 
+            // Update authentication state
+            const { setAuthenticated } = useAuth()
+            setAuthenticated(false)
+
             // Clear auth cookies from browser
             clearAuthCookies()
 
-            // Redirect to login page
-            await navigateTo('/login')
+            // Use external: true to force a full browser redirect
+            // This ensures the server-side state is properly cleared
+            await navigateTo('/login', { external: true })
         } catch (err: any) {
             console.error('Logout failed:', err)
             error.value = err.data?.message || 'Failed to logout. Please try again.'
@@ -58,10 +65,15 @@ export const useLogout = () => {
             // Even if server logout fails, clear local state and cookies
             const user = useState<any>('auth-user')
             user.value = null
+
+            // Update authentication state
+            const { setAuthenticated } = useAuth()
+            setAuthenticated(false)
+
             clearAuthCookies()
 
-            // Still redirect to login
-            await navigateTo('/login')
+            // Still redirect to login with full page reload
+            await navigateTo('/login', { external: true })
         } finally {
             isLoggingOut.value = false
         }

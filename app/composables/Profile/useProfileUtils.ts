@@ -137,13 +137,21 @@ export function useProfileUtils() {
             return 'U';
         }
 
-        const words = name.trim().split(/\s+/);
-        const initials = words
-            .map(word => word.charAt(0))
-            .join('')
-            .toUpperCase();
-
-        return initials.slice(0, 2);
+        const words = name.trim().split(/\s+/).filter(w => w.length > 0);
+        
+        if (words.length === 0) {
+            return 'U';
+        }
+        
+        // If multiple words, use first letter of first and last word (e.g., "John Doe" -> "JD")
+        if (words.length >= 2) {
+            const firstInitial = words[0]?.charAt(0) || '';
+            const lastInitial = words[words.length - 1]?.charAt(0) || '';
+            return (firstInitial + lastInitial).toUpperCase();
+        }
+        
+        // If single word, return first two letters (e.g., "John" -> "JO")
+        return (words[0] || '').substring(0, 2).toUpperCase();
     };
 
     /**

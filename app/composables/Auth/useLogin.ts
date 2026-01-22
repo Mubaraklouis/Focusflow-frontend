@@ -13,12 +13,13 @@ const form = reactive({
     errors: {
         email: '',
         password: '',
+        general: '',
     } as Record<string, string>,
 });
 
 const submit = async () => {
     form.processing = true;
-    form.errors = { email: '', password: '' };
+    form.errors = { email: '', password: '', general: '' };
 
     console.log("trying to login")
 
@@ -40,10 +41,27 @@ const submit = async () => {
         // This ensures the newly set cookies are included in the HTTP request
         await navigateTo('/dashboard', { external: true });
     } catch (error: any) {
-        if (error.data && error.data.errors) {
-            form.errors = error.data.errors;
+        console.error('Login failed:', error);
+        
+        if (error.data) {
+            // Handle field-specific validation errors
+            if (error.data.errors) {
+                form.errors = { ...form.errors, ...error.data.errors };
+            }
+            // Handle general error message from server
+            if (error.data.message) {
+                form.errors.general = error.data.message;
+            }
+        } else if (error.statusCode === 401) {
+            form.errors.general = 'Invalid email or password. Please try again.';
+        } else if (error.statusCode === 422) {
+            form.errors.general = 'Please check your credentials and try again.';
+        } else if (error.statusCode === 429) {
+            form.errors.general = 'Too many login attempts. Please try again later.';
+        } else if (error.message) {
+            form.errors.general = error.message;
         } else {
-            console.error('Login failed', error);
+            form.errors.general = 'An unexpected error occurred. Please try again.';
         }
     } finally {
         form.processing = false;

@@ -13,7 +13,8 @@ import {
     Link as LinkIcon,
     Calendar,
     Mail,
-    Check
+    Check,
+    Camera
 } from 'lucide-vue-next';
 import {
     useProfile,
@@ -41,7 +42,16 @@ const breadcrumbs = [
 
 // Composables
 const { profile, isLoading, error } = useProfile();
-const { isEditMode, isSaving, editForm, toggleEditMode, cancelEdit, saveChanges } = useProfileEdit();
+const { 
+    isEditMode, 
+    isSaving, 
+    editForm, 
+    avatarPreview,
+    toggleEditMode, 
+    cancelEdit, 
+    saveChanges,
+    setAvatarFile 
+} = useProfileEdit();
 const { fetchProfile } = useProfileApi();
 const { formatDate, getInitials } = useProfileUtils();
 
@@ -51,10 +61,39 @@ onMounted(async () => {
 });
 
 /**
+ * Handles avatar file selection
+ */
+const handleAvatarChange = (event: Event): void => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size should be less than 5MB');
+            return;
+        }
+        
+        setAvatarFile(file);
+    }
+};
+
+/**
  * Handles save button click
+ * Saves changes and refreshes profile data from server
  */
 const handleSave = async (): Promise<void> => {
-    await saveChanges();
+    const success = await saveChanges();
+    if (success) {
+        // Refresh profile to ensure we have the latest data
+        await fetchProfile();
+    }
 };
 </script>
 
@@ -77,17 +116,40 @@ const handleSave = async (): Promise<void> => {
                 <div class="mb-8">
                     <div class="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
                         <!-- Avatar -->
-                        <div class="relative">
-                            <div class="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                        <div class="relative group">
+                            <div class="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 overflow-hidden">
+                                <!-- Show preview if available, otherwise show current avatar -->
                                 <img 
-                                    v-if="profile.avatar" 
-                                    :src="profile.avatar" 
+                                    v-if="avatarPreview || profile.avatar" 
+                                    :src="avatarPreview || profile.avatar" 
                                     :alt="profile.name"
                                     class="h-full w-full rounded-full object-cover"
                                 />
                                 <span v-else class="text-2xl font-medium text-primary">
                                     {{ getInitials(profile.name) }}
                                 </span>
+                            </div>
+                            
+                            <!-- Avatar upload overlay (visible in edit mode) -->
+                            <label 
+                                v-if="isEditMode"
+                                class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                            >
+                                <Camera class="h-6 w-6 text-white" />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    class="hidden"
+                                    @change="handleAvatarChange"
+                                />
+                            </label>
+                            
+                            <!-- Edit badge -->
+                            <div 
+                                v-if="isEditMode"
+                                class="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
+                            >
+                                <Camera class="h-3.5 w-3.5" />
                             </div>
                         </div>
 
