@@ -264,7 +264,7 @@ When accessing protected routes that require email verification:
 ```typescript
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const baseURL = config.public.apiBaseUrl || 'http://localhost:8000'
+  const baseURL = config.public.apiBaseUrl || 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com'
 
   const getCsrfToken = async () => {
     await $fetch('/sanctum/csrf-cookie', {
@@ -502,7 +502,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 export default defineNuxtConfig({
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000',
+      apiBaseUrl: process.env.API_BASE_URL || 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com',
     },
   },
 })
@@ -540,7 +540,7 @@ if (error.status === 409 && error.data?.message?.includes('not verified')) {
 ### Backend (.env)
 
 ```env
-APP_URL=http://localhost:8000
+APP_URL=http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com
 FRONTEND_URL=http://localhost:3000
 
 # Mail configuration for verification emails
@@ -557,7 +557,7 @@ MAIL_FROM_NAME="${APP_NAME}"
 ### Frontend (.env)
 
 ```env
-API_BASE_URL=http://localhost:8000
+API_BASE_URL=http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com
 ```
 
 ---

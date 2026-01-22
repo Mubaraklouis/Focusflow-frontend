@@ -39,7 +39,7 @@ export default defineEventHandler(async (event): Promise<UserProfileResponse> =>
     const { baseUrl } = useConfig();
 
     // TODO: Change to baseUrl after deploying update endpoint to production
-    const localUrl = 'http://localhost:8000';
+    const localUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
 
     try {
         // Get user_id from cookie

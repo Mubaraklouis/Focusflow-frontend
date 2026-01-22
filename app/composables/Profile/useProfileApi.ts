@@ -87,7 +87,7 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
     let avatarUrl = userData.avatar || '';
     if (avatarUrl && !avatarUrl.startsWith('http')) {
         // TODO: Change to production URL after deployment
-        const backendUrl = 'http://localhost:8000';
+        const backendUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
         avatarUrl = `${backendUrl}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}`;
     }
     
