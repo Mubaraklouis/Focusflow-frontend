@@ -11,10 +11,6 @@ import useLogin from '~/composables/Auth/useLogin';
 import {useForgetPassword} from "~/composables/Auth/useForgetPassword";
 import useGoogleAuth from '~/composables/Auth/useGoogleAuth';
 
-// Redirect authenticated users to dashboard
-definePageMeta({
-    middleware: 'guest'
-});
 
 const {form,submit,status} = await useLogin()
 const { initiateGoogleAuth } = useGoogleAuth()

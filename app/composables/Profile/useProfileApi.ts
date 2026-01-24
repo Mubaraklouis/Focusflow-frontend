@@ -30,7 +30,6 @@ interface UserData {
     id: number;
     name: string;
     email: string;
-    email_verified_at: string | null;
     created_at: string;
     updated_at: string;
     username?: string;
@@ -86,8 +85,8 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
     // Handle avatar URL - prepend backend URL if it's a relative path
     let avatarUrl = userData.avatar || '';
     if (avatarUrl && !avatarUrl.startsWith('http')) {
-        // TODO: Change to production URL after deployment
-        const backendUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
+        const config = useRuntimeConfig();
+        const backendUrl = config.public.usersApiUrl || config.usersApiUrl;
         avatarUrl = `${backendUrl}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}`;
     }
     

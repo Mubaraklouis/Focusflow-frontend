@@ -36,10 +36,8 @@ const submit = async () => {
     const { setAuthenticated } = useAuth()
     setAuthenticated(true)
 
-    // Redirect to verify-email page since new users need to verify their email
-    // Use external: true to force a full browser redirect
-    // This ensures the newly set cookies are included in the HTTP request
-    await navigateTo('/verify-email', { external: true });
+    // Redirect to dashboard after successful registration
+    await navigateTo('/dashboard', { external: true });
   } catch (error: any) {
     console.error('Registration failed in useAuthApi:', error)
     console.error('Error status:', error.statusCode)

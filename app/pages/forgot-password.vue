@@ -7,10 +7,6 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 import { useForgetPassword } from '~/composables/Auth/useForgetPassword';
 
-// Redirect authenticated users to dashboard
-definePageMeta({
-    middleware: 'guest'
-});
 
 const { form, submit, status } = await useForgetPassword()
 

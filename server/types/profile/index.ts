@@ -20,8 +20,6 @@ export interface UserData {
     name: string;
     /** User's email address */
     email: string;
-    /** Email verification timestamp (null if not verified) */
-    email_verified_at: string | null;
     /** Account creation timestamp */
     created_at: string;
     /** Last update timestamp */

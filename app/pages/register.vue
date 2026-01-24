@@ -10,10 +10,6 @@ import { reactive, ref } from 'vue';
 import useAuthApi from '~/composables/Auth/useAuthApi';
 import useGoogleAuth from '~/composables/Auth/useGoogleAuth';
 
-// Redirect authenticated users to dashboard
-definePageMeta({
-    middleware: 'guest'
-});
 
 useHead({
     title: 'Register',
