@@ -1315,7 +1315,7 @@ const fetchCourses = async () => {
         // Get user UUID from Inertia page props
         const userUuid = user.value?.uuid;
 
-        console.log('🔍 fetchCourses: Starting course fetch with UUID:', userUuid);
+        console.log('🔍 fetchCourses: Starting courses fetch with UUID:', userUuid);
 
         if (!userUuid) {
             throw new Error('User UUID not found. Please ensure user is logged in.');
@@ -1347,7 +1347,7 @@ const fetchCourses = async () => {
 
         // Use fallback data in development
         if (import.meta.env.DEV) {
-            console.warn('🔍 fetchCourses: Using fallback course data for development');
+            console.warn('🔍 fetchCourses: Using fallback courses data for development');
             coursesInProgress.value = [
                 {
                     id: 1,

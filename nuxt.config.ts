@@ -9,16 +9,17 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Step 1: Define keys with empty strings or defaults
     laravelApiUrl: '',        // Nuxt looks for NUXT_LARAVEL_API_URL
-    laravelApiKey: '',  
+    laravelApiKey: '',
     usersApiUrl: '',        // Nuxt looks for NUXT_USERS_API_URL
-    
+    coursesApiUrl: '',      // Nuxt looks for NUXT_COURSES_API_URL
+
     public: {
       stripeKey: ''           // Nuxt looks for NUXT_PUBLIC_STRIPE_KEY
     }
   }
 
 
-  
+
 })
 
 
