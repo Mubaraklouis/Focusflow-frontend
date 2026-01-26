@@ -48,9 +48,18 @@ export const useCreateCourse = () => {
                 throw new Error('User ID not found. Please ensure you are logged in.');
             }
 
+            // Prepare payload with only the fields expected by the backend
+            const payload = {
+                course_title: form.value.course_title,
+                course_thumb: form.value.course_thumb,
+                course_category_id: form.value.course_category_id,
+                user_id: form.value.user_id,
+                course_visibility: form.value.course_visibility
+            };
+
             const response = await $fetch('/api/courses', {
                 method: 'POST',
-                body: form.value
+                body: payload
             });
 
             console.log('Course created successfully', response);
