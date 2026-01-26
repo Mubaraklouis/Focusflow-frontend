@@ -1,5 +1,3 @@
-import { useProfile } from '~/composables/Profile/useProfile';
-
 export interface CreateCourseForm {
     course_title: string;
     course_thumb: string;
@@ -10,7 +8,6 @@ export interface CreateCourseForm {
 }
 
 export const useCreateCourse = () => {
-    const { profile } = useProfile();
     const isLoading = useState<boolean>('create-course-loading', () => false);
     const error = useState<string | null>('create-course-error', () => null);
 
@@ -23,30 +20,32 @@ export const useCreateCourse = () => {
         course_description: ''
     }));
 
-    // Initialize user_id from profile if available
-    if (profile.value?.id) {
-        // Assuming profile.id is compatible. The requirement JSON showed user_id as number 440.
-        // Profile ID is string in definition. I will parse it if possible or keep as string if flexible.
-        // For now, I'll attempt to parse, or default.
-        const parsedId = parseInt(profile.value.id);
+    // Get user_id from cookie
+    const userIdCookie = useCookie<string>('focusflow-user-id');
+
+    // Initialize user_id from cookie if available
+    if (userIdCookie.value) {
+        const parsedId = parseInt(userIdCookie.value);
         if (!isNaN(parsedId)) {
             form.value.user_id = parsedId;
         }
     }
-
-    const { $csrfFetch } = useNuxtApp();
 
     const createCourse = async () => {
         isLoading.value = true;
         error.value = null;
 
         try {
-            // Ensure user_id is set before sending (if it wasn't available at init)
-            if (!form.value.user_id && profile.value?.id) {
-                const parsedId = parseInt(profile.value.id);
+            // Ensure user_id is set before sending (retrieve from cookie if not set)
+            if (!form.value.user_id && userIdCookie.value) {
+                const parsedId = parseInt(userIdCookie.value);
                 if (!isNaN(parsedId)) {
                     form.value.user_id = parsedId;
                 }
+            }
+
+            if (!form.value.user_id) {
+                throw new Error('User ID not found. Please ensure you are logged in.');
             }
 
             const response = await $fetch('/api/courses', {
