@@ -127,10 +127,10 @@ const handlePublish = async () => {
                                         type="text"
                                         placeholder="e.g., Introduction to Web Development"
                                         :class="[
-                                            'text-sm sm:text-base h-11 sm:h-12 transition-all',
+                                            'text-sm sm:text-base h-11 sm:h-12 transition-all bg-background text-foreground placeholder:text-muted-foreground',
                                             validationErrors.course_title 
                                                 ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20' 
-                                                : 'border-border/50 focus-visible:border-primary/50 focus-visible:ring-primary/20'
+                                                : 'border-border focus-visible:border-primary/50 focus-visible:ring-primary/20 dark:border-border/60'
                                         ]"
                                     />
                                     <p v-if="validationErrors.course_title" class="text-sm text-destructive">
@@ -201,7 +201,7 @@ const handlePublish = async () => {
                         <div class="flex flex-col sm:flex-row justify-between sm:justify-end gap-3 mt-8 sm:mt-10 sticky bottom-4 sm:static bg-background/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none p-4 sm:p-0 -mx-3 sm:mx-0 rounded-lg sm:rounded-none border sm:border-0 border-border/50 shadow-lg sm:shadow-none">
                             <Button
                                 variant="outline"
-                                class="w-full sm:w-auto h-11 sm:h-10 order-2 sm:order-1 transition-all hover:bg-muted hover:border-primary/30"
+                                class="w-full sm:w-auto h-11 sm:h-10 order-2 sm:order-1 transition-all hover:bg-muted hover:border-primary/30 border-border dark:border-border/60 dark:text-foreground dark:hover:bg-muted/80"
                             >
                                 Save Draft
                             </Button>
