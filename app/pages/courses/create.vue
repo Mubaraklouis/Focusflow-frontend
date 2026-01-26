@@ -23,7 +23,7 @@ const breadcrumbs = [
     { title: 'Create Course', href: '/courses/create', current: true }
 ];
 
-const { form, createCourse, isLoading } = useCreateCourse();
+const { form, createCourse, isLoading, validationErrors } = useCreateCourse();
 
 const handlePublish = async () => {
     try {
@@ -126,8 +126,16 @@ const handlePublish = async () => {
                                         v-model="form.course_title"
                                         type="text"
                                         placeholder="e.g., Introduction to Web Development"
-                                        class="text-sm sm:text-base h-11 sm:h-12 border-border/50 focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                                        :class="[
+                                            'text-sm sm:text-base h-11 sm:h-12 transition-all',
+                                            validationErrors.course_title 
+                                                ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20' 
+                                                : 'border-border/50 focus-visible:border-primary/50 focus-visible:ring-primary/20'
+                                        ]"
                                     />
+                                    <p v-if="validationErrors.course_title" class="text-sm text-destructive">
+                                        {{ validationErrors.course_title }}
+                                    </p>
                                 </div>
 
                                 <!-- Category Dropdown -->
@@ -136,7 +144,15 @@ const handlePublish = async () => {
                                         <Tag class="h-4 w-4 text-muted-foreground" />
                                         Category <span class="text-destructive">*</span>
                                     </label>
-                                    <select v-model="form.course_category_id" class="flex h-11 sm:h-12 w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm sm:text-base ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 text-foreground">
+                                    <select 
+                                        v-model="form.course_category_id" 
+                                        :class="[
+                                            'flex h-11 sm:h-12 w-full rounded-md border bg-background px-3 py-2 text-sm sm:text-base ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground',
+                                            validationErrors.course_category_id 
+                                                ? 'border-destructive focus-visible:ring-destructive/20 focus-visible:border-destructive' 
+                                                : 'border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/50'
+                                        ]"
+                                    >
                                         <option :value="null" disabled selected>Select a category</option>
                                         <option :value="1">Programming & Development</option>
                                         <option :value="2">Design & Creative</option>
@@ -147,6 +163,9 @@ const handlePublish = async () => {
                                         <option :value="7">Language Learning</option>
                                         <option :value="8">Other</option>
                                     </select>
+                                    <p v-if="validationErrors.course_category_id" class="text-sm text-destructive">
+                                        {{ validationErrors.course_category_id }}
+                                    </p>
                                 </div>
 
                                 <!-- Course Description -->
@@ -158,14 +177,22 @@ const handlePublish = async () => {
                                         <textarea
                                             v-model="form.course_description"
                                             placeholder="Provide a clear and engaging description of what students will learn..."
-                                            class="w-full h-32 sm:h-36 rounded-md border border-border/50 bg-background px-3 sm:px-4 py-3 text-sm sm:text-base text-foreground shadow-sm transition-all resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+                                            :class="[
+                                                'w-full h-32 sm:h-36 rounded-md border bg-background px-3 sm:px-4 py-3 text-sm sm:text-base text-foreground shadow-sm transition-all resize-none focus:outline-none focus:ring-2',
+                                                validationErrors.course_description 
+                                                    ? 'border-destructive focus:ring-destructive/20 focus:border-destructive' 
+                                                    : 'border-border/50 focus:ring-primary/20 focus:border-primary/50'
+                                            ]"
                                             maxlength="500"
                                         ></textarea>
                                         <div class="absolute bottom-3 right-3 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-                                            0/500
+                                            {{ form.course_description.length }}/500
                                         </div>
                                     </div>
-                                    <p class="text-xs text-muted-foreground">Write a compelling description to attract students</p>
+                                    <p v-if="validationErrors.course_description" class="text-sm text-destructive">
+                                        {{ validationErrors.course_description }}
+                                    </p>
+                                    <p v-else class="text-xs text-muted-foreground">Write a compelling description to attract students</p>
                                 </div>
                             </div>
                         </div>

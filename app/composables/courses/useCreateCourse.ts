@@ -2,55 +2,97 @@ export interface CreateCourseForm {
     course_title: string;
     course_thumb: string;
     course_category_id: number | null;
-    user_id: number | null; // or string depending on backend, example showed 440
+    user_id: number | null;
     course_visibility: 'public' | 'private';
-    course_description: string; // Added based on UI
+    course_description: string;
+}
+
+export interface ValidationErrors {
+    course_title?: string;
+    course_category_id?: string;
+    course_description?: string;
 }
 
 export const useCreateCourse = () => {
     const isLoading = useState<boolean>('create-course-loading', () => false);
     const error = useState<string | null>('create-course-error', () => null);
+    const validationErrors = useState<ValidationErrors>('create-course-validation', () => ({}));
 
-    const form = useState<CreateCourseForm>('create-course-form', () => ({
+    const getDefaultForm = (): CreateCourseForm => ({
         course_title: '',
-        course_thumb: '', // Placeholder or handle upload separately
+        course_thumb: '',
         course_category_id: null,
         user_id: null,
         course_visibility: 'public',
         course_description: ''
-    }));
+    });
+
+    const form = useState<CreateCourseForm>('create-course-form', getDefaultForm);
 
     // Get user_id from cookie
     const userIdCookie = useCookie<string>('focusflow-user-id');
 
-    console.log('🔍 [useCreateCourse] Cookie value:', userIdCookie.value);
-
     // Initialize user_id from cookie if available
     if (userIdCookie.value) {
         const parsedId = parseInt(userIdCookie.value);
-        console.log('🔍 [useCreateCourse] Parsed ID:', parsedId);
         if (!isNaN(parsedId)) {
             form.value.user_id = parsedId;
-            console.log('✅ [useCreateCourse] Set user_id in form:', form.value.user_id);
         }
-    } else {
-        console.log('❌ [useCreateCourse] Cookie not found or empty');
     }
+
+    const validateForm = (): boolean => {
+        const errors: ValidationErrors = {};
+
+        // Validate course title
+        if (!form.value.course_title.trim()) {
+            errors.course_title = 'Course title is required';
+        } else if (form.value.course_title.trim().length < 3) {
+            errors.course_title = 'Course title must be at least 3 characters';
+        } else if (form.value.course_title.trim().length > 100) {
+            errors.course_title = 'Course title must be less than 100 characters';
+        }
+
+        // Validate category
+        if (!form.value.course_category_id) {
+            errors.course_category_id = 'Please select a category';
+        }
+
+        // Validate description
+        if (!form.value.course_description.trim()) {
+            errors.course_description = 'Course description is required';
+        } else if (form.value.course_description.trim().length < 10) {
+            errors.course_description = 'Description must be at least 10 characters';
+        }
+
+        validationErrors.value = errors;
+        return Object.keys(errors).length === 0;
+    };
+
+    const resetForm = () => {
+        // Keep the user_id when resetting
+        const userId = form.value.user_id;
+        form.value = getDefaultForm();
+        form.value.user_id = userId;
+        validationErrors.value = {};
+        error.value = null;
+    };
 
     const createCourse = async () => {
         isLoading.value = true;
         error.value = null;
 
+        // Validate form first
+        if (!validateForm()) {
+            isLoading.value = false;
+            throw new Error('Please fix the validation errors');
+        }
+
         try {
             // Ensure user_id is set before sending (retrieve from cookie if not set)
-            console.log('🔍 [createCourse] Current user_id in form:', form.value.user_id);
-            console.log('🔍 [createCourse] Cookie value:', userIdCookie.value);
-
             if (!form.value.user_id && userIdCookie.value) {
                 const parsedId = parseInt(userIdCookie.value);
                 if (!isNaN(parsedId)) {
                     form.value.user_id = parsedId;
-                    console.log('✅ [createCourse] Updated user_id from cookie:', parsedId);
                 }
             }
 
@@ -60,26 +102,24 @@ export const useCreateCourse = () => {
 
             // Prepare payload with only the fields expected by the backend
             const payload = {
-                course_title: form.value.course_title,
+                course_title: form.value.course_title.trim(),
                 course_thumb: form.value.course_thumb,
                 course_category_id: form.value.course_category_id,
                 user_id: form.value.user_id,
                 course_visibility: form.value.course_visibility
             };
 
-            console.log('📦 [createCourse] Payload being sent:', JSON.stringify(payload, null, 2));
-
             const response = await $fetch('/api/courses', {
                 method: 'POST',
                 body: payload
             });
 
-            console.log('Course created successfully', response);
-            // Reset form or redirect
+            // Reset form after successful creation
+            resetForm();
+
             return response;
 
         } catch (e: any) {
-            console.error('Failed to create course', e);
             error.value = e.message || 'Failed to create course';
             throw e;
         } finally {
@@ -91,6 +131,10 @@ export const useCreateCourse = () => {
         form,
         createCourse,
         isLoading,
-        error
+        error,
+        validationErrors,
+        validateForm,
+        resetForm
     };
 }
+
