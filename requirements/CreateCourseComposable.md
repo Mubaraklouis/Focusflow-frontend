@@ -18,3 +18,9 @@ accepted datastructure from the backend is
     "user_id": 440,
     "course_visibility": "public"
 }
+
+
+Fix 1:
+
+Within Create course can you retrive the user id from the cookies and pass it to the create course request 
+
