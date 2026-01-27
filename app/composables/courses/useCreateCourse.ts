@@ -1,6 +1,6 @@
 export interface CreateCourseForm {
     course_title: string;
-    course_thumb: string;
+    course_thumb: string | File;
     course_category_id: number | null;
     user_id: number | null;
     course_visibility: 'public' | 'private';
@@ -23,7 +23,7 @@ export const useCreateCourse = () => {
         course_thumb: '',
         course_category_id: null,
         user_id: null,
-        course_visibility: 'public',
+        course_visibility: 'private',
         course_description: ''
     });
 
@@ -77,6 +77,7 @@ export const useCreateCourse = () => {
         error.value = null;
     };
 
+
     const createCourse = async () => {
         isLoading.value = true;
         error.value = null;
@@ -100,19 +101,38 @@ export const useCreateCourse = () => {
                 throw new Error('User ID not found. Please ensure you are logged in.');
             }
 
-            // Prepare payload with only the fields expected by the backend
-            const payload = {
-                course_title: form.value.course_title.trim(),
-                course_thumb: form.value.course_thumb,
-                course_category_id: form.value.course_category_id,
-                user_id: form.value.user_id,
-                course_visibility: form.value.course_visibility
-            };
-
-            const response = await $fetch('/api/courses', {
-                method: 'POST',
-                body: payload
-            });
+            let response;
+            // If course_thumb is a File, use FormData for upload
+            if (form.value.course_thumb instanceof File) {
+                const formData = new FormData();
+                formData.append('course_title', form.value.course_title.trim());
+                formData.append('course_thumb', form.value.course_thumb);
+                formData.append('course_category_id', String(form.value.course_category_id));
+                formData.append('user_id', String(form.value.user_id));
+                formData.append('course_visibility', form.value.course_visibility);
+                // Optionally add description if backend expects it
+                if (form.value.course_description) {
+                    formData.append('course_description', form.value.course_description);
+                }
+                response = await $fetch('/api/courses', {
+                    method: 'POST',
+                    body: formData
+                });
+            } else {
+                // Fallback to JSON payload if not a File
+                const payload = {
+                    course_title: form.value.course_title.trim(),
+                    course_thumb: form.value.course_thumb,
+                    course_category_id: form.value.course_category_id,
+                    user_id: form.value.user_id,
+                    course_visibility: form.value.course_visibility,
+                    course_description: form.value.course_description
+                };
+                response = await $fetch('/api/courses', {
+                    method: 'POST',
+                    body: payload
+                });
+            }
 
             // Reset form after successful creation
             resetForm();

@@ -68,8 +68,11 @@ export default defineEventHandler(async (event): Promise<UserUpdateResponse> => 
         // Get update payload from request body
         const body = await readBody<UserUpdatePayload>(event);
 
+        // TODO: Change to baseUrl after deploying update endpoint to production
+        const localUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
+
         // Update user profile on Laravel using PUT method
-        const updateResponse = await $fetch<UserUpdateResponse>(`${baseUrl}/api/user/${userId}`, {
+        const updateResponse = await $fetch<UserUpdateResponse>(`${localUrl}/api/user/${userId}`, {
             method: 'PUT',
             headers: {
                 'Accept': 'application/json',
