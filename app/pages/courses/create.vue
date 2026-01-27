@@ -23,7 +23,7 @@ const breadcrumbs = [
     { title: 'Create Course', href: '/courses/create', current: true }
 ];
 
-const { form, createCourse, isLoading, validationErrors } = useCreateCourse();
+const { form, createCourse, isLoading, validationErrors, handleThumbnailUpload, thumbnailPreviewUrl } = useCreateCourse();
 
 const handlePublish = async () => {
     try {
@@ -32,6 +32,12 @@ const handlePublish = async () => {
     } catch (e) {
         // Error is handled in composable state
     }
+};
+
+const onFileChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0] || null;
+    handleThumbnailUpload(file);
 };
 
 </script>
@@ -93,16 +99,35 @@ const handlePublish = async () => {
 
             <div>
                 <!-- Course Thumbnail -->
-                <div class="relative aspect-[3/2] sm:aspect-video bg-muted rounded-xl overflow-hidden border-2 border-dashed border-border/60 transition-all hover:border-primary/50 hover:shadow-lg shadow-sm cursor-pointer dark:bg-muted/50 mb-6 sm:mb-8 group">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-muted/20 dark:from-muted/30 dark:to-muted/10 transition-all group-hover:from-muted/50 group-hover:to-muted/30">
+                <div class="relative aspect-[3/2] sm:aspect-video bg-muted rounded-xl overflow-hidden border-2 border-dashed transition-all hover:border-primary/50 hover:shadow-lg shadow-sm cursor-pointer dark:bg-muted/50 mb-6 sm:mb-8 group"
+                     :class="validationErrors.course_thumb ? 'border-destructive' : 'border-border/60'">
+                    <!-- Preview Image (shown when file is uploaded) -->
+                    <img 
+                        v-if="thumbnailPreviewUrl" 
+                        :src="thumbnailPreviewUrl" 
+                        alt="Course thumbnail preview" 
+                        class="absolute inset-0 w-full h-full object-cover"
+                    />
+                    
+                    <!-- Upload Placeholder (shown when no file) -->
+                    <div v-else class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-muted/20 dark:from-muted/30 dark:to-muted/10 transition-all group-hover:from-muted/50 group-hover:to-muted/30">
                         <div class="bg-background/80 backdrop-blur-sm rounded-full p-4 mb-3 group-hover:scale-110 transition-transform">
                             <ImageIcon class="h-10 w-10 sm:h-12 sm:w-12 text-primary/70" />
                         </div>
                         <p class="text-sm sm:text-base font-semibold text-foreground mb-1">Upload Course Cover</p>
                         <p class="text-xs sm:text-sm text-muted-foreground px-4 text-center">Click or drag image here (Recommended: 1280×720px)</p>
                     </div>
-                    <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
+                    
+                    <input 
+                        type="file" 
+                        class="absolute inset-0 opacity-0 cursor-pointer" 
+                        accept="image/*" 
+                        @change="onFileChange"
+                    />
                 </div>
+                <p v-if="validationErrors.course_thumb" class="text-sm text-destructive -mt-4 mb-4">
+                    {{ validationErrors.course_thumb }}
+                </p>
 
                 <!-- Document-style editor -->
                 <Card class="border-none shadow-none bg-transparent transition-colors">
@@ -142,16 +167,11 @@ const handlePublish = async () => {
                                 <div class="space-y-2">
                                     <label class="block text-sm font-medium text-foreground/80 flex items-center gap-2">
                                         <Tag class="h-4 w-4 text-muted-foreground" />
-                                        Category <span class="text-destructive">*</span>
+                                        Category (Optional)
                                     </label>
                                     <select 
                                         v-model="form.course_category_id" 
-                                        :class="[
-                                            'flex h-11 sm:h-12 w-full rounded-md border bg-background px-3 py-2 text-sm sm:text-base ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground',
-                                            validationErrors.course_category_id 
-                                                ? 'border-destructive focus-visible:ring-destructive/20 focus-visible:border-destructive' 
-                                                : 'border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/50'
-                                        ]"
+                                        class="flex h-11 sm:h-12 w-full rounded-md border bg-background px-3 py-2 text-sm sm:text-base ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/50"
                                     >
                                         <option :value="null" disabled selected>Select a category</option>
                                         <option :value="1">Programming & Development</option>
@@ -163,15 +183,13 @@ const handlePublish = async () => {
                                         <option :value="7">Language Learning</option>
                                         <option :value="8">Other</option>
                                     </select>
-                                    <p v-if="validationErrors.course_category_id" class="text-sm text-destructive">
-                                        {{ validationErrors.course_category_id }}
-                                    </p>
+
                                 </div>
 
                                 <!-- Course Description -->
                                 <div class="space-y-2">
                                     <label class="block text-sm font-medium text-foreground/80">
-                                        Course Description <span class="text-destructive">*</span>
+                                        Course Description (Optional)
                                     </label>
                                     <div class="relative">
                                         <textarea
