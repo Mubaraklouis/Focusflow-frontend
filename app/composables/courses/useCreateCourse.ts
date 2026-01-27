@@ -127,36 +127,23 @@ export const useCreateCourse = () => {
                 throw new Error('User ID not found. Please ensure you are logged in.');
             }
 
-            // If user uploaded a file, upload to S3 first
-            let thumbnailUrl = form.value.course_thumb;
+            // Build FormData with file and course data - backend handles S3 upload
+            const formData = new FormData();
+            formData.append('course_title', form.value.course_title.trim());
+            formData.append('course_category_id', String(form.value.course_category_id ?? ''));
+            formData.append('user_id', String(form.value.user_id));
+            formData.append('course_visibility', form.value.course_visibility);
 
+            // Append file if selected, otherwise use existing URL
             if (form.value.course_thumb_file) {
-                const uploadFormData = new FormData();
-                uploadFormData.append('file', form.value.course_thumb_file);
-
-                try {
-                    const uploadResponse = await $fetch<{ url: string }>('/api/upload', {
-                        method: 'POST',
-                        body: uploadFormData
-                    });
-                    thumbnailUrl = uploadResponse.url;
-                } catch (uploadError: any) {
-                    throw new Error('Failed to upload thumbnail: ' + (uploadError.message || 'Unknown error'));
-                }
+                formData.append('course_thumb', form.value.course_thumb_file);
+            } else if (form.value.course_thumb) {
+                formData.append('course_thumb', form.value.course_thumb);
             }
-
-            // Send only the fields expected by the backend
-            const payload = {
-                course_title: form.value.course_title.trim(),
-                course_thumb: thumbnailUrl,
-                course_category_id: form.value.course_category_id,
-                user_id: form.value.user_id,
-                course_visibility: form.value.course_visibility
-            };
 
             const response = await $fetch('/api/courses', {
                 method: 'POST',
-                body: payload
+                body: formData
             });
 
             // Reset form after successful creation

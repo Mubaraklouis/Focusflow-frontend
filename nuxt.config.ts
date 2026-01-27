@@ -12,7 +12,6 @@ export default defineNuxtConfig({
     laravelApiKey: '',
     usersApiUrl: '',        // Nuxt looks for NUXT_USERS_API_URL
     coursesApiUrl: '',      // Nuxt looks for NUXT_COURSES_API_URL
-    uploadUrl: '',          // Nuxt looks for NUXT_UPLOAD_URL
 
     public: {
       stripeKey: ''           // Nuxt looks for NUXT_PUBLIC_STRIPE_KEY

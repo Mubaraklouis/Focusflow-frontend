@@ -8,12 +8,10 @@ const useConfig = () => {
     const config = useRuntimeConfig()
     const baseUrl = config.usersApiUrl
     const courseUrl = config.coursesApiUrl
-    const uploadUrl = config.uploadUrl
 
     return {
         baseUrl,
-        courseUrl,
-        uploadUrl
+        courseUrl
     }
 }
 
