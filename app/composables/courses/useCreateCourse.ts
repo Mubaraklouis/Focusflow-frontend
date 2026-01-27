@@ -1,16 +1,13 @@
 export interface CreateCourseForm {
     course_title: string;
-    course_thumb: string | File;
+    course_thumb: string;
     course_category_id: number | null;
     user_id: number | null;
     course_visibility: 'public' | 'private';
-    course_description: string;
 }
 
 export interface ValidationErrors {
     course_title?: string;
-    course_category_id?: string;
-    course_description?: string;
 }
 
 export const useCreateCourse = () => {
@@ -23,8 +20,7 @@ export const useCreateCourse = () => {
         course_thumb: '',
         course_category_id: null,
         user_id: null,
-        course_visibility: 'private',
-        course_description: ''
+        course_visibility: 'private'
     });
 
     const form = useState<CreateCourseForm>('create-course-form', getDefaultForm);
@@ -50,18 +46,6 @@ export const useCreateCourse = () => {
             errors.course_title = 'Course title must be at least 3 characters';
         } else if (form.value.course_title.trim().length > 100) {
             errors.course_title = 'Course title must be less than 100 characters';
-        }
-
-        // Validate category
-        if (!form.value.course_category_id) {
-            errors.course_category_id = 'Please select a category';
-        }
-
-        // Validate description
-        if (!form.value.course_description.trim()) {
-            errors.course_description = 'Course description is required';
-        } else if (form.value.course_description.trim().length < 10) {
-            errors.course_description = 'Description must be at least 10 characters';
         }
 
         validationErrors.value = errors;
@@ -101,38 +85,19 @@ export const useCreateCourse = () => {
                 throw new Error('User ID not found. Please ensure you are logged in.');
             }
 
-            let response;
-            // If course_thumb is a File, use FormData for upload
-            if (form.value.course_thumb instanceof File) {
-                const formData = new FormData();
-                formData.append('course_title', form.value.course_title.trim());
-                formData.append('course_thumb', form.value.course_thumb);
-                formData.append('course_category_id', String(form.value.course_category_id));
-                formData.append('user_id', String(form.value.user_id));
-                formData.append('course_visibility', form.value.course_visibility);
-                // Optionally add description if backend expects it
-                if (form.value.course_description) {
-                    formData.append('course_description', form.value.course_description);
-                }
-                response = await $fetch('/api/courses', {
-                    method: 'POST',
-                    body: formData
-                });
-            } else {
-                // Fallback to JSON payload if not a File
-                const payload = {
-                    course_title: form.value.course_title.trim(),
-                    course_thumb: form.value.course_thumb,
-                    course_category_id: form.value.course_category_id,
-                    user_id: form.value.user_id,
-                    course_visibility: form.value.course_visibility,
-                    course_description: form.value.course_description
-                };
-                response = await $fetch('/api/courses', {
-                    method: 'POST',
-                    body: payload
-                });
-            }
+            // Send only the fields expected by the backend
+            const payload = {
+                course_title: form.value.course_title.trim(),
+                course_thumb: form.value.course_thumb,
+                course_category_id: form.value.course_category_id,
+                user_id: form.value.user_id,
+                course_visibility: form.value.course_visibility
+            };
+
+            const response = await $fetch('/api/courses', {
+                method: 'POST',
+                body: payload
+            });
 
             // Reset form after successful creation
             resetForm();
