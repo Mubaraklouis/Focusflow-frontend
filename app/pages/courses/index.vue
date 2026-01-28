@@ -267,8 +267,16 @@ watch([activeFilter, searchQuery], () => {
                             <h3 class="text-xl font-semibold text-foreground mb-1 line-clamp-2">{{ course.course_title }}</h3>
                             <p class="text-sm text-muted-foreground/90 mb-4 line-clamp-1 font-medium">{{ course.course_description }}</p>
                             
-                            <!-- Visibility badge -->
+                            <!-- Category and Visibility badges -->
                             <div class="flex flex-wrap gap-2 mb-5">
+                                <!-- Category badge -->
+                                <span 
+                                    v-if="course.category?.category_name"
+                                    class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+                                >
+                                    {{ course.category.category_name }}
+                                </span>
+                                <!-- Visibility badge -->
                                 <span 
                                     class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border"
                                     :class="course.course_visibility === 'public' 

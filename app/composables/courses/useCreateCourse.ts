@@ -1,3 +1,8 @@
+import { COURSE_CATEGORIES, type Category } from './useGetCourses';
+
+// Re-export for use in create course form
+export { COURSE_CATEGORIES, type Category };
+
 export interface CreateCourseForm {
     course_title: string;
     course_thumb: string;
@@ -5,7 +10,7 @@ export interface CreateCourseForm {
     course_category_id: number | null;
     user_id: number | null;
     course_visibility: 'public' | 'private';
-    course_description: string; // UI field, not sent to backend
+    course_description: string;
 }
 
 export interface ValidationErrors {

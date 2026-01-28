@@ -1,9 +1,32 @@
+/**
+ * Category interface for course categories
+ */
+export interface Category {
+    category_id: number;
+    category_name: string;
+    description: string;
+}
+
+/**
+ * Hardcoded course categories to avoid server fetching
+ */
+export const COURSE_CATEGORIES: Category[] = [
+    { category_id: 1, category_name: "Development", description: "Web, Mobile, and Software dev" },
+    { category_id: 2, category_name: "Business", description: "Marketing, Finance, and Sales" },
+    { category_id: 3, category_name: "Design", description: "UI/UX and Graphic Design" },
+    { category_id: 4, category_name: "Personal Development", description: "Soft skills and productivity" },
+];
+
+/**
+ * Course data structure from the backend API
+ */
 export interface Course {
     course_id: number;
     course_title: string;
     course_thumb: string;
     course_category_id: number;
     user_id: number;
+    category: Category;
     course_visibility: 'public' | 'private';
     course_description: string;
     course_progress: number;

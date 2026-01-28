@@ -1,6 +1,15 @@
 import useConfig from "~~/server/util/useConfig"
 
 /**
+ * Category data structure
+ */
+interface Category {
+    category_id: number;
+    category_name: string;
+    description: string;
+}
+
+/**
  * Course data structure returned from the backend API
  */
 interface Course {
@@ -9,6 +18,7 @@ interface Course {
     course_thumb: string;
     course_category_id: number;
     user_id: number;
+    category: Category;
     course_visibility: 'public' | 'private';
     course_description: string;
     course_progress: number;
