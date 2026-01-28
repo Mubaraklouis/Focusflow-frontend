@@ -1,6 +1,3 @@
-/**
- * Course data structure from the backend API
- */
 export interface Course {
     course_id: number;
     course_title: string;
@@ -8,6 +5,8 @@ export interface Course {
     course_category_id: number;
     user_id: number;
     course_visibility: 'public' | 'private';
+    course_description: string;
+    course_progress: number;
 }
 
 /**

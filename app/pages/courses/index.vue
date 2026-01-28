@@ -73,16 +73,31 @@ const getPlaceholderImage = (id: number) => {
 
 /**
  * Filtered courses based on search and filter criteria
- * Note: Progress filtering is simplified since API doesn't provide progress data
  */
 const filteredCourses = computed(() => {
     let filtered = courses.value;
+
+    // Apply progress filter
+    switch (activeFilter.value) {
+        case 'completed':
+            filtered = filtered.filter((course: Course) => course.course_progress === 100);
+            break;
+        case 'in-progress':
+            filtered = filtered.filter((course: Course) => course.course_progress > 0 && course.course_progress < 100);
+            break;
+        case 'not-started':
+            filtered = filtered.filter((course: Course) => course.course_progress === 0);
+            break;
+    }
 
     // Apply search filter if query exists
     if (searchQuery.value.trim()) {
         const query = searchQuery.value.toLowerCase().trim();
         filtered = filtered.filter((course: Course) => {
-            return course.course_title.toLowerCase().includes(query);
+            return (
+                course.course_title.toLowerCase().includes(query) ||
+                (course.course_description && course.course_description.toLowerCase().includes(query))
+            );
         });
     }
 
@@ -250,6 +265,7 @@ watch([activeFilter, searchQuery], () => {
                         </div>
                         <div class="px-5 pb-5">
                             <h3 class="text-xl font-semibold text-foreground mb-1 line-clamp-2">{{ course.course_title }}</h3>
+                            <p class="text-sm text-muted-foreground/90 mb-4 line-clamp-1 font-medium">{{ course.course_description }}</p>
                             
                             <!-- Visibility badge -->
                             <div class="flex flex-wrap gap-2 mb-5">
@@ -264,15 +280,52 @@ watch([activeFilter, searchQuery], () => {
                             </div>
 
                             <div class="flex items-center justify-between mt-6 pt-4 border-t border-border">
-                                <!-- Start/View button -->
+                                <div class="flex items-center gap-2">
+                                    <!-- Circular progress indicator -->
+                                    <div class="relative w-10 h-10">
+                                        <svg class="w-10 h-10 transform -rotate-90" viewBox="0 0 100 100">
+                                            <circle
+                                                class="text-muted stroke-current"
+                                                stroke-width="10"
+                                                fill="transparent"
+                                                r="40"
+                                                cx="50"
+                                                cy="50"
+                                            />
+                                            <circle
+                                                class="text-primary stroke-current"
+                                                stroke-width="10"
+                                                stroke-linecap="round"
+                                                fill="transparent"
+                                                r="40"
+                                                cx="50"
+                                                cy="50"
+                                                :stroke-dasharray="251.2"
+                                                :stroke-dashoffset="251.2 - (251.2 * course.course_progress / 100)"
+                                            />
+                                        </svg>
+                                        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center text-xs font-medium">
+                                            {{ course.course_progress }}%
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-muted-foreground">Progress</span>
+                                </div>
+                                
+                                <!-- Start/Continue button with different styles based on progress -->
                                 <Button 
-                                    variant="default" 
+                                    :variant="course.course_progress > 0 ? 'outline' : 'default'" 
                                     size="sm"
                                     @click="navigateTo(`/courses/detail?id=${course.course_id}`)"
                                     class="flex items-center gap-1.5"
                                 >
-                                    <PlayCircle class="h-3.5 w-3.5" />
-                                    View
+                                    <template v-if="course.course_progress > 0">
+                                        <RefreshCw class="h-3.5 w-3.5" />
+                                        Continue
+                                    </template>
+                                    <template v-else>
+                                        <PlayCircle class="h-3.5 w-3.5" />
+                                        Start
+                                    </template>
                                 </Button>
                             </div>
                         </div>

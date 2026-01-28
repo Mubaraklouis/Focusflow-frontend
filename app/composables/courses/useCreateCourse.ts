@@ -130,6 +130,7 @@ export const useCreateCourse = () => {
             // Build FormData with file and course data - backend handles S3 upload
             const formData = new FormData();
             formData.append('course_title', form.value.course_title.trim());
+            formData.append('course_description', form.value.course_description.trim());
             formData.append('course_category_id', String(form.value.course_category_id ?? ''));
             formData.append('user_id', String(form.value.user_id));
             formData.append('course_visibility', form.value.course_visibility);
