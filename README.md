@@ -84,3 +84,20 @@ This feature directly supports our objective of creating structured learning spa
 ## 🏗️ System Architecture
 
 ### Microservices Architecture
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ FocusFlow Platform │
+├───────────────┬─────────────────┬─────────────────┬─────────────────┤
+│ Nuxt.js │ Auth Service │ Course Service │ Course Material │
+│ Frontend │ (Laravel) │ (Go/Gin) │ Service (Go/Gin)│
+│ │ │ │ │
+├───────────────┴─────────────────┴─────────────────┴─────────────────┤
+│ API Gateway │
+│ (Rate Limiting, Load Balancing, Routing) │
+├─────────────────────────────────────────────────────────────────────┤
+│ Shared Services Layer │
+│ ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌─────────┐ │
+│ │ Postgres │ │ Redis │ │ S3 │ │ EC2 │ │
+│ │ Database │ │ (Cache) │ │(Storage) │ │ (Host) │ │
+│ └──────────┘ └─────────┘ └──────────┘ └─────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
