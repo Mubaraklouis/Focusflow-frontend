@@ -1,6 +1,6 @@
 # FocusFlow - Structured Learning Platform
 
-## 🚀 Project Status: Beta **view the project live :** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
+## 🚀 Project Status: Beta  [FocusFlow](https://focusfllow.vercel.app/)  
 **Current Version:** 0.8.0 | **Last Updated:** February 2025  
 *This platform is currently in active development and not yet released to public users.*
 
