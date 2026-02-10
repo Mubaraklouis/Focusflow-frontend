@@ -85,19 +85,19 @@ This feature directly supports our objective of creating structured learning spa
 
 ### Microservices Architecture
 
-┌─────────────────────────────────────────────────────────────────────┐
-│ FocusFlow Platform │
-├───────────────┬─────────────────┬─────────────────┬─────────────────┤
-│ Nuxt.js │ Auth Service │ Course Service │ Course Material │
-│ Frontend │ (Laravel) │ (Go/Gin) │ Service (Go/Gin)│
-│ │ │ │ │
-├───────────────┴─────────────────┴─────────────────┴─────────────────┤
-│ API Gateway │
-│ (Rate Limiting, Load Balancing, Routing) │
-├─────────────────────────────────────────────────────────────────────┤
-│ Shared Services Layer │
-│ ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌─────────┐ │
-│ │ Postgres │ │ Redis │ │ S3 │ │ EC2 │ │
-│ │ Database │ │ (Cache) │ │(Storage) │ │ (Host) │ │
-│ └──────────┘ └─────────┘ └──────────┘ └─────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
+
+## 📦 Microservices Breakdown
+
+### 1. Auth Service
+**Repository:** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
+**Version:** 1.2.0  
+**Tech Stack:** Laravel 10, Laravel Sanctum, PostgreSQL, Inertia.js
+
+**Key Responsibilities:**
+- User registration and authentication
+- Session management and token handling
+- Password reset functionality
+- User profile management
+- Inertia.js integration for server-side rendering
+
+**API Endpoints:**
