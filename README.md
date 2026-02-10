@@ -101,3 +101,235 @@ This feature directly supports our objective of creating structured learning spa
 - Inertia.js integration for server-side rendering
 
 **API Endpoints:**
+
+POST /api/auth/register # Register new user
+POST /api/auth/login # User login
+POST /api/auth/logout # User logout
+POST /api/auth/forgot-password # Password reset request
+POST /api/auth/reset-password # Complete password reset
+GET /api/auth/user # Get current user data
+
+
+### 3. Course Material Service
+**Repository:** [focusflow-material](https://github.com/yourusername/focusflow-material)  
+**Version:** 1.0.8  
+**Tech Stack:** Go 1.21, Gin Web Framework, PostgreSQL, YouTube Data API v3
+
+**Key Responsibilities:**
+- YouTube video integration and metadata fetching
+- Learning material attachment and organization
+- External resource management
+- Content categorization and tagging
+- S3 file storage integration
+
+**API Endpoints:**
+
+POST /api/materials/youtube # Attach YouTube video
+POST /api/materials/upload # Upload document
+GET /api/courses/{id}/materials # Get course materials
+DELETE /api/materials/{id} # Remove material
+GET /api/materials/search # Search materials
+
+
+## 💻 Frontend Application
+
+### Nuxt.js Frontend
+**Repository:** [focusflow-frontend](https://github.com/yourusername/focusflow-frontend)  
+**Version:** 1.0.3  
+**Tech Stack:** Nuxt.js 3, Vue.js 3, TypeScript, Tailwind CSS, Axios
+
+**Key Features:**
+- Server-side rendering (SSR) for optimal SEO and performance
+- Progressive Web App (PWA) capabilities
+- Responsive design for desktop and mobile
+- Real-time progress updates
+- Interactive course management interface
+- YouTube video player integration
+
+  
+## 🔧 DevOps & Infrastructure
+
+### Infrastructure as Code (Terraform)
+**Repository:** [focusflow-infra](https://github.com/yourusername/focusflow-infra)  
+**Version:** 1.0.0
+
+**AWS Infrastructure Components:**
+```hcl
+# Main Infrastructure
+module "vpc" {
+  source = "terraform-aws-modules/vpc/aws"
+  # VPC configuration for microservices
+}
+
+module "ec2" {
+  source = "./modules/ec2"
+  # EC2 instances for microservices deployment
+  instance_count = 4
+  instance_type  = "t3.medium"
+}
+
+module "rds" {
+  source = "./modules/rds"
+  # PostgreSQL RDS instances
+  database_name = "focusflow_db"
+  engine_version = "14.7"
+}
+
+module "s3" {
+  source = "./modules/s3"
+  # S3 buckets for static assets and file storage
+  buckets = ["focusflow-assets", "focusflow-materials"]
+}
+
+module "elasticache" {
+  source = "./modules/elasticache"
+  # Redis cache for session and data caching
+  node_type = "cache.t3.micro"
+}
+
+```
+**CI/CD Pipeline Architecture**
+
+GitHub Repository
+    │
+    ▼
+GitHub Actions (CI/CD)
+    │
+    ├───▶ Build Stage
+    │     ├── Go services compilation
+    │     ├── PHP dependencies
+    │     └── Nuxt.js build
+    │
+    ├───▶ Test Stage
+    │     ├── Unit tests
+    │     ├── Integration tests
+    │     └── Security scans
+    │
+    ├───▶ Containerize Stage
+    │     ├── Docker image building
+    │     ├── Image scanning
+    │     └── Push to ECR
+    │
+    └───▶ Deploy Stage
+          ├── Terraform apply
+          ├── Kubernetes deployment
+          ├── S3 sync
+          └── Health checks
+
+
+**Containerization Strategy**
+
+Each service is containerized with optimized Docker configurations:
+
+Docker Compose (Development):
+
+# Multi-stage build for Go service
+FROM golang:1.21-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -a -installsuffix cgo -o main .
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /root/
+COPY --from=builder /app/main .
+COPY --from=builder /app/.env.production .
+EXPOSE 8080
+CMD ["./main"]
+
+**GitOps Workflow**
+
+Developer
+    │
+    ▼
+Git Repository
+    │
+    ▼
+GitHub Actions
+    │
+    ▼
+Container Registry (ECR)
+    │
+    ▼
+Kubernetes Cluster (EKS)
+    │
+    ▼
+AWS Infrastructure (Terraform Managed)
+    ├── EC2 Instances
+    ├── RDS PostgreSQL
+    ├── ElastiCache Redis
+    ├── S3 Buckets
+    └── Load Balancers
+
+**Monitoring & Observability Stack**
+
+AWS CloudWatch: Centralized logging and metrics collection
+
+Prometheus & Grafana: Custom dashboards for service metrics
+
+Health Endpoints: /health endpoints on all services
+
+Application Performance Monitoring: Structured logging with request IDs
+
+Error Tracking: Sentry integration for real-time error monitoring
+
+
+# 🚀 Project Documentation: FocusFlow
+
+## 🔍 Monitoring & Observability Stack
+
+We utilize a robust suite of tools to ensure system health and performance:
+
+* **AWS CloudWatch:** Centralized logging and metrics collection.
+* **Prometheus & Grafana:** Custom dashboards for service metrics.
+* **Health Endpoints:** `/health` endpoints implemented on all services.
+* **Application Performance Monitoring (APM):** Structured logging with unique Request IDs for distributed tracing.
+* **Error Tracking:** Sentry integration for real-time error monitoring and alerting.
+
+---
+
+## 📊 Diagrams & Documentation
+
+| # | Type | Description | Link |
+| :--- | :--- | :--- | :--- |
+| 1 | **System Architecture** | High-level overview of FocusFlow microservices, databases, and infra. | [View Diagram](https://docs/diagrams/system-architecture.png) |
+| 2 | **Component Diagram** | Detailed view of system components and internal interactions. | [View Diagram](https://docs/diagrams/component-diagram.png) |
+| 3 | **Use Case Diagram** | User interactions, actors, and functional requirements. | [View Diagram](https://docs/diagrams/use-case-diagram.png) |
+| 4 | **Sequence Diagrams** | Step-by-step logic for Course Creation, Auth Flow, and Material Attachment. | [Folder](https://docs/diagrams/) |
+| 5 | **Entity Relationship (ERD)** | Complete database schema, tables, and constraints. | [View Diagram](https://docs/diagrams/erd-diagram.png) |
+| 6 | **Deployment Architecture** | AWS layout (EC2, RDS, S3, and VPC Networking). | [View Diagram](https://docs/diagrams/deployment-architecture.png) |
+| 7 | **Infrastructure as Code** | Visual representation of Terraform-managed resources. | [View Diagram](https://docs/diagrams/terraform-infrastructure.png) |
+| 8 | **CI/CD Pipeline** | End-to-end workflow from commit to production. | [View Diagram](https://docs/diagrams/cicd-pipeline.png) |
+| 9 | **Microservices Comm.** | Communication via API Gateway and Service Discovery. | [View Diagram](https://docs/diagrams/microservices-communication.png) |
+| 10 | **Monitoring Architecture** | Setup for CloudWatch, Prometheus, and Grafana. | [View Diagram](https://docs/diagrams/monitoring-architecture.png) |
+
+---
+
+## 🛠️ Development Setup
+
+### Prerequisites
+Ensure you have the following versions (or higher) installed:
+* **Go 1.21+** (Backend services)
+* **PHP 8.2+** with **Composer** (Auth service)
+* **Node.js 18+** and **npm** (Nuxt.js frontend)
+* **Docker & Docker Compose** (Containerization)
+* **PostgreSQL 14+** (Primary database)
+* **Redis 7+** (Caching)
+* **AWS CLI** & **Terraform 1.5+** (Infrastructure management)
+
+### Local Development Environment
+```bash
+# Clone all repositories
+git clone [https://github.com/yourusername/focusflow-auth.git](https://github.com/yourusername/focusflow-auth.git)
+git clone [https://github.com/yourusername/focusflow-course.git](https://github.com/yourusername/focusflow-course.git)
+git clone [https://github.com/yourusername/focusflow-material.git](https://github.com/yourusername/focusflow-material.git)
+git clone [https://github.com/yourusername/focusflow-frontend.git](https://github.com/yourusername/focusflow-frontend.git)
+git clone [https://github.com/yourusername/focusflow-infra.git](https://github.com/yourusername/focusflow-infra.git)
+
+# Start development environment
+cd focusflow-infra/docker
+docker-compose -f docker-compose.dev.yml up -d ````
+
+
