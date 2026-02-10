@@ -187,33 +187,6 @@ module "elasticache" {
 ```
 **CI/CD Pipeline Architecture**
 
-GitHub Repository
-    │
-    ▼
-GitHub Actions (CI/CD)
-    │
-    ├───▶ Build Stage
-    │     ├── Go services compilation
-    │     ├── PHP dependencies
-    │     └── Nuxt.js build
-    │
-    ├───▶ Test Stage
-    │     ├── Unit tests
-    │     ├── Integration tests
-    │     └── Security scans
-    │
-    ├───▶ Containerize Stage
-    │     ├── Docker image building
-    │     ├── Image scanning
-    │     └── Push to ECR
-    │
-    └───▶ Deploy Stage
-          ├── Terraform apply
-          ├── Kubernetes deployment
-          ├── S3 sync
-          └── Health checks
-
-
 **Containerization Strategy**
 
 Each service is containerized with optimized Docker configurations:
