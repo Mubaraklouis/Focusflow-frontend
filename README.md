@@ -218,47 +218,6 @@ GitHub Actions (CI/CD)
 
 Each service is containerized with optimized Docker configurations:
 
-Docker Compose (Development):
-
-# Multi-stage build for Go service
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -a -installsuffix cgo -o main .
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates tzdata
-WORKDIR /root/
-COPY --from=builder /app/main .
-COPY --from=builder /app/.env.production .
-EXPOSE 8080
-CMD ["./main"]
-
-**GitOps Workflow**
-
-Developer
-    │
-    ▼
-Git Repository
-    │
-    ▼
-GitHub Actions
-    │
-    ▼
-Container Registry (ECR)
-    │
-    ▼
-Kubernetes Cluster (EKS)
-    │
-    ▼
-AWS Infrastructure (Terraform Managed)
-    ├── EC2 Instances
-    ├── RDS PostgreSQL
-    ├── ElastiCache Redis
-    ├── S3 Buckets
-    └── Load Balancers
 
 **Monitoring & Observability Stack**
 
@@ -272,8 +231,6 @@ Application Performance Monitoring: Structured logging with request IDs
 
 Error Tracking: Sentry integration for real-time error monitoring
 
-
-# 🚀 Project Documentation: FocusFlow
 
 ## 🔍 Monitoring & Observability Stack
 
@@ -327,6 +284,6 @@ git clone [https://github.com/yourusername/focusflow-infra.git](https://github.c
 
 # Start development environment
 cd focusflow-infra/docker
-docker-compose -f docker-compose.dev.yml up -d ````
+docker-compose -f docker-compose.dev.yml up -d 
 
 
