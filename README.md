@@ -131,7 +131,7 @@ GET /api/materials/search # Search materials
 ## 💻 Frontend Application
 
 ### Nuxt.js Frontend
-**Repository:** [focusflow-frontend](https://focusfllow.vercel.app/)  
+**Live url:** [focusflow-frontend](https://focusfllow.vercel.app/)  
 **Version:** 1.0.3  
 **Tech Stack:** Nuxt.js 3, Vue.js 3, TypeScript, Tailwind CSS, Axios
 
