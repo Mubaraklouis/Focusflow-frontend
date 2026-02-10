@@ -1,8 +1,5 @@
 # FocusFlow - Structured Learning Platform
 
-![FocusFlow Architecture Overview](https://via.placeholder.com/800x400/2D3748/FFFFFF?text=FocusFlow+System+Architecture)
-*Note: Replace with actual architecture diagram*
-
 ## 🚀 Project Status: Beta
 **Current Version:** 0.8.0 | **Last Updated:** February 2025  
 *This platform is currently in active development and not yet released to public users.*
