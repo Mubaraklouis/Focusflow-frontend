@@ -1,6 +1,6 @@
 # FocusFlow - Structured Learning Platform
 
-## 🚀 Project Status: Beta
+## 🚀 Project Status: Beta **view the project live :** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
 **Current Version:** 0.8.0 | **Last Updated:** February 2025  
 *This platform is currently in active development and not yet released to public users.*
 
@@ -86,7 +86,7 @@ This feature directly supports our objective of creating structured learning spa
 ## 📦 Microservices Breakdown
 
 ### 1. Auth Service
-**Repository:** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
+**URL:** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
 **Version:** 1.2.0  
 **Tech Stack:** Laravel 10, Laravel Sanctum, PostgreSQL, Inertia.js
 
@@ -131,7 +131,7 @@ GET /api/materials/search # Search materials
 ## 💻 Frontend Application
 
 ### Nuxt.js Frontend
-**Repository:** [focusflow-frontend](https://github.com/yourusername/focusflow-frontend)  
+**Repository:** [focusflow-frontend](https://focusfllow.vercel.app/)  
 **Version:** 1.0.3  
 **Tech Stack:** Nuxt.js 3, Vue.js 3, TypeScript, Tailwind CSS, Axios
 
