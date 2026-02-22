@@ -42,10 +42,10 @@ FocusFlow provides:
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| Course Creation | Create structured courses with modules and lessons | ✅ Implemented |
-| Progress Tracking | Track completion status and learning milestones | ✅ Implemented |
-| Course Organization | Categorize and filter courses by topic, difficulty, etc. | ✅ Implemented |
-| Flow State Timer | Integrated Pomodoro-style focus timer | 🚧 In Progress |
+| Course Creation | Create structured courses with modules and lessons | Implemented |
+| Progress Tracking | Track completion status and learning milestones | Implemented |
+| Course Organization | Categorize and filter courses by topic, difficulty, etc. | Implemented |
+| Flow State Timer | Integrated Pomodoro-style focus timer | In Progress |
 
 **Success Metrics:**
 - **Performance:** Course creation within 30 seconds
@@ -70,11 +70,11 @@ This feature directly supports our objective of creating structured learning spa
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| Email/Password Auth | Traditional login with secure password handling | ✅ Implemented |
-| OAuth Integration | Social login options | 🚧 Planned |
-| Password Reset | Secure password recovery flow | ✅ Implemented |
-| Session Management | JWT-based session handling with Laravel Sanctum | ✅ Implemented |
-| CSRF Protection | Full CSRF protection coverage | ✅ Implemented |
+| Email/Password Auth | Traditional login with secure password handling | Implemented |
+| OAuth Integration | Social login options | Planned |
+| Password Reset | Secure password recovery flow | Implemented |
+| Session Management | JWT-based session handling with Laravel Sanctum | Implemented |
+| CSRF Protection | Full CSRF protection coverage |  Implemented |
 
 **Performance Target:** Login authentication within 100ms
 
@@ -217,7 +217,7 @@ We utilize a robust suite of tools to ensure system health and performance:
 
 ---
 
-## 📊 Diagrams & Documentation
+## Diagrams & Documentation
 
 | # | Type | Description | Link |
 | :--- | :--- | :--- | :--- |
@@ -234,7 +234,7 @@ We utilize a robust suite of tools to ensure system health and performance:
 
 ---
 
-## 🛠️ Development Setup
+##  Development Setup
 
 ### Prerequisites
 Ensure you have the following versions (or higher) installed:
