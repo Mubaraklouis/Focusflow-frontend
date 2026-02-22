@@ -1,6 +1,6 @@
 # FocusFlow - Structured Learning Platform
 
-## 🚀 Project Status: Beta  [FocusFlow](https://focusfllow.vercel.app/)  
+## Project Status: Beta  [FocusFlow](https://focusfllow.vercel.app/)  
 **Current Version:** 0.8.0 | **Last Updated:** February 2025  
 *This platform is currently in active development and not yet released to public users.*
 
@@ -35,7 +35,7 @@ FocusFlow provides:
 - **Integrated Resources**: Attach various course materials (videos, articles, documents) to courses
 - **Cross-Platform Access**: Web and mobile applications with synchronized progress
 
-## ✨ Core Features
+## Core Features
 
 ### 1. Course Management Service
 **Goal:** Create a comprehensive course feature with centralized, structured course management and progress tracking.
@@ -48,19 +48,19 @@ FocusFlow provides:
 | Flow State Timer | Integrated Pomodoro-style focus timer | 🚧 In Progress |
 
 **Success Metrics:**
-- ⏱️ **Performance:** Course creation within 30 seconds
-- 🔒 **Security:** Full ownership and access control for course creators
-- 👤 **UX:** Intuitive interface with <1 minute course setup
+- **Performance:** Course creation within 30 seconds
+- **Security:** Full ownership and access control for course creators
+- **UX:** Intuitive interface with <1 minute course setup
 
 ### 2. Course Material Service
 **Goal:** Enable users to attach various learning materials to their courses.
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| YouTube Integration | Attach videos via YouTube API | ✅ Implemented |
-| PDF/Document Upload | Upload and view learning materials | 🚧 In Progress |
-| Link Management | Save external resources with preview | ✅ Implemented |
-| Material Organization | Categorize materials by type and relevance | ✅ Implemented |
+| YouTube Integration | Attach videos via YouTube API | Implemented |
+| PDF/Document Upload | Upload and view learning materials | In Progress |
+| Link Management | Save external resources with preview | Implemented |
+| Material Organization | Categorize materials by type and relevance | Implemented |
 
 **Why This Matters:**  
 This feature directly supports our objective of creating structured learning spaces by allowing users to curate and organize all relevant materials in one place, reducing context-switching and maintaining focus.
@@ -78,12 +78,12 @@ This feature directly supports our objective of creating structured learning spa
 
 **Performance Target:** Login authentication within 100ms
 
-## 🏗️ System Architecture
+## System Architecture
 
 ### Microservices Architecture
 
 
-## 📦 Microservices Breakdown
+## Microservices Breakdown
 
 ### 1. Auth Service
 **URL:** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
@@ -128,7 +128,7 @@ DELETE /api/materials/{id} # Remove material
 GET /api/materials/search # Search materials
 
 
-## 💻 Frontend Application
+## Frontend Application
 
 ### Nuxt.js Frontend
 **Live url:** [focusflow-frontend](https://focusfllow.vercel.app/)  
@@ -144,7 +144,7 @@ GET /api/materials/search # Search materials
 - YouTube video player integration
 
   
-## 🔧 DevOps & Infrastructure
+## DevOps & Infrastructure
 
 ### Infrastructure as Code (Terraform)
 **Repository:** [focusflow-infra](https://github.com/yourusername/focusflow-infra)  
