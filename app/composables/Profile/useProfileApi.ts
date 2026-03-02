@@ -86,8 +86,7 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
     // Handle avatar URL - prepend backend URL if it's a relative path
     let avatarUrl = userData.avatar || '';
     if (avatarUrl && !avatarUrl.startsWith('http')) {
-        // TODO: Change to production URL after deployment
-        const backendUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
+        const { public: { backendUrl } } = useRuntimeConfig();
         avatarUrl = `${backendUrl}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}`;
     }
     

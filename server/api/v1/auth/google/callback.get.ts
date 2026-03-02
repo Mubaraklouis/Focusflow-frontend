@@ -57,10 +57,17 @@ export default defineEventHandler(async (event) => {
         // If there's a redirect in the response, follow it
         const locationHeader = callbackResponse.headers.get('location')
         if (locationHeader) {
-            // Replace any localhost URLs with the actual frontend URL
+            // Normalize redirect URL to use the current frontend URL
             let redirectUrl = locationHeader
-            if (locationHeader.includes('localhost:3000')) {
-                redirectUrl = locationHeader.replace(/http:\/\/localhost:3000/g, frontendUrl)
+            try {
+                const redirectParsed = new URL(redirectUrl)
+                const frontendParsed = new URL(frontendUrl)
+                // If the redirect points to a different host, rewrite it to the frontend
+                if (redirectParsed.host !== frontendParsed.host) {
+                    redirectUrl = `${frontendUrl}${redirectParsed.pathname}${redirectParsed.search}${redirectParsed.hash}`
+                }
+            } catch {
+                // If URL parsing fails, it's likely a relative URL — use as-is
             }
             
             // If it's a relative URL, make it absolute

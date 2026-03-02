@@ -17,7 +17,7 @@ import useForwardCookies from "~~/server/composables/global/useForwardCookies"
  * @returns {Promise<any>} The authenticated user data from Laravel.
  */
 export default defineEventHandler(async (event): Promise<any> => {
-    const { baseUrl } = useConfig()
+    const { baseUrl, frontendUrl } = useConfig()
 
     try {
         // --- STEP 1: Handshake & Cookie Prep ---
@@ -32,8 +32,8 @@ export default defineEventHandler(async (event): Promise<any> => {
                 'Accept': 'application/json',
                 'X-XSRF-TOKEN': xsrfToken,
                 'Cookie': cookieString,
-                'Referer': 'http://localhost:3000', // Helping Laravel Sanctum trust the origin
-                'Origin': 'http://localhost:3000',
+                'Referer': frontendUrl,
+                'Origin': frontendUrl,
             },
             credentials: 'include'
         })

@@ -12,9 +12,11 @@ export default defineNuxtConfig({
     laravelApiKey: '',
     usersApiUrl: '',        // Nuxt looks for NUXT_USERS_API_URL
     coursesApiUrl: '',      // Nuxt looks for NUXT_COURSES_API_URL
+    frontendUrl: '',        // Nuxt looks for NUXT_FRONTEND_URL
 
     public: {
-      stripeKey: ''           // Nuxt looks for NUXT_PUBLIC_STRIPE_KEY
+      stripeKey: '',          // Nuxt looks for NUXT_PUBLIC_STRIPE_KEY
+      backendUrl: ''          // Nuxt looks for NUXT_PUBLIC_BACKEND_URL (for client-side avatar URLs)
     }
   }
 
