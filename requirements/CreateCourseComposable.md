@@ -24,3 +24,13 @@ Fix 1:
 
 Within Create course can you retrive the user id from the cookies and pass it to the create course request 
 
+
+Feature addons :1
+
+I have updated my backend to handle file upload and the file should be pass like this
+course_thumb
+I want you to modify the create course composable to be able to upload the thamnail to the backend so that i can be save to s3 backet 
+
+
+
+

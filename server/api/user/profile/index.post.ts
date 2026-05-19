@@ -58,11 +58,8 @@ export default defineEventHandler(async (event): Promise<UserUpdateResponse> => 
             }
         }
 
-        // TODO: Change to baseUrl after deploying update endpoint to production
-        const localUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
-
         // Upload avatar to Laravel using POST /user/{id}/avatar
-        const updateResponse = await $fetch<UserUpdateResponse>(`${localUrl}/api/user/${userId}/avatar`, {
+        const updateResponse = await $fetch<UserUpdateResponse>(`${baseUrl}/api/user/${userId}/avatar`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',

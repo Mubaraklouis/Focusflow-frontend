@@ -38,9 +38,6 @@ import useConfig from '~~/server/util/useConfig';
 export default defineEventHandler(async (event): Promise<UserProfileResponse> => {
     const { baseUrl } = useConfig();
 
-    // TODO: Change to baseUrl after deploying update endpoint to production
-    const localUrl = 'http://ec2-16-171-250-147.eu-north-1.compute.amazonaws.com';
-
     try {
         // Get user_id from cookie
         const userId = getCookie(event, 'focusflow-user-id');
@@ -53,7 +50,7 @@ export default defineEventHandler(async (event): Promise<UserProfileResponse> =>
         }
 
         // Fetch user profile from Laravel
-        const profileResponse = await $fetch<UserProfileResponse>(`${localUrl}/api/user/${userId}`, {
+        const profileResponse = await $fetch<UserProfileResponse>(`${baseUrl}/api/user/${userId}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',

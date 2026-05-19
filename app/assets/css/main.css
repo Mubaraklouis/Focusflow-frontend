@@ -51,16 +51,16 @@ html {
         --background: 219 46% 11%;  /* Updated dark background color */
         --foreground: 0 0% 98%;
         --card: 217 33% 18%;  /* Updated card background color */
-        --card-foreground: 217 33% 18%;  /* Updated card foreground color */
+        --card-foreground: 0 0% 98%;  /* Light text on dark cards */
         --popover: 240 10% 5.9%;
         --popover-foreground: 0 0% 98%;
         --primary: 14 97% 56%;  /* Keeping brand color */
         --primary-foreground: 0 0% 98%;
         --secondary: 240 3.7% 17.9%;
         --secondary-foreground: 0 0% 98%;
-        --muted: 240 3.7% 17.9%;
+        --muted: 217 33% 22%;  /* Slightly lighter for visible muted backgrounds */
         --muted-foreground: 240 5% 75%;  /* Lighter muted text for better contrast */
-        --accent: 217 33% 18%;  /* Updated accent color */
+        --accent: 217 33% 25%;  /* Lighter accent for visible hover/active states */
         --accent-foreground: 0 0% 98%;
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 0 0% 98%;

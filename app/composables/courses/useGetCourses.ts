@@ -86,6 +86,35 @@ export default function useGetCourses() {
                 courses.value = [];
             }
 
+            // The Course service's `course_progress` column is static (set at
+            // creation, never recomputed). Real lesson-completion state lives
+            // in the Course Material service, so derive progress from there —
+            // same source the course detail page uses. Done in parallel; a
+            // per-course failure leaves that course at 0 rather than blocking.
+            await Promise.all(
+                courses.value.map(async (course) => {
+                    try {
+                        const res = await $fetch<{
+                            count: number;
+                            data: Array<{ completed: boolean }>;
+                        }>(`/api/course-material/course/${course.course_id}`, {
+                            method: 'GET',
+                        });
+                        const lessons = Array.isArray(res?.data) ? res.data : [];
+                        if (lessons.length === 0) {
+                            course.course_progress = 0;
+                            return;
+                        }
+                        const done = lessons.filter((l) => l.completed).length;
+                        course.course_progress = Math.round(
+                            (done / lessons.length) * 100
+                        );
+                    } catch {
+                        course.course_progress = course.course_progress || 0;
+                    }
+                })
+            );
+
         } catch (e: any) {
             console.error('[useGetCourses] Failed to fetch courses:', e);
             error.value = e.data?.message || e.message || 'Failed to fetch courses';

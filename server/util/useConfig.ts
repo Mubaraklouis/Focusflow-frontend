@@ -8,10 +8,14 @@ const useConfig = () => {
     const config = useRuntimeConfig()
     const baseUrl = config.usersApiUrl
     const courseUrl = config.coursesApiUrl
+    const courseMaterialUrl = config.courseMaterialApiUrl
+    const frontendUrl = config.frontendUrl
 
     return {
         baseUrl,
-        courseUrl
+        courseUrl,
+        courseMaterialUrl,
+        frontendUrl
     }
 }
 
