@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, ref, watch } from 'vue';
 import AppSidebar from '@/components/dashboard/AppSidebar.vue';
 import AppHeader from '@/components/dashboard/AppHeader.vue';
 import { useProfile, useProfileApi } from '~/composables/Profile';
@@ -14,11 +14,24 @@ defineProps<{
     breadcrumbs?: Breadcrumb[];
 }>();
 
-// Mobile sidebar state
+// Mobile sidebar state — per-navigation, no need to persist.
 const isMobileSidebarOpen = ref(false);
 
-// Sidebar collapsed state
-const isSidebarCollapsed = ref(false);
+// Sidebar collapsed state — shared via Nuxt useState so it survives page
+// navigations (every page on this layout uses `layout: false` and
+// remounts AppLayout on every route change). We also rehydrate from
+// localStorage on the client so the preference survives a page reload.
+const isSidebarCollapsed = useState<boolean>('sidebar-collapsed', () => false);
+
+if (import.meta.client) {
+    const stored = window.localStorage.getItem('focusflow.sidebar.collapsed');
+    if (stored === 'true' || stored === 'false') {
+        isSidebarCollapsed.value = stored === 'true';
+    }
+    watch(isSidebarCollapsed, (v) => {
+        window.localStorage.setItem('focusflow.sidebar.collapsed', String(v));
+    });
+}
 
 // Get user data from profile composable
 const { profile } = useProfile();

@@ -30,6 +30,7 @@ export const useCourseMaterialDetail = () => {
     duration: '0:00',
     completed: false,
     module: '',
+    description: '',
   });
 
   const courseId = computed(() => String(route.query.id ?? ''));
@@ -60,6 +61,58 @@ export const useCourseMaterialDetail = () => {
     return Math.round((completedLessons / totalLessons.value) * 100);
   });
 
+  /**
+   * Flat list of all lessons in sequential order. We sort by the DB
+   * primary key (`dbVideoId`) ascending — same ordering the backend uses
+   * for its sequential-progression lock — so the UI and the server agree
+   * on what "lesson 1, 2, 3…" means.
+   */
+  const orderedLessons = computed(() => {
+    if (!course.value) return [];
+    const flat = course.value.modules.flatMap((m) => m.lessons);
+    return [...flat].sort((a, b) => {
+      const av = typeof a.dbVideoId === 'number' ? a.dbVideoId : Number.MAX_SAFE_INTEGER;
+      const bv = typeof b.dbVideoId === 'number' ? b.dbVideoId : Number.MAX_SAFE_INTEGER;
+      return av - bv;
+    });
+  });
+
+  /**
+   * Map from lesson `id` → boolean indicating whether the lesson is
+   * locked. A lesson is locked when any earlier-ordered lesson in the
+   * same course is still incomplete. The very first lesson is never
+   * locked; the first incomplete lesson is "current"; everything after
+   * the first incomplete lesson is locked.
+   */
+  const lockedById = computed(() => {
+    const map: Record<string | number, boolean> = {};
+    let seenIncomplete = false;
+    for (const lesson of orderedLessons.value) {
+      if (seenIncomplete && !lesson.completed) {
+        map[lesson.id] = true;
+      } else {
+        map[lesson.id] = false;
+      }
+      if (!lesson.completed) {
+        seenIncomplete = true;
+      }
+    }
+    return map;
+  });
+
+  /** True when the currently-selected lesson is gated behind earlier ones. */
+  const isCurrentLessonLocked = computed(() => {
+    if (!course.value || !currentVideo.value.id) return false;
+    for (const m of course.value.modules) {
+      for (const lesson of m.lessons) {
+        if (lesson.videoId === currentVideo.value.id) {
+          return !!lockedById.value[lesson.id];
+        }
+      }
+    }
+    return false;
+  });
+
   const youtubeEmbedUrl = computed(() => {
     if (!currentVideo.value.id) {
       return '';
@@ -81,6 +134,7 @@ export const useCourseMaterialDetail = () => {
       duration: firstLesson.duration,
       completed: firstLesson.completed,
       module: moduleItem.title,
+      description: firstLesson.description ?? '',
     };
   };
 
@@ -148,7 +202,39 @@ export const useCourseMaterialDetail = () => {
       duration: lessonItem.duration,
       completed: lessonItem.completed,
       module: moduleItem.title,
+      description: lessonItem.description ?? '',
     };
+  };
+
+  /**
+   * Find the lesson currently shown in the player. Returns null if no lesson
+   * is selected or the lookup fails — callers must handle the null case.
+   */
+  const findCurrentLesson = () => {
+    if (!course.value) return null;
+    for (const moduleItem of course.value.modules) {
+      const match = moduleItem.lessons.find(
+        (lesson) =>
+          lesson.videoId === currentVideo.value.id && moduleItem.title === currentVideo.value.module,
+      );
+      if (match) return { moduleItem, lesson: match };
+    }
+    return null;
+  };
+
+  /**
+   * Apply the result of a successful US-001 takeaway submission to the local
+   * state. Marks the lesson completed without a network round-trip; the
+   * authoritative state stays in the backend.
+   */
+  const markCurrentLessonCompleted = () => {
+    const result = findCurrentLesson();
+    if (!result) return;
+    result.lesson.completed = true;
+    currentVideo.value.completed = true;
+
+    const allCompleted = result.moduleItem.lessons.every((l) => l.completed);
+    result.moduleItem.completed = allCompleted;
   };
 
   const currentResources = computed(() => {
@@ -178,5 +264,10 @@ export const useCourseMaterialDetail = () => {
     isModuleExpanded,
     playLesson,
     loadCourse,
+    findCurrentLesson,
+    markCurrentLessonCompleted,
+    lockedById,
+    isCurrentLessonLocked,
+    orderedLessons,
   };
 };

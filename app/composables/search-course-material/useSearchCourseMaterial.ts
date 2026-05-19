@@ -1,18 +1,21 @@
 import { ref, reactive } from 'vue';
 import type {
   SearchCourseMaterialState,
-  YouTubeSearchResult,
+  YouTubeSearchResponse,
 } from '~/interfaces/search-course-material';
+import { normalizeSearchResults } from '~/composables/search-course-material/useNormalizeSearchResult';
 
 /**
  * @module composables/search-course-material/useSearchCourseMaterial
- * UI-only state management for the YouTube course material search dialog.
- * API integration will be wired later — the composable exposes a `search()`
- * method that is currently a placeholder.
+ * State management and API integration for the YouTube course material search dialog.
+ * Calls the `/api/course-material/search` server proxy which forwards to the course-material backend.
  */
 
+/** Default number of results to request per search. */
+const DEFAULT_MAX_RESULTS = 10;
+
 /**
- * Manages open/close state and search form state for the search dialog.
+ * Manages open/close state, search form state, and API calls for the search dialog.
  */
 export const useSearchCourseMaterial = () => {
   const isOpen = ref<boolean>(false);
@@ -42,8 +45,8 @@ export const useSearchCourseMaterial = () => {
   };
 
   /**
-   * Placeholder search function.
-   * Will be replaced with actual API call during integration.
+   * Searches YouTube videos via the server proxy.
+   * Normalizes the raw backend response into UI-friendly objects.
    */
   const search = async () => {
     const trimmed = state.query.trim();
@@ -57,9 +60,16 @@ export const useSearchCourseMaterial = () => {
     state.hasSearched = true;
 
     try {
-      // TODO: Replace with actual API call — e.g. $fetch('/api/courses/search-youtube', { params: { q: trimmed } })
-      state.results = [];
+      const response = await $fetch<YouTubeSearchResponse>('/api/course-material/search', {
+        params: {
+          query: trimmed,
+          max_results: DEFAULT_MAX_RESULTS,
+        },
+      });
+
+      state.results = normalizeSearchResults(response.results ?? []);
     } catch (err: any) {
+      console.error('[useSearchCourseMaterial] Search failed:', err);
       state.error = err?.data?.message || err?.message || 'Search failed. Please try again.';
       state.results = [];
     } finally {

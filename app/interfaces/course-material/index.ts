@@ -18,6 +18,9 @@ export interface CourseMaterialResource {
  */
 export interface CourseMaterialLesson {
   id: number | string;
+  /** Internal DB primary key (CourseMaterial.video_id). Required to call
+   * the takeaway/active-recall endpoints in the Course Material Service. */
+  dbVideoId: number | null;
   title: string;
   videoId: string;
   duration: string;
@@ -62,4 +65,6 @@ export interface CurrentVideoState {
   duration: string;
   completed: boolean;
   module: string;
+  /** YouTube video description for the currently selected lesson. */
+  description: string;
 }

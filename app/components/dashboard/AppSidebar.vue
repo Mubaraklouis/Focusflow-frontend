@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import {
     LayoutDashboard,
-    Timer,
     BookOpen,
     ListTodo,
-    Target,
     Settings,
     Command,
     X,
@@ -22,6 +20,15 @@ interface NavItem {
     href: string;
 }
 
+/**
+ * AppSidebar is fully controlled by AppLayout: the collapsed state lives
+ * up there (in a useState that persists across page navigations and
+ * localStorage rehydrates on reload), and this component just consumes
+ * `props.collapsed`. Toggling the chevron emits an event; we never store
+ * the value locally — that's what caused the "expanding on link click"
+ * bug because clicking a NuxtLink re-mounted AppLayout, the local ref
+ * reset to its prop default, and the two states drifted.
+ */
 const props = defineProps<{
     collapsed?: boolean;
     user?: {
@@ -36,14 +43,13 @@ const emit = defineEmits<{
     (e: 'close-mobile'): void;
 }>();
 
-const isCollapsed = ref(props.collapsed || false);
+// Single source of truth: read directly from the prop every render.
+const isCollapsed = computed(() => !!props.collapsed);
 
 const navigationItems: NavItem[] = [
     { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { title: 'Focus Sessions', icon: Timer, href: '/focus' },
     { title: 'Courses', icon: BookOpen, href: '/courses' },
-    { title: 'Tasks', icon: ListTodo, href: '/tasks' },
-    { title: 'Goals', icon: Target, href: '/goals' },
+    { title: 'Quiz history', icon: ListTodo, href: '/quizzes' },
 ];
 
 const route = useRoute();
@@ -53,7 +59,6 @@ const isActiveRoute = (href: string) => {
 };
 
 const toggleCollapse = () => {
-    isCollapsed.value = !isCollapsed.value;
     emit('toggle-collapse');
 };
 

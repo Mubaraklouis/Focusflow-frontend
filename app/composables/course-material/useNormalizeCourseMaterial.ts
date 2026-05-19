@@ -51,10 +51,23 @@ export const normalizeCourseMaterial = (rawCourse: Record<string, any>): CourseM
         type: pick(resource, ['type', 'resource_type']),
       }));
 
+      // The Go Course Material Service uses `video_id` (int) as the DB primary key
+      // and `youtube_id` (string) as the embeddable YouTube identifier. Older
+      // payloads conflated the two on `videoId`, so we keep both fields:
+      //   - videoId   : YouTube ID used for the embed iframe and thumbnail
+      //   - dbVideoId : integer DB primary key used for takeaway endpoints (US-001)
+      const rawDbVideoId = pick(rawLesson, ['video_id']);
+      const dbVideoId = typeof rawDbVideoId === 'number'
+        ? rawDbVideoId
+        : rawDbVideoId !== undefined && rawDbVideoId !== null && !isNaN(Number(rawDbVideoId))
+          ? Number(rawDbVideoId)
+          : null;
+
       return {
         id: pick(rawLesson, ['id', 'lesson_id']) ?? `${moduleIndex}-${lessonIndex}`,
+        dbVideoId,
         title: String(pick(rawLesson, ['title', 'lesson_title']) ?? 'Untitled Lesson'),
-        videoId: String(pick(rawLesson, ['video_id', 'videoId']) ?? ''),
+        videoId: String(pick(rawLesson, ['youtube_id', 'videoId']) ?? ''),
         duration: String(pick(rawLesson, ['duration']) ?? '0:00'),
         completed: Boolean(pick(rawLesson, ['completed', 'is_completed']) ?? false),
         description: pick(rawLesson, ['description', 'lesson_description']),
