@@ -64,14 +64,6 @@ const resetPagination = () => {
 };
 
 /**
- * Gets a placeholder image URL for courses without thumbnails
- * @param id - The course ID for generating unique placeholder
- */
-const getPlaceholderImage = (id: number) => {
-    return `https://picsum.photos/seed/course${id}/600/400`;
-};
-
-/**
  * Filtered courses based on search and filter criteria
  */
 const filteredCourses = computed(() => {
@@ -250,14 +242,19 @@ watch([activeFilter, searchQuery], () => {
                     >
                         <div class="p-3 pt-3">
                             <div class="aspect-video bg-muted relative rounded-lg overflow-hidden">
-                                <!-- Fallback icon (shows while image loads) -->
+                                <!-- Book icon shown behind the image (and as the
+                                     final fallback when the course has neither an
+                                     uploaded cover nor any lessons). -->
                                 <div class="absolute inset-0 flex items-center justify-center text-muted-foreground">
                                     <BookOpen class="h-12 w-12 opacity-20" />
                                 </div>
-                                <!-- Course image or placeholder -->
-                                <img 
-                                    class="w-full h-full object-cover absolute inset-0 z-10" 
-                                    :src="course.course_thumb || getPlaceholderImage(course.course_id)" 
+                                <!-- Cover image: uploaded thumbnail, else the
+                                     first lesson's YouTube thumbnail. Omitted
+                                     entirely when neither exists. -->
+                                <img
+                                    v-if="course.course_thumb || course.derived_thumb"
+                                    class="w-full h-full object-cover absolute inset-0 z-10"
+                                    :src="course.course_thumb || course.derived_thumb"
                                     :alt="`${course.course_title} thumbnail`"
                                     loading="lazy"
                                 >

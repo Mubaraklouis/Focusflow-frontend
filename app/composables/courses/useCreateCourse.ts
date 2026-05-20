@@ -84,10 +84,8 @@ export const useCreateCourse = () => {
             errors.course_description = 'Description must be at least 10 characters if provided';
         }
 
-        // Validate thumbnail
-        if (!form.value.course_thumb && !form.value.course_thumb_file) {
-            errors.course_thumb = 'Please upload a course thumbnail';
-        }
+        // Thumbnail is optional — when omitted, the course list falls back to
+        // the first lesson's YouTube thumbnail (or a book icon if no lessons).
 
         validationErrors.value = errors;
         return Object.keys(errors).length === 0;

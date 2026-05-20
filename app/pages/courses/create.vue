@@ -114,8 +114,8 @@ const onFileChange = (event: Event) => {
                         <div class="bg-background/80 backdrop-blur-sm rounded-full p-4 mb-3 group-hover:scale-110 transition-transform">
                             <ImageIcon class="h-10 w-10 sm:h-12 sm:w-12 text-primary/70" />
                         </div>
-                        <p class="text-sm sm:text-base font-semibold text-foreground mb-1">Upload Course Cover</p>
-                        <p class="text-xs sm:text-sm text-muted-foreground px-4 text-center">Click or drag image here (Recommended: 1280×720px)</p>
+                        <p class="text-sm sm:text-base font-semibold text-foreground mb-1">Upload Course Cover (Optional)</p>
+                        <p class="text-xs sm:text-sm text-muted-foreground px-4 text-center">Click or drag image here (Recommended: 1280×720px). If skipped, we'll use your first lesson's thumbnail.</p>
                     </div>
                     
                     <input 
