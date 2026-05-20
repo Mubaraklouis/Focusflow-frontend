@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useHead } from '#imports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GraduationCap, BookOpen, RefreshCw, Search, PlayCircle, Settings } from 'lucide-vue-next';
+import { GraduationCap, BookOpen, RefreshCw, Search, PlayCircle } from 'lucide-vue-next';
 import useGetCourses from '~/composables/courses/useGetCourses';
 import type { Course } from '~/composables/courses/useGetCourses';
 
@@ -258,15 +258,6 @@ watch([activeFilter, searchQuery], () => {
                                     :alt="`${course.course_title} thumbnail`"
                                     loading="lazy"
                                 >
-                                <!-- Settings shortcut -->
-                                <button
-                                    type="button"
-                                    @click="navigateTo(`/courses/settings?id=${course.course_id}`)"
-                                    class="absolute top-2 right-2 z-20 inline-flex items-center justify-center h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background shadow-sm transition-colors"
-                                    :aria-label="`Settings for ${course.course_title}`"
-                                >
-                                    <Settings class="h-4 w-4" />
-                                </button>
                             </div>
                         </div>
                         <div class="px-5 pb-5">

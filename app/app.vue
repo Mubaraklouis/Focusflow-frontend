@@ -8,6 +8,10 @@ initTheme();
 
 // Prevent flash of wrong theme
 useHead({
+  // Guarantee a mobile viewport even if the default head is ever overridden.
+  meta: [
+    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+  ],
   script: [
     {
       innerHTML: `(function() {

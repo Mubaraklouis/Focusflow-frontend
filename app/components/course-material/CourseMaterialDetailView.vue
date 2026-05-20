@@ -12,6 +12,7 @@ import {
   Lock,
   PlayCircle,
   Plus,
+  Settings,
   Video,
   Youtube,
 } from 'lucide-vue-next';
@@ -149,6 +150,12 @@ watch(
   },
 );
 const isDescriptionLong = computed(() => (currentVideo.value.description ?? '').length > 280);
+
+// Settings link for the current course (edit details, visibility, delete).
+const settingsHref = computed(() => {
+  const id = route.query.id ?? course.value?.id;
+  return id != null && id !== '' ? `/courses/settings?id=${id}` : null;
+});
 </script>
 
 <template>
@@ -202,6 +209,14 @@ const isDescriptionLong = computed(() => (currentVideo.value.description ?? '').
             </span>
           </div>
         </div>
+
+        <!-- Course settings -->
+        <NuxtLink v-if="settingsHref" :to="settingsHref" class="shrink-0">
+          <Button variant="outline" size="sm" class="h-9 w-full gap-2 md:w-auto">
+            <Settings class="h-4 w-4" />
+            Settings
+          </Button>
+        </NuxtLink>
       </div>
 
       <!-- Progress bar -->
@@ -403,7 +418,7 @@ const isDescriptionLong = computed(() => (currentVideo.value.description ?? '').
               </div>
 
               <!-- Module list -->
-              <div class="h-[calc(600px-52px)] overflow-y-auto">
+              <div class="max-h-[60vh] overflow-y-auto lg:h-[calc(600px-52px)] lg:max-h-none">
                 <div v-for="(moduleItem, idx) in course.modules" :key="moduleItem.id" class="px-2">
                   <!-- Module header button -->
                   <button
