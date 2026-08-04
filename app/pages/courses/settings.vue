@@ -4,7 +4,7 @@ import { useHead } from '#imports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Settings, Globe, Lock, Image as ImageIcon, Tag, Trash2 } from 'lucide-vue-next';
+import { Settings, Globe, Lock, Image as ImageIcon, Tag, Trash2, Users, LinkIcon, Send } from 'lucide-vue-next';
 import { useCourseSettings } from '~/composables/courses/useCourseSettings';
 
 definePageMeta({
@@ -54,8 +54,50 @@ const onFileChange = (event: Event) => {
     handleThumbnailUpload(target.files?.[0] || null);
 };
 
-const setVisibility = (value: 'public' | 'private') => {
+const setVisibility = (value: 'public' | 'private' | 'shared') => {
     form.value.course_visibility = value;
+};
+
+// Share Link Logic
+const copied = ref(false);
+const copyShareLink = async () => {
+    if (!courseId.value) return;
+    const url = `${window.location.origin}/courses/detail?id=${courseId.value}`;
+    try {
+        await navigator.clipboard.writeText(url);
+        copied.value = true;
+        setTimeout(() => copied.value = false, 2000);
+    } catch (e) {
+        console.error('Failed to copy', e);
+    }
+};
+
+// Invite Users Logic
+const inviteEmail = ref<string>('');
+const isInviting = ref(false);
+const inviteMessage = ref('');
+const inviteSuccess = ref(false);
+
+const sendInvite = async () => {
+    if (!courseId.value || !inviteEmail.value) return;
+    isInviting.value = true;
+    inviteMessage.value = '';
+    
+    try {
+        await $fetch(`/api/courses/course/${courseId.value}/invite`, {
+            method: 'POST',
+            body: { email: inviteEmail.value }
+        });
+        inviteSuccess.value = true;
+        inviteMessage.value = 'Invitation sent successfully!';
+        inviteEmail.value = '';
+    } catch (e: any) {
+        inviteSuccess.value = false;
+        inviteMessage.value = e.data?.message || 'Failed to send invitation.';
+    } finally {
+        isInviting.value = false;
+        setTimeout(() => { if (inviteSuccess.value) inviteMessage.value = '' }, 3000);
+    }
 };
 
 const handleSave = async () => {
@@ -114,7 +156,7 @@ const previewSrc = computed(() => thumbnailPreviewUrl.value || form.value.course
                     <CardContent class="p-5 sm:p-6">
                         <h3 class="text-base sm:text-lg font-semibold text-foreground mb-1">Visibility</h3>
                         <p class="text-sm text-muted-foreground mb-4">Control who can discover this course.</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <button
                                 type="button"
                                 @click="setVisibility('public')"
@@ -147,7 +189,58 @@ const previewSrc = computed(() => thumbnailPreviewUrl.value || form.value.course
                                     <span class="block text-xs text-muted-foreground">Only you can access this course.</span>
                                 </span>
                             </button>
+                            <button
+                                type="button"
+                                @click="setVisibility('shared')"
+                                :class="[
+                                    'flex items-start gap-3 rounded-lg border p-4 text-left transition-all',
+                                    form.course_visibility === 'shared'
+                                        ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                                        : 'border-border hover:border-primary/40'
+                                ]"
+                            >
+                                <Users class="h-5 w-5 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                                <span>
+                                    <span class="block font-medium text-foreground">Shared</span>
+                                    <span class="block text-xs text-muted-foreground">Hidden. Anyone with the link can view it.</span>
+                                </span>
+                            </button>
                         </div>
+
+                        <!-- Copy Link Button (only for public or shared) -->
+                        <div v-if="form.course_visibility === 'public' || form.course_visibility === 'shared'" class="mt-4 p-4 border rounded-lg bg-muted/30 flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium">Share Link</h4>
+                                <p class="text-xs text-muted-foreground">Share this link with others to let them enroll.</p>
+                            </div>
+                            <Button variant="outline" size="sm" @click="copyShareLink" class="shrink-0 gap-2">
+                                <LinkIcon class="h-4 w-4" />
+                                {{ copied ? 'Copied!' : 'Copy Link' }}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Invitations -->
+                <Card class="border border-border dark:border-border/80 shadow-md dark:shadow-none mb-6">
+                    <CardContent class="p-5 sm:p-6">
+                        <h3 class="text-base sm:text-lg font-semibold text-foreground mb-1">Invite Users</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Send an invitation email to users so they can join this course.</p>
+                        <div class="flex gap-3">
+                            <Input
+                                v-model="inviteEmail"
+                                type="email"
+                                placeholder="Enter email address..."
+                                class="flex-1 border-border focus-visible:border-primary/50 focus-visible:ring-primary/20"
+                            />
+                            <Button @click="sendInvite" :disabled="isInviting || !inviteEmail" class="shrink-0">
+                                <Send class="h-4 w-4 mr-2" />
+                                {{ isInviting ? 'Sending...' : 'Send Invite' }}
+                            </Button>
+                        </div>
+                        <p v-if="inviteMessage" :class="inviteSuccess ? 'text-green-600 dark:text-green-400' : 'text-destructive'" class="text-sm mt-2">
+                            {{ inviteMessage }}
+                        </p>
                     </CardContent>
                 </Card>
 

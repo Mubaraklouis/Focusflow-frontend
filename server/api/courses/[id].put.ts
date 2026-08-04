@@ -18,11 +18,24 @@ export default defineEventHandler(async (event) => {
 
     try {
         const formData = await readFormData(event)
-
-        const response = await $fetch(`${courseUrl}/${id}`, {
+        
+        const options: any = {
             method: 'PUT',
             body: formData,
-        })
+            headers: {}
+        }
+        
+        const frontendUrl = useConfig().frontendUrl
+        options.headers['Referer'] = frontendUrl
+        options.headers['Origin'] = frontendUrl
+        
+        const authHeader = getHeader(event, 'Authorization')
+        if (authHeader) options.headers['Authorization'] = authHeader
+        
+        const cookieHeader = getHeader(event, 'cookie')
+        if (cookieHeader) options.headers['cookie'] = cookieHeader
+        
+        const response = await $fetch(`${courseUrl}/${id}`, options)
 
         return response
     } catch (error: any) {

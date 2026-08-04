@@ -10,9 +10,14 @@ import {
     Sparkles,
     LogOut,
     PanelLeftOpen,
-    ChevronRight
+    ChevronRight,
+    Shield,
+    GraduationCap,
+    Users,
+    BarChart3
 } from 'lucide-vue-next';
 import { useLogout } from '~/composables/Auth/useLogout';
+import { useProfile } from '~/composables/Profile';
 
 interface NavItem {
     title: string;
@@ -46,11 +51,32 @@ const emit = defineEmits<{
 // Single source of truth: read directly from the prop every render.
 const isCollapsed = computed(() => !!props.collapsed);
 
-const navigationItems: NavItem[] = [
-    { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { title: 'Courses', icon: BookOpen, href: '/courses' },
-    { title: 'Quiz history', icon: ListTodo, href: '/quizzes' },
-];
+const { profile } = useProfile();
+const userRole = computed(() => profile.value?.role || 'student');
+
+const navigationItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+        { title: 'Discover Courses', icon: BookOpen, href: '/courses' },
+        { title: 'Quiz History', icon: ListTodo, href: '/quizzes' },
+    ];
+
+    // Teacher-specific items
+    if (userRole.value === 'teacher' || userRole.value === 'admin') {
+        items.push(
+            { title: 'My Teaching', icon: GraduationCap, href: '/teacher/courses' },
+        );
+    }
+
+    // Admin-specific items
+    if (userRole.value === 'admin') {
+        items.push(
+            { title: 'Admin Panel', icon: Shield, href: '/admin' },
+        );
+    }
+
+    return items;
+});
 
 const route = useRoute();
 
@@ -217,7 +243,18 @@ const handleLogout = async () => {
                     <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500 shadow-sm" />
                 </div>
                 <div v-if="!isCollapsed" class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-semibold text-foreground">{{ user?.name || 'Loading...' }}</p>
+                    <p class="truncate text-sm font-semibold text-foreground flex items-center gap-2">
+                        {{ user?.name || 'Loading...' }}
+                        <span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
+                              :class="{
+                                'bg-primary/15 text-primary': userRole === 'admin',
+                                'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400': userRole === 'teacher',
+                                'bg-blue-500/15 text-blue-600 dark:text-blue-400': userRole === 'student',
+                              }"
+                        >
+                            {{ userRole }}
+                        </span>
+                    </p>
                     <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
                 </div>
                 <ChevronRight v-if="!isCollapsed" class="h-4 w-4 text-muted-foreground transition-all duration-200 group-hover:text-primary group-hover:translate-x-1" />

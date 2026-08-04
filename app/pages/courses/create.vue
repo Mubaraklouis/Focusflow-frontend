@@ -186,6 +186,43 @@ const onFileChange = (event: Event) => {
 
                                 </div>
 
+                                <!-- Course Visibility -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-foreground/80 flex items-center gap-2">
+                                        <BookOpen class="h-4 w-4 text-muted-foreground" />
+                                        Visibility
+                                    </label>
+                                    <div class="flex flex-wrap gap-2">
+                                        <Button
+                                            type="button"
+                                            :variant="form.course_visibility === 'public' ? 'default' : 'outline'"
+                                            @click="form.course_visibility = 'public'"
+                                            class="w-full sm:w-auto transition-colors"
+                                        >
+                                            Public
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            :variant="form.course_visibility === 'shared' ? 'default' : 'outline'"
+                                            @click="form.course_visibility = 'shared'"
+                                            class="w-full sm:w-auto transition-colors"
+                                        >
+                                            Shared
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            :variant="form.course_visibility === 'private' ? 'default' : 'outline'"
+                                            @click="form.course_visibility = 'private'"
+                                            class="w-full sm:w-auto transition-colors"
+                                        >
+                                            Private
+                                        </Button>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground mt-1">
+                                        {{ form.course_visibility === 'public' ? 'Anyone can view and enroll in this course.' : form.course_visibility === 'shared' ? 'Hidden from discover. Anyone with the link can view and enroll.' : 'Only you can access this course.' }}
+                                    </p>
+                                </div>
+
                                 <!-- Course Description -->
                                 <div class="space-y-2">
                                     <label class="block text-sm font-medium text-foreground/80">

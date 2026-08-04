@@ -7,11 +7,24 @@ export default defineEventHandler(async (event) => {
         // Read the multipart form data (includes file)
         const formData = await readFormData(event)
 
-        // Forward FormData to backend - backend handles S3 upload
-        const response = await $fetch(courseUrl, {
+        const options: any = {
             method: 'POST',
-            body: formData
-        })
+            body: formData,
+            headers: {}
+        }
+        
+        const frontendUrl = useConfig().frontendUrl
+        options.headers['Referer'] = frontendUrl
+        options.headers['Origin'] = frontendUrl
+        
+        const authHeader = getHeader(event, 'Authorization')
+        if (authHeader) options.headers['Authorization'] = authHeader
+        
+        const cookieHeader = getHeader(event, 'cookie')
+        if (cookieHeader) options.headers['cookie'] = cookieHeader
+
+        // Forward FormData to backend - backend handles S3 upload
+        const response = await $fetch(courseUrl, options)
 
         return response
     } catch (error: any) {

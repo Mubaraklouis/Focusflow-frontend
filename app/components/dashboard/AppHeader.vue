@@ -3,12 +3,12 @@ import { computed } from 'vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import {
     Menu,
-    Bell,
     Search,
     ChevronRight,
     Home,
     Command
 } from 'lucide-vue-next';
+import NotificationsPopover from './NotificationsPopover.vue';
 
 interface Breadcrumb {
     title: string;
@@ -94,10 +94,7 @@ const emit = defineEmits<{
             </button>
 
             <!-- Notifications -->
-            <button class="relative flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                <Bell class="h-5 w-5" />
-                <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-            </button>
+            <NotificationsPopover />
 
             <!-- Theme toggle -->
             <ThemeToggle />

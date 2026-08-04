@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useHead } from '#imports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { GraduationCap, BookOpen, RefreshCw, Search, PlayCircle } from 'lucide-vue-next';
-import useGetCourses from '~/composables/courses/useGetCourses';
+import { useDiscoverCourses } from '~/composables/courses/useDiscoverCourses';
 import type { Course } from '~/composables/courses/useGetCourses';
+import { useEnrollment } from '~/composables/courses/useEnrollment';
 
 /**
  * Filter status type for course filtering
@@ -30,7 +31,21 @@ const breadcrumbs = [
 ];
 
 // Get courses from composable
-const { courses, loading, error, fetchCourses } = useGetCourses();
+const { courses, loading, error, fetchCourses } = useDiscoverCourses();
+const { myEnrollments, fetchMyEnrollments, enrollInCourse, isEnrolled, isLoading: isEnrolling } = useEnrollment();
+
+onMounted(async () => {
+    await fetchMyEnrollments();
+});
+
+const handleEnroll = async (courseId: number) => {
+    try {
+        await enrollInCourse(courseId);
+        await fetchMyEnrollments();
+    } catch (e) {
+        console.error('Failed to enroll:', e);
+    }
+};
 
 // Local state for filtering and search
 const activeFilter = ref<FilterStatus>('all');
@@ -316,22 +331,36 @@ watch([activeFilter, searchQuery], () => {
                                     <span class="text-sm text-muted-foreground">Progress</span>
                                 </div>
                                 
-                                <!-- Start/Continue button with different styles based on progress -->
-                                <Button 
-                                    :variant="course.course_progress > 0 ? 'outline' : 'default'" 
-                                    size="sm"
-                                    @click="navigateTo(`/courses/detail?id=${course.course_id}`)"
-                                    class="flex items-center gap-1.5"
-                                >
-                                    <template v-if="course.course_progress > 0">
-                                        <RefreshCw class="h-3.5 w-3.5" />
-                                        Continue
-                                    </template>
-                                    <template v-else>
-                                        <PlayCircle class="h-3.5 w-3.5" />
-                                        Start
-                                    </template>
-                                </Button>
+                                <template v-if="isEnrolled(course.course_id)">
+                                    <!-- Start/Continue button for enrolled courses -->
+                                    <Button 
+                                        :variant="course.course_progress > 0 ? 'outline' : 'default'" 
+                                        size="sm"
+                                        @click="navigateTo(`/courses/detail?id=${course.course_id}`)"
+                                        class="flex items-center gap-1.5"
+                                    >
+                                        <template v-if="course.course_progress > 0">
+                                            <RefreshCw class="h-3.5 w-3.5" />
+                                            Continue
+                                        </template>
+                                        <template v-else>
+                                            <PlayCircle class="h-3.5 w-3.5" />
+                                            Start Learning
+                                        </template>
+                                    </Button>
+                                </template>
+                                <template v-else>
+                                    <!-- Enroll button for unenrolled courses -->
+                                    <Button 
+                                        variant="default" 
+                                        size="sm"
+                                        @click="handleEnroll(course.course_id)"
+                                        :disabled="isEnrolling"
+                                        class="flex items-center gap-1.5"
+                                    >
+                                        Enroll Now
+                                    </Button>
+                                </template>
                             </div>
                         </div>
                     </div>

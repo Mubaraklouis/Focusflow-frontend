@@ -71,6 +71,8 @@ export interface UserProfile {
     location: string;
     /** User's personal website URL */
     website: string;
+    /** User's role: 'student', 'teacher', or 'admin' */
+    role: string;
     /** ISO date string of when user joined */
     joinedDate: string;
     /** List of achievements earned by the user */
@@ -90,6 +92,7 @@ const DEFAULT_PROFILE: Readonly<UserProfile> = Object.freeze({
     avatar: '',
     location: '',
     website: '',
+    role: 'student',
     joinedDate: '',
     achievements: [],
 });

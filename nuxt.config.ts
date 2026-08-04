@@ -13,8 +13,8 @@ export default defineNuxtConfig({
     laravelApiUrl: '',                                  // NUXT_LARAVEL_API_URL
     laravelApiKey: '',
     usersApiUrl: 'http://56.228.5.72',                  // NUXT_USERS_API_URL (auth svc)
-    coursesApiUrl: 'http://13.61.153.194/api/course',   // NUXT_COURSES_API_URL (course svc)
-    courseMaterialApiUrl: 'http://13.48.190.13/api/courses', // NUXT_COURSE_MATERIAL_API_URL
+    coursesApiUrl: 'http://56.228.5.72:8081/api/course',   // NUXT_COURSES_API_URL (course svc)
+    courseMaterialApiUrl: 'http://56.228.5.72:8080/api/courses', // NUXT_COURSE_MATERIAL_API_URL
     frontendUrl: 'https://focusfllow.vercel.app',       // NUXT_FRONTEND_URL (Origin/Referer to Laravel)
 
     public: {

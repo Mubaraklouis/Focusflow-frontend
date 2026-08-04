@@ -38,6 +38,7 @@ interface UserData {
     avatar?: string;
     location?: string;
     website?: string;
+    role?: string;
 }
 
 /**
@@ -99,6 +100,7 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
         avatar: avatarUrl,
         location: userData.location || '',
         website: userData.website || '',
+        role: userData.role || 'student',
         joinedDate: userData.created_at ? userData.created_at.split('T')[0] : '',
     };
 };
