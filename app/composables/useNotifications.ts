@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { toProxiedThumb } from '~/utils/thumbUrl';
 
 export interface Notification {
     id: number;
@@ -23,6 +24,9 @@ export function useNotifications() {
         loading.value = true;
         try {
             const data = await $fetch<Notification[]>('/api/notifications', { method: 'GET' });
+            data?.forEach((n) => {
+                if (n.course) n.course.course_thumb = toProxiedThumb(n.course.course_thumb)
+            });
             notifications.value = data || [];
         } catch (e) {
             console.error('Failed to fetch notifications', e);

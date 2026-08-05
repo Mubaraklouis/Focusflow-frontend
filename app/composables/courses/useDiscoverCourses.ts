@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import type { Course } from './useGetCourses';
+import { toProxiedThumb } from '~/utils/thumbUrl';
 
 export function useDiscoverCourses() {
     const courses = ref<Course[]>([]);
@@ -14,6 +15,11 @@ export function useDiscoverCourses() {
             const response = await $fetch<Course[]>('/api/courses', {
                 method: 'GET'
             });
+
+            // Serve MinIO thumbnails over HTTPS (browsers block http:// images)
+            response.forEach((course) => {
+                course.course_thumb = toProxiedThumb(course.course_thumb)
+            })
 
             // Filter courses to only show public ones
             courses.value = response.filter(

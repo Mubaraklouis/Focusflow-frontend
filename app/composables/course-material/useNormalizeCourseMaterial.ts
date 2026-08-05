@@ -4,6 +4,7 @@ import type {
   CourseMaterialModule,
   CourseMaterialResource,
 } from '~/interfaces/course-material';
+import { toProxiedThumb } from '~/utils/thumbUrl';
 
 /**
  * @module composables/course-material/useNormalizeCourseMaterial
@@ -87,7 +88,7 @@ export const normalizeCourseMaterial = (rawCourse: Record<string, any>): CourseM
     id: pick(rawCourse, ['id', 'course_id', 'uuid']) ?? '',
     title: String(pick(rawCourse, ['title', 'course_title']) ?? 'Untitled Course'),
     description: String(pick(rawCourse, ['description', 'course_description']) ?? ''),
-    thumbnail: pick(rawCourse, ['course_thumb', 'thumbnail', 'image']),
+    thumbnail: toProxiedThumb(pick(rawCourse, ['course_thumb', 'thumbnail', 'image'])),
     progress: Number(pick(rawCourse, ['progress', 'course_progress']) ?? 0),
     modules,
   };

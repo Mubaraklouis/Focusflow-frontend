@@ -1,4 +1,5 @@
 import type { Course } from './useGetCourses';
+import { toProxiedThumb } from '~/utils/thumbUrl';
 
 /**
  * Editable course fields surfaced on the settings screen.
@@ -56,7 +57,7 @@ export const useCourseSettings = () => {
                 course_description: course.course_description ?? '',
                 course_category_id: course.course_category_id ?? null,
                 course_visibility: course.course_visibility === 'public' ? 'public' : 'private',
-                course_thumb: course.course_thumb ?? '',
+                course_thumb: toProxiedThumb(course.course_thumb ?? ''),
                 course_thumb_file: null,
             };
         } catch (e: any) {

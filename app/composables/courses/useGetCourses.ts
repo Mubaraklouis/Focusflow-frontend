@@ -1,3 +1,5 @@
+import { toProxiedThumb } from '~/utils/thumbUrl';
+
 /**
  * Category interface for course categories
  */
@@ -87,6 +89,12 @@ export default function useGetCourses() {
             const response = await $fetch<Course[]>('/api/courses', {
                 method: 'GET'
             });
+
+            // Serve MinIO thumbnails over HTTPS (browsers block http:// images
+            // on the https:// frontend) — rewrites to /api/thumb/...
+            response.forEach((course) => {
+                course.course_thumb = toProxiedThumb(course.course_thumb)
+            })
 
             // Get the logged-in user's ID
             const loggedInUserId = userIdCookie.value

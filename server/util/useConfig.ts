@@ -10,12 +10,14 @@ const useConfig = () => {
     const courseUrl = config.coursesApiUrl
     const courseMaterialUrl = config.courseMaterialApiUrl
     const frontendUrl = config.frontendUrl
+    const storageUrl = config.storageUrl
 
     return {
         baseUrl,
         courseUrl,
         courseMaterialUrl,
-        frontendUrl
+        frontendUrl,
+        storageUrl
     }
 }
 
