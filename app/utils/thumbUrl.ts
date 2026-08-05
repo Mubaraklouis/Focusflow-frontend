@@ -6,6 +6,11 @@
  * pointing at the storage base is rewritten to `/api/thumb/<bucket>/<key>`,
  * which streams the object over HTTPS. Non-storage URLs (e.g. YouTube
  * thumbnails) pass through untouched.
+ *
+ * NOTE: this rewrite is opt-in — any composable/page that renders course
+ * thumbnails must run its URLs through toProxiedThumb (or fetch via a
+ * composable that already does), otherwise raw http:// MinIO URLs will be
+ * rendered and blocked by the browser as mixed content.
  */
 export const toProxiedThumb = (url?: string | null): string => {
     if (!url) return ''
