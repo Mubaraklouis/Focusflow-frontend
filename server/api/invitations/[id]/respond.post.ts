@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody, getHeader, setResponseStatus } from 'h3';
+import useConfig from "~~/server/util/useConfig"
 
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id;
@@ -6,6 +7,10 @@ export default defineEventHandler(async (event) => {
         setResponseStatus(event, 400);
         return { message: 'Invitation ID is required' };
     }
+
+    const { courseUrl, frontendUrl } = useConfig()
+    // courseUrl is "http://host/api/course"; invitations live at "http://host/api/invitations"
+    const url = `${courseUrl.replace(/\/api\/course\/?$/, '/api/invitations')}/${id}/respond`
 
     const body = await readBody(event);
     
@@ -18,12 +23,14 @@ export default defineEventHandler(async (event) => {
 
     const referer = getHeader(event, 'referer');
     if (referer) headers.set('referer', referer);
+    else headers.set('referer', frontendUrl);
 
     const origin = getHeader(event, 'origin');
     if (origin) headers.set('origin', origin);
+    else headers.set('origin', frontendUrl);
 
     try {
-        const response = await fetch(`http://localhost:8081/api/invitations/${id}/respond`, {
+        const response = await fetch(url, {
             method: 'POST',
             headers,
             body: JSON.stringify(body)

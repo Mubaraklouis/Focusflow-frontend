@@ -1,6 +1,11 @@
 import { defineEventHandler, getHeader, setResponseStatus } from 'h3';
+import useConfig from "~~/server/util/useConfig"
 
 export default defineEventHandler(async (event) => {
+    const { courseUrl, frontendUrl } = useConfig()
+    // courseUrl is "http://host/api/course"; notifications live at "http://host/api/notifications"
+    const url = courseUrl.replace(/\/api\/course\/?$/, '/api/notifications')
+
     const headers = new Headers();
     const cookieHeader = getHeader(event, 'cookie');
     if (cookieHeader) headers.set('cookie', cookieHeader);
@@ -10,12 +15,14 @@ export default defineEventHandler(async (event) => {
 
     const referer = getHeader(event, 'referer');
     if (referer) headers.set('referer', referer);
+    else headers.set('referer', frontendUrl);
 
     const origin = getHeader(event, 'origin');
     if (origin) headers.set('origin', origin);
+    else headers.set('origin', frontendUrl);
 
     try {
-        const response = await fetch('http://localhost:8081/api/notifications', {
+        const response = await fetch(url, {
             method: 'GET',
             headers
         });

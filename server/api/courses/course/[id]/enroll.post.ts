@@ -4,10 +4,8 @@ export default defineEventHandler(async (event) => {
     const { courseUrl, frontendUrl } = useConfig()
     const id = getRouterParam(event, 'id')
     
-    // The nuxt.config.ts courseUrl might be 'http://13.61.153.194/api/course'
-    // but the enroll endpoint on the backend is '/api/course/:id/enroll'
-    // Let's strip '/api/course' from the end if needed, or just append properly.
-    // Assuming courseUrl = "http://host/api/course"
+    // courseUrl is "http://host/api/course" (from nuxt.config.ts / env),
+    // and the enroll endpoint on the backend is '/api/course/:id/enroll'.
     const url = `${courseUrl}/${id}/enroll`
     
     const options: any = {
