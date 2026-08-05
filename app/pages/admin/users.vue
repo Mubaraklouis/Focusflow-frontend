@@ -92,7 +92,7 @@
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
-                      <img v-if="user.avatar" :src="user.avatar" alt="" class="w-full h-full object-cover" />
+                      <img v-if="user.avatar" :src="toProxiedAvatar(user.avatar)" alt="" class="w-full h-full object-cover" />
                       <span v-else>{{ user.name?.charAt(0).toUpperCase() || 'U' }}</span>
                     </div>
                     <div>
@@ -175,6 +175,7 @@ import { Input } from '@/components/ui/input'
 import { 
   ShieldAlert, Search, Loader2, CheckCircle2, AlertCircle, X
 } from 'lucide-vue-next'
+import { toProxiedAvatar } from '~/utils/thumbUrl'
 
 definePageMeta({ 
   layout: false, 

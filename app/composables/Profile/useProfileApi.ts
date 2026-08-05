@@ -21,6 +21,7 @@
 
 import { ref } from 'vue';
 import { useProfile, type UserProfile } from './useProfile';
+import { toProxiedAvatar } from '~/utils/thumbUrl';
 
 /**
  * User data from API response
@@ -84,12 +85,9 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
     const email = userData.email || '';
     const username = userData.username || (email ? email.split('@')[0] : '');
     
-    // Handle avatar URL - prepend backend URL if it's a relative path
-    let avatarUrl = userData.avatar || '';
-    if (avatarUrl && !avatarUrl.startsWith('http')) {
-        const { public: { backendUrl } } = useRuntimeConfig();
-        avatarUrl = `${backendUrl}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}`;
-    }
+    // Serve avatar images over HTTPS (browsers block http:// images on the
+    // https:// frontend) — rewrites auth-service paths to /api/avatar/...
+    const avatarUrl = toProxiedAvatar(userData.avatar || '');
     
     return {
         id: String(userData.id || ''),
