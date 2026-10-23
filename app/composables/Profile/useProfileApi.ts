@@ -86,7 +86,7 @@ const transformApiResponse = (userData: UserData): Partial<UserProfile> => {
     const username = userData.username || (email ? email.split('@')[0] : '');
     
     // Serve avatar images over HTTPS (browsers block http:// images on the
-    // https:// frontend) — rewrites auth-service paths to /api/avatar/...
+    // https:// frontend) — returns the API's HTTPS avatar URL
     const avatarUrl = toProxiedAvatar(userData.avatar || '');
     
     return {
