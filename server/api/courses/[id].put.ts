@@ -1,49 +1,8 @@
-import useConfig from "~~/server/util/useConfig"
+import { apiFetch } from '~~/server/util/api'
 
-/**
- * @module server/api/courses/[id].put
- * Proxies a course update to the Course Service.
- *
- * Forwards the incoming multipart/form-data (so an optional new thumbnail and
- * any changed fields — including `course_visibility` for the public/private
- * toggle — reach the backend) to `PUT ${courseUrl}/:id`.
- */
+/** PUT /api/courses/:id (multipart) → API PUT /api/course/:id (owner only). */
 export default defineEventHandler(async (event) => {
-    const { courseUrl } = useConfig()
-    const id = getRouterParam(event, 'id')
-
-    if (!id) {
-        throw createError({ statusCode: 400, message: 'Course id is required' })
-    }
-
-    try {
-        const formData = await readFormData(event)
-        
-        const options: any = {
-            method: 'PUT',
-            body: formData,
-            headers: {}
-        }
-        
-        const frontendUrl = useConfig().frontendUrl
-        options.headers['Referer'] = frontendUrl
-        options.headers['Origin'] = frontendUrl
-        
-        const authHeader = getHeader(event, 'Authorization')
-        if (authHeader) options.headers['Authorization'] = authHeader
-        
-        const cookieHeader = getHeader(event, 'cookie')
-        if (cookieHeader) options.headers['cookie'] = cookieHeader
-        
-        const response = await $fetch(`${courseUrl}/${id}`, options)
-
-        return response
-    } catch (error: any) {
-        console.error('[courses/[id].put.ts] Course update failed:', error)
-        throw createError({
-            statusCode: error.response?.status || 500,
-            message: error.data?.message || error.message || 'Failed to update course',
-            data: error.data,
-        })
-    }
+  const id = getRouterParam(event, 'id')
+  const form = await readFormData(event)
+  return apiFetch(event, `/api/course/${id}`, { method: 'PUT', body: form })
 })

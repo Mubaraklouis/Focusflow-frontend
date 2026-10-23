@@ -91,7 +91,7 @@ export default function useGetCourses() {
             });
 
             // Serve MinIO thumbnails over HTTPS (browsers block http:// images
-            // on the https:// frontend) — rewrites to /api/thumb/...
+            // on the https:// frontend) — returns the API's HTTPS thumbnail URL
             response.forEach((course) => {
                 course.course_thumb = toProxiedThumb(course.course_thumb)
             })

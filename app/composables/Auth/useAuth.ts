@@ -8,13 +8,15 @@
  * ## 🎯 Purpose
  *
  * - Provides a centralized, reactive authentication state across the application
- * - Verifies authentication by checking Laravel Sanctum session cookies
+ * - Verifies authentication by checking the FocusFlow API session cookie (ff_session)
  * - Works seamlessly on both server-side (SSR) and client-side (SPA)
  * - Integrates with Nuxt's `useState` for SSR hydration
  *
  * ## 🔐 Authentication Model
  *
- * Authentication is determined by the presence of **both** cookies:
+ * Authentication is determined by the presence of the httpOnly `ff_session`
+ * cookie (set by the API on login/register and relayed by server/api/*).
+ * Previously (Laravel) it needed both of these cookies:
  * - `focusflow-session` - Laravel session identifier
  * - `XSRF-TOKEN` - CSRF protection token
  *
@@ -159,23 +161,14 @@ export const useAuth = () => {
      * ```
      */
     const checkAuth = (): boolean => {
-        // Use Nuxt's useCookie which works on both server and client
-        const focusflowSession = useCookie('focusflow-session')
-        const xsrfToken = useCookie('XSRF-TOKEN')
-
-        const hasFocusflowSession = !!focusflowSession.value
-        const hasXsrfToken = !!xsrfToken.value
-
-        console.log('useAuth: Checking cookies - focusflow-session:', hasFocusflowSession, 'XSRF-TOKEN:', hasXsrfToken)
-
-        // User is authenticated if BOTH tokens exist
-        if (hasFocusflowSession && hasXsrfToken) {
-            console.log('useAuth: Both session tokens found, user is authenticated')
+        // ff_session is the FocusFlow API session (httpOnly: readable during SSR).
+        // Its presence is the check here; the API rejects expired sessions with 401.
+        const session = useCookie('ff_session')
+        if (session.value) {
             isAuthenticated.value = true
             return true
         }
 
-        console.log('useAuth: Missing tokens, user is not authenticated')
         isAuthenticated.value = false
         return false
     }

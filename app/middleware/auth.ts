@@ -18,9 +18,9 @@ import { useAuth } from '~/composables/Auth/useAuth'
  *
  * ### Server-Side Rendering (SSR)
  * 1. Middleware intercepts navigation to protected route
- * 2. Calls `checkAuth()` which reads `focusflow-session` and `XSRF-TOKEN` cookies
+ * 2. Calls `checkAuth()` which reads the `ff_session` cookie
  * 3. Sets `isAuthenticated` state based on cookie presence
- * 4. Allows access if both tokens exist, otherwise redirects to `/login`
+ * 4. Allows access if the session cookie exists, otherwise redirects to `/login`
  * 5. State is hydrated to client for subsequent navigations
  *
  * ### Client-Side Navigation (SPA)
@@ -53,8 +53,7 @@ import { useAuth } from '~/composables/Auth/useAuth'
  * ## 🔗 Dependencies
  *
  * - {@link useAuth} - Composable providing authentication state and verification
- * - `focusflow-session` cookie - Laravel Sanctum session identifier
- * - `XSRF-TOKEN` cookie - CSRF protection token
+ * - `ff_session` cookie - FocusFlow API session (httpOnly)
  *
  * @see {@link useAuth} for the authentication state management composable
  * @see {@link checkAuth} for the cookie verification implementation

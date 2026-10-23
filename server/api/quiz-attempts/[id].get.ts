@@ -1,33 +1,8 @@
-import useConfig from '~~/server/util/useConfig';
+import { apiFetch, forwardQuery } from '~~/server/util/api'
 
-/**
- * @module server/api/quiz-attempts/[id].get
- *
- * Returns one quiz attempt with all answer line items eager-loaded. The
- * results page polls this until `status` flips from `evaluating` to
- * `completed` (or `failed`).
- */
+/** GET /api/quiz-attempts/{id} → API GET /api/quiz-attempts/:id. One quiz attempt (poll until status is completed). */
 export default defineEventHandler(async (event) => {
-  const { courseMaterialUrl } = useConfig();
-  const id = getRouterParam(event, 'id');
-
-  if (!id || isNaN(Number(id))) {
-    throw createError({ statusCode: 400, message: 'attempt id is required and must be numeric' });
-  }
-
-  // courseMaterialUrl points at `.../api/courses` — swap to `.../api/quiz-attempts`.
-  const base = courseMaterialUrl.replace(/\/api\/courses\/?$/, '/api/quiz-attempts');
-
-  try {
-    return await $fetch<unknown>(`${base}/${id}`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-  } catch (error: any) {
-    throw createError({
-      statusCode: error?.response?.status || error?.statusCode || 500,
-      message: error?.data?.error || error?.message || 'Failed to fetch attempt',
-      data: error?.data,
-    });
-  }
-});
+  const id = getRouterParam(event, 'id')
+  if (!id || isNaN(Number(id))) throw createError({ statusCode: 400, message: 'id must be numeric' })
+  return apiFetch(event, `/api/quiz-attempts/${id}`, { query: forwardQuery(event) })
+})

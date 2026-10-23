@@ -1,94 +1,21 @@
-import useConfig from "~~/server/util/useConfig"
-import useForwardCookies from "~~/server/composables/global/useForwardCookies"
+import { apiFetch, rememberUserId } from '~~/server/util/api'
 
+/**
+ * GET /api/v1/auth/google/callback (Google redirects here: this URL is the
+ * GOOGLE_REDIRECT_URI). Passes code+state to the API, which signs the user in
+ * and sets ff_session; then the browser goes to the dashboard.
+ */
 export default defineEventHandler(async (event) => {
-    const { baseUrl } = useConfig()
-    
-    // Get the frontend URL from the request (handles both development and production)
-    const requestUrl = getRequestURL(event)
-    const frontendUrl = `${requestUrl.protocol}//${requestUrl.host}`
-
-    // Get query parameters from the OAuth callback (code, state, etc.)
-    const query = getQuery(event)
-
-    // Get cookies from the browser request to forward to Laravel
-    // This is CRITICAL - Laravel needs the same session to validate OAuth state
-    const browserCookies = getHeader(event, 'cookie') || ''
-
-    try {
-        // Forward the callback to Laravel's Google callback endpoint with all query params
-        const callbackResponse = await $fetch.raw(`${baseUrl}/api/v1/auth/google/callback`, {
-            method: 'GET',
-            query: query,
-            credentials: 'include',
-            redirect: 'manual',
-            headers: {
-                'Cookie': browserCookies
-            }
-        })
-
-        // Extract authentication cookies from Laravel
-        const cookies = callbackResponse.headers.getSetCookie?.() || []
-
-        // Forward all cookies to the browser on the frontend domain
-        useForwardCookies(cookies, event)
-
-        // Check if the response contains user data (successful authentication)
-        const userData = callbackResponse._data as any
-
-        // Save user_id in cookie for profile retrieval (same as regular login)
-        if (userData?.user_id || userData?.user?.id) {
-            const userId = userData.user_id || userData.user.id
-            
-            setCookie(event, 'focusflow-user-id', String(userId), {
-                path: '/',
-                httpOnly: false,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 60 * 60 * 24 * 7, // 7 days
-            })
-        }
-
-        if (userData && (userData.user || userData.success)) {
-            // Successful authentication - redirect to dashboard
-            return sendRedirect(event, '/dashboard')
-        }
-
-        // If there's a redirect in the response, follow it
-        const locationHeader = callbackResponse.headers.get('location')
-        if (locationHeader) {
-            // Normalize redirect URL to use the current frontend URL
-            let redirectUrl = locationHeader
-            try {
-                const redirectParsed = new URL(redirectUrl)
-                const frontendParsed = new URL(frontendUrl)
-                // If the redirect points to a different host, rewrite it to the frontend
-                if (redirectParsed.host !== frontendParsed.host) {
-                    redirectUrl = `${frontendUrl}${redirectParsed.pathname}${redirectParsed.search}${redirectParsed.hash}`
-                }
-            } catch {
-                // If URL parsing fails, it's likely a relative URL — use as-is
-            }
-            
-            // If it's a relative URL, make it absolute
-            if (redirectUrl.startsWith('/')) {
-                return sendRedirect(event, redirectUrl)
-            }
-            return sendRedirect(event, redirectUrl)
-        }
-
-        // Default success redirect
-        return sendRedirect(event, '/dashboard')
-
-    } catch (error: any) {
-        console.error('Google callback error:', error)
-
-        // Redirect to login page with error message
-        const errorMessage = encodeURIComponent(
-            error.data?.message || error.message || 'Google authentication failed'
-        )
-
-        // Use relative URL to stay on the correct domain
-        return sendRedirect(event, `/login?error=${errorMessage}`)
-    }
+  const { code, state, error } = getQuery(event)
+  if (error) {
+    return sendRedirect(event, `/login?error=${encodeURIComponent('Google sign-in was cancelled')}`)
+  }
+  try {
+    const data = await apiFetch(event, '/api/v1/auth/google/callback', { query: { code, state } })
+    rememberUserId(event, data)
+    return sendRedirect(event, '/dashboard')
+  } catch (err: any) {
+    const message = err?.data?.message || err?.message || 'Google authentication failed'
+    return sendRedirect(event, `/login?error=${encodeURIComponent(message)}`)
+  }
 })
