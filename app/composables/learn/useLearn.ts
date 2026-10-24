@@ -11,6 +11,7 @@ export interface Digest {
   summary: string
   topics: string[] | null
   key_points: string[] | null
+  concepts?: { name: string; summary: string; pages: number[] | null; slides: number[] | null }[] | null
 }
 
 export interface Material {
@@ -27,6 +28,28 @@ export interface Material {
   created_at: string
 }
 
+/** Where a concept can be checked, with a link that opens at the right place. */
+export interface ConceptSource {
+  material_id: number
+  pages?: number[]
+  slides?: number[]
+  start_seconds?: number
+  title: string
+  kind: MaterialKind
+  url: string
+  hint: string
+  youtube_id?: string
+}
+
+export interface Concept {
+  id: number
+  unit_id: number
+  position: number
+  title: string
+  explanation: string
+  sources: ConceptSource[]
+}
+
 export interface Unit {
   id: number
   course_id: number
@@ -37,6 +60,8 @@ export interface Unit {
   locked?: boolean
   completed?: boolean
   materials?: Material[]
+  concepts?: Concept[]
+  concept_names?: string[]
 }
 
 export interface LearnCourse {
@@ -126,6 +151,14 @@ export function useLearn() {
       send<Unit>('PUT', `units/${uid}`, body),
     deleteUnit: (uid: number) => send('DELETE', `units/${uid}`),
     reorderUnits: (id: number, unitIds: number[]) => send<Unit[]>('PUT', `courses/${id}/units/order`, { unit_ids: unitIds }),
+
+    addConcept: (uid: number, title: string, explanation = '') =>
+      send<Concept>('POST', `units/${uid}/concepts`, { title, explanation }),
+    updateConcept: (cid: number, body: { title?: string; explanation?: string }) =>
+      send<Concept[]>('PUT', `concepts/${cid}`, body),
+    deleteConcept: (cid: number) => send('DELETE', `concepts/${cid}`),
+    reorderConcepts: (uid: number, conceptIds: number[]) =>
+      send<Concept[]>('PUT', `units/${uid}/concepts/order`, { concept_ids: conceptIds }),
 
     publish: (id: number, visibility: 'public' | 'private', confirmRights: boolean) =>
       send<LearnCourse>('POST', `courses/${id}/publish`, { visibility, confirm_rights: confirmRights }),

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { FileText, Presentation, Link2, ExternalLink, CheckCircle2, ArrowLeft, ArrowRight, Trophy, Lock } from 'lucide-vue-next'
 import { useLearn, apiError, kindLabel, type Unit, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
 import { renderMarkdown } from '~/utils/markdown'
+import ConceptSources from '~/components/learn/ConceptSources.vue'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
 
@@ -103,8 +104,24 @@ const docIcon = { pdf: FileText, slides: Presentation, link: Link2, video: Link2
 
         <div v-if="unit.body" class="md-content" v-html="renderMarkdown(unit.body)" />
 
+        <!-- Concepts: each explained, with where to check it in the sources -->
+        <section v-if="unit.concepts?.length" class="mt-8 space-y-5">
+          <h2 class="text-lg font-semibold">Key concepts</h2>
+          <div v-for="(c, i) in unit.concepts" :key="c.id" :id="`concept-${c.id}`"
+            class="rounded-lg border border-border bg-card p-5">
+            <h3 class="font-semibold text-foreground flex items-baseline gap-2">
+              <span class="text-primary text-sm">{{ i + 1 }}.</span>{{ c.title }}
+            </h3>
+            <div v-if="c.explanation" class="md-content mt-2 text-[0.95rem]" v-html="renderMarkdown(c.explanation)" />
+            <div v-if="c.sources.length" class="mt-4 border-t border-border pt-3">
+              <p class="text-xs text-muted-foreground mb-2">Want to understand this better? Check the source:</p>
+              <ConceptSources :sources="c.sources" />
+            </div>
+          </div>
+        </section>
+
         <section v-if="docs.length" class="mt-8">
-          <h2 class="text-lg font-semibold mb-3">Materials</h2>
+          <h2 class="text-lg font-semibold mb-3">All materials for this unit</h2>
           <ul class="space-y-2">
             <li v-for="m in docs" :key="m.id">
               <a :href="m.url" target="_blank" rel="noopener noreferrer"

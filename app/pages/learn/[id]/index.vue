@@ -109,11 +109,17 @@ const join = async () => {
               class="flex items-center gap-3 rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
               <CheckCircle2 v-if="u.completed" class="h-5 w-5 text-green-600 shrink-0" />
               <span v-else class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">{{ i + 1 }}</span>
-              <span class="font-medium">{{ u.title }}</span>
+              <span class="min-w-0">
+                <span class="font-medium block">{{ u.title }}</span>
+                <span v-if="u.concept_names?.length" class="text-xs text-muted-foreground line-clamp-1">{{ u.concept_names.join(' · ') }}</span>
+              </span>
             </NuxtLink>
             <div v-else class="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4 text-muted-foreground">
               <Lock class="h-5 w-5 shrink-0" />
-              <span>{{ u.title }}</span>
+              <span class="min-w-0">
+                <span class="block">{{ u.title }}</span>
+                <span v-if="u.concept_names?.length" class="text-xs line-clamp-1">{{ u.concept_names.join(' · ') }}</span>
+              </span>
               <span class="ml-auto text-xs">{{ learner?.enrolled ? 'Finish the previous unit' : 'Join to unlock' }}</span>
             </div>
           </li>

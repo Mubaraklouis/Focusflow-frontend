@@ -6,7 +6,8 @@ import {
   FileText, Presentation, PlayCircle, Link2, Upload, Loader2, CheckCircle2, AlertCircle, RotateCw, Trash2,
   Sparkles, ChevronUp, ChevronDown, Plus, Eye, Pencil, Globe, Lock, Rocket, Undo2, Users,
 } from 'lucide-vue-next'
-import { useLearn, apiError, kindLabel, type CreatorView, type Material, type Unit, type MaterialKind } from '~/composables/learn/useLearn'
+import { useLearn, apiError, kindLabel, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
+import ConceptSources from '~/components/learn/ConceptSources.vue'
 import { renderMarkdown } from '~/utils/markdown'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -214,6 +215,58 @@ const addUnit = async () => {
   }
 }
 
+// ── concepts ───────────────────────────────────────────────────────────
+const editingConcept = ref<number | null>(null)
+const conceptDraft = ref({ title: '', explanation: '' })
+const newConcept = ref('')
+
+const startConceptEdit = (c: Concept) => {
+  editingConcept.value = c.id
+  conceptDraft.value = { title: c.title, explanation: c.explanation }
+}
+const saveConcept = async (c: Concept) => {
+  try {
+    await api.updateConcept(c.id, conceptDraft.value)
+    editingConcept.value = null
+    await load(true)
+  } catch (e) {
+    flash('error', apiError(e))
+  }
+}
+const removeConcept = async (c: Concept) => {
+  if (!confirm(`Remove the concept "${c.title}"?`)) return
+  try {
+    await api.deleteConcept(c.id)
+    await load(true)
+  } catch (e) {
+    flash('error', apiError(e))
+  }
+}
+const moveConcept = async (u: Unit, index: number, delta: number) => {
+  const ids = (u.concepts ?? []).map((c) => c.id)
+  const j = index + delta
+  if (j < 0 || j >= ids.length) return
+  ;[ids[index], ids[j]] = [ids[j], ids[index]]
+  try {
+    await api.reorderConcepts(u.id, ids)
+    await load(true)
+  } catch (e) {
+    flash('error', apiError(e))
+  }
+}
+const addConcept = async (u: Unit) => {
+  if (!newConcept.value.trim()) return
+  try {
+    const res = await api.addConcept(u.id, newConcept.value.trim())
+    newConcept.value = ''
+    await load(true)
+    const fresh = units.value.find((x) => x.id === u.id)?.concepts?.find((c) => c.id === res.data.id)
+    if (fresh) startConceptEdit(fresh)
+  } catch (e) {
+    flash('error', apiError(e))
+  }
+}
+
 // ── publish ────────────────────────────────────────────────────────────
 const visibility = ref<'public' | 'private'>('public')
 const confirmRights = ref(false)
@@ -317,6 +370,9 @@ const unpublish = async () => {
                   <span class="text-xs text-muted-foreground">{{ kindLabel[m.kind] }} {{ sizeLabel(m.size_bytes) }}</span>
                 </div>
                 <p v-if="m.status === 'ready' && m.digest?.summary && m.kind !== 'link' && m.kind !== 'video'" class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ m.digest.summary }}</p>
+                <p v-if="m.status === 'ready' && m.digest?.concepts?.length" class="text-xs text-primary mt-1">
+                  {{ m.digest.concepts.length }} concepts found: {{ m.digest.concepts.slice(0, 4).map((c) => c.name).join(', ') }}{{ m.digest.concepts.length > 4 ? '…' : '' }}
+                </p>
                 <p v-if="m.status === 'failed'" class="text-xs text-destructive mt-1">{{ m.error }}</p>
               </div>
               <span v-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />Reading…</span>
@@ -331,7 +387,7 @@ const unpublish = async () => {
         <section class="rounded-lg border border-border bg-card p-5 mb-6">
           <h2 class="text-lg font-semibold mb-1">2. Organise with AI</h2>
           <p class="text-sm text-muted-foreground mb-4">
-            The AI groups your materials into units in a sensible order and writes a short text for each unit. You can edit everything afterwards.
+            The AI reads every material, finds the key concepts and where each one appears (pages, slides), then builds units that teach those concepts in order, each linked to its sources. You can edit everything afterwards.
           </p>
           <div v-if="course.organise_status === 'processing'" class="flex items-center gap-2 text-sm">
             <Loader2 class="h-4 w-4 animate-spin text-primary" /> Organising your course… this usually takes under a minute.
@@ -364,7 +420,7 @@ const unpublish = async () => {
                 <div class="flex-1 min-w-0">
                   <p class="font-medium truncate">{{ u.title }}</p>
                   <p class="text-xs text-muted-foreground">
-                    {{ (u.materials ?? []).length }} materials · {{ u.source === 'ai' ? 'written by AI' : 'written by you' }}
+                    {{ (u.concepts ?? []).length }} concepts · {{ (u.materials ?? []).length }} materials · {{ u.source === 'ai' ? 'drafted by AI' : 'written by you' }}
                   </p>
                 </div>
                 <button type="button" class="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30" :disabled="i === 0" title="Move up" @click="move(i, -1)"><ChevronUp class="h-4 w-4" /></button>
@@ -382,9 +438,47 @@ const unpublish = async () => {
                   </div>
                   <textarea v-if="!preview" v-model="draft.body" rows="12"
                     class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Explain the unit. Markdown works: # headings, **bold**, lists, links." />
+                    placeholder="Unit introduction: what this unit covers and why it matters. Markdown works." />
                   <div v-else class="md-content rounded-md border border-border p-4 min-h-40" v-html="renderMarkdown(draft.body)" />
                 </div>
+                <!-- Concepts -->
+                <div>
+                  <p class="text-sm font-medium mb-2">Concepts <span class="text-muted-foreground font-normal">(each explained and linked to its sources; changes save on their own)</span></p>
+                  <ol class="space-y-2">
+                    <li v-for="(c, ci) in u.concepts ?? []" :key="c.id" class="rounded-md border border-border p-3">
+                      <template v-if="editingConcept === c.id">
+                        <Input v-model="conceptDraft.title" class="mb-2" maxlength="255" />
+                        <textarea v-model="conceptDraft.explanation" rows="6"
+                          class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          placeholder="Explain the concept (Markdown)" />
+                        <div class="mt-2 flex justify-end gap-2">
+                          <Button type="button" variant="outline" class="h-8 px-3" @click="editingConcept = null">Cancel</Button>
+                          <Button type="button" class="h-8 px-3" :disabled="!conceptDraft.title.trim()" @click="saveConcept(c)">Save concept</Button>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <div class="flex items-start gap-2">
+                          <span class="text-xs text-primary font-semibold mt-0.5">{{ ci + 1 }}.</span>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium">{{ c.title }}</p>
+                            <p class="text-xs text-muted-foreground line-clamp-2 mt-0.5">{{ c.explanation }}</p>
+                            <ConceptSources class="mt-2" :sources="c.sources" />
+                            <p v-if="!c.sources.length" class="mt-1 text-xs text-amber-700 dark:text-amber-400">No source linked</p>
+                          </div>
+                          <button type="button" class="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30" :disabled="ci === 0" title="Move up" @click="moveConcept(u, ci, -1)"><ChevronUp class="h-4 w-4" /></button>
+                          <button type="button" class="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30" :disabled="ci === (u.concepts ?? []).length - 1" title="Move down" @click="moveConcept(u, ci, 1)"><ChevronDown class="h-4 w-4" /></button>
+                          <button type="button" class="p-1 text-muted-foreground hover:text-foreground" title="Edit" @click="startConceptEdit(c)"><Pencil class="h-4 w-4" /></button>
+                          <button type="button" class="p-1 text-muted-foreground hover:text-destructive" title="Remove" @click="removeConcept(c)"><Trash2 class="h-4 w-4" /></button>
+                        </div>
+                      </template>
+                    </li>
+                  </ol>
+                  <form class="mt-2 flex gap-2" @submit.prevent="addConcept(u)">
+                    <Input v-model="newConcept" placeholder="Add a concept" maxlength="255" />
+                    <Button type="submit" variant="outline" :disabled="!newConcept.trim()"><Plus class="h-4 w-4 mr-1" />Add</Button>
+                  </form>
+                </div>
+
                 <div>
                   <p class="text-sm font-medium mb-2">Materials in this unit <span class="text-muted-foreground font-normal">(in the order you tick them)</span></p>
                   <div class="grid gap-1 sm:grid-cols-2">
