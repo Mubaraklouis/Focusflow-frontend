@@ -29,12 +29,24 @@ export interface Material {
   total_pages?: number
   read_pages?: number
   reading?: boolean
+  /** Long videos are watched in parts (seconds). */
+  total_seconds?: number
+  read_seconds?: number
   created_at: string
+}
+
+/** Seconds as m:ss or h:mm:ss. */
+export const clock = (sec = 0) => {
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
+  const ss = String(s).padStart(2, '0')
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`
 }
 
 /** A long PDF whose reading stopped before the end (Retry continues it). */
 export const partlyRead = (m: Material) =>
-  m.status === 'ready' && !m.reading && !!m.read_pages && !!m.total_pages && m.read_pages < m.total_pages
+  m.status === 'ready' && !m.reading &&
+  ((!!m.read_pages && !!m.total_pages && m.read_pages < m.total_pages) ||
+   (!!m.read_seconds && !!m.total_seconds && m.read_seconds < m.total_seconds))
 
 /** Where a concept can be checked, with a link that opens at the right place. */
 export interface ConceptSource {
