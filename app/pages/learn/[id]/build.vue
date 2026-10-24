@@ -6,7 +6,7 @@ import {
   FileText, Presentation, PlayCircle, Link2, Upload, Loader2, CheckCircle2, AlertCircle, RotateCw, Trash2,
   Sparkles, ChevronUp, ChevronDown, Plus, Eye, Pencil, Globe, Lock, Rocket, Undo2, Users,
 } from 'lucide-vue-next'
-import { useLearn, apiError, kindLabel, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
+import { useLearn, apiError, kindLabel, partlyRead, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
 import { renderMarkdown } from '~/utils/markdown'
 
@@ -58,7 +58,7 @@ const load = async (quiet = false) => {
 
 // Refresh every 3 s while the AI is reading materials or organising
 const busy = computed(() =>
-  materials.value.some((m) => m.status === 'processing') || course.value?.organise_status === 'processing' ||
+  materials.value.some((m) => m.status === 'processing' || m.reading) || course.value?.organise_status === 'processing' ||
   course.value?.references_status === 'processing')
 let poll: ReturnType<typeof setInterval> | undefined
 watch(busy, (b) => {
@@ -391,9 +391,14 @@ const unpublish = async () => {
                 <p v-if="m.status === 'ready' && m.digest?.concepts?.length" class="text-xs text-primary mt-1">
                   {{ m.digest.concepts.length }} concepts found: {{ m.digest.concepts.slice(0, 4).map((c) => c.name).join(', ') }}{{ m.digest.concepts.length > 4 ? '…' : '' }}
                 </p>
-                <p v-if="m.status === 'failed'" class="text-xs text-destructive mt-1">{{ m.error }}</p>
+                <p v-if="m.status === 'ready' && m.total_pages && m.read_pages && m.read_pages < m.total_pages" class="text-xs text-muted-foreground mt-1">
+                  Pages 1–{{ m.read_pages }} of {{ m.total_pages }} read<template v-if="m.reading">. Reading the rest in parts; you can already organise, and new units are added as more pages are read.</template>
+                </p>
+                <p v-if="m.status === 'failed' || (m.status === 'ready' && m.error)" class="text-xs text-destructive mt-1">{{ m.error }}</p>
               </div>
               <span v-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching…' : 'Reading…' }}</span>
+              <span v-else-if="m.reading" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />Reading more…</span>
+              <button v-else-if="partlyRead(m)" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />Continue reading</button>
               <CheckCircle2 v-else-if="m.status === 'ready'" class="h-4 w-4 text-green-600 mt-0.5" />
               <button v-else-if="m.status === 'failed'" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />Retry</button>
               <button type="button" class="text-muted-foreground hover:text-destructive" title="Remove" @click="removeMaterial(m)"><Trash2 class="h-4 w-4" /></button>
@@ -408,7 +413,9 @@ const unpublish = async () => {
             The AI reads every material, finds the key concepts and where each one appears (pages, slides, video times), then builds units that explain each concept step by step with an example, a common mistake and a self-check question, linked to its sources. It then searches the web for free resources to expand each concept. You can edit everything afterwards.
           </p>
           <div v-if="course.organise_status === 'processing'" class="flex items-center gap-2 text-sm">
-            <Loader2 class="h-4 w-4 animate-spin text-primary" /> Organising your course… this usually takes under a minute.
+            <Loader2 class="h-4 w-4 animate-spin text-primary" />
+            <template v-if="course.organise_more">Adding units for the newly read pages… your existing units stay as they are.</template>
+            <template v-else>Organising your course… this usually takes under a minute.</template>
           </div>
           <template v-else>
             <div class="flex flex-wrap items-center gap-3">
@@ -418,7 +425,7 @@ const unpublish = async () => {
               <span class="text-xs text-muted-foreground">{{ runsLeft }} of {{ limits?.organise_runs_per_course }} AI runs left</span>
             </div>
             <p v-if="organiseBlocked" class="mt-2 text-sm text-muted-foreground">{{ organiseBlocked }}</p>
-            <p v-if="course.organise_status === 'failed' && course.organise_error" class="mt-2 text-sm text-destructive">{{ course.organise_error }}</p>
+            <p v-if="course.organise_error && course.organise_status !== 'idle'" class="mt-2 text-sm text-destructive">{{ course.organise_error }}</p>
           </template>
           <div v-if="units.length" class="mt-4 border-t border-border pt-4 flex flex-wrap items-center gap-3 text-sm">
             <span class="font-medium">Expand-your-knowledge references:</span>
