@@ -14,7 +14,9 @@ import {
     Shield,
     GraduationCap,
     Users,
-    BarChart3
+    BarChart3,
+    Library,
+    Compass
 } from 'lucide-vue-next';
 import { useLogout } from '~/composables/Auth/useLogout';
 import { useProfile } from '~/composables/Profile';
@@ -57,6 +59,8 @@ const userRole = computed(() => profile.value?.role || 'student');
 const navigationItems = computed<NavItem[]>(() => {
     const items: NavItem[] = [
         { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+        { title: 'My Learning', icon: Library, href: '/learn' },
+        { title: 'Browse Courses', icon: Compass, href: '/learn/browse' },
         { title: 'Discover Courses', icon: BookOpen, href: '/courses' },
         { title: 'Quiz History', icon: ListTodo, href: '/quizzes' },
     ];
