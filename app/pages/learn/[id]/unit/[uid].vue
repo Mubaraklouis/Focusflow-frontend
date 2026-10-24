@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { FileText, Presentation, Link2, ExternalLink, CheckCircle2, ArrowLeft, ArrowRight, Trophy, Lock } from 'lucide-vue-next'
+import { FileText, Presentation, Link2, ExternalLink, CheckCircle2, ArrowLeft, ArrowRight, Trophy, Lock, Telescope } from 'lucide-vue-next'
 import { useLearn, apiError, kindLabel, type Unit, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
 import { renderMarkdown } from '~/utils/markdown'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
@@ -116,6 +116,18 @@ const docIcon = { pdf: FileText, slides: Presentation, link: Link2, video: Link2
             <div v-if="c.sources.length" class="mt-4 border-t border-border pt-3">
               <p class="text-xs text-muted-foreground mb-2">Want to understand this better? Check the source:</p>
               <ConceptSources :sources="c.sources" />
+            </div>
+            <div v-if="c.references?.length" class="mt-4 border-t border-border pt-3">
+              <p class="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1"><Telescope class="h-3.5 w-3.5" />Expand your knowledge</p>
+              <ul class="space-y-1.5">
+                <li v-for="r in c.references" :key="r.url">
+                  <a :href="r.url" target="_blank" rel="noopener noreferrer nofollow" class="group block rounded-md px-2 py-1.5 -mx-2 hover:bg-accent">
+                    <span class="text-sm font-medium text-primary group-hover:underline">{{ r.title }}</span>
+                    <span class="text-xs text-muted-foreground"> · {{ r.site }}</span>
+                    <span v-if="r.why" class="block text-xs text-muted-foreground">{{ r.why }}</span>
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </section>

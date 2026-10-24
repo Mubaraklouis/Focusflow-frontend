@@ -41,6 +41,14 @@ export interface ConceptSource {
   youtube_id?: string
 }
 
+/** An outside resource to expand knowledge (found by web search). */
+export interface Reference {
+  title: string
+  url: string
+  site: string
+  why: string
+}
+
 export interface Concept {
   id: number
   unit_id: number
@@ -48,6 +56,7 @@ export interface Concept {
   title: string
   explanation: string
   sources: ConceptSource[]
+  references: Reference[] | null
 }
 
 export interface Unit {
@@ -79,6 +88,7 @@ export interface LearnCourse {
   organise_status: JobStatus
   organise_error?: string
   organise_runs: number
+  references_status: JobStatus
   units?: number
   learners?: number
 }
@@ -154,7 +164,8 @@ export function useLearn() {
 
     addConcept: (uid: number, title: string, explanation = '') =>
       send<Concept>('POST', `units/${uid}/concepts`, { title, explanation }),
-    updateConcept: (cid: number, body: { title?: string; explanation?: string }) =>
+    findReferences: (id: number) => send('POST', `courses/${id}/references`),
+    updateConcept: (cid: number, body: { title?: string; explanation?: string; keep_reference_urls?: string[] }) =>
       send<Concept[]>('PUT', `concepts/${cid}`, body),
     deleteConcept: (cid: number) => send('DELETE', `concepts/${cid}`),
     reorderConcepts: (uid: number, conceptIds: number[]) =>

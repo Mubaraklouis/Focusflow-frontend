@@ -58,7 +58,8 @@ const load = async (quiet = false) => {
 
 // Refresh every 3 s while the AI is reading materials or organising
 const busy = computed(() =>
-  materials.value.some((m) => m.status === 'processing') || course.value?.organise_status === 'processing')
+  materials.value.some((m) => m.status === 'processing') || course.value?.organise_status === 'processing' ||
+  course.value?.references_status === 'processing')
 let poll: ReturnType<typeof setInterval> | undefined
 watch(busy, (b) => {
   clearInterval(poll)
@@ -254,6 +255,23 @@ const moveConcept = async (u: Unit, index: number, delta: number) => {
     flash('error', apiError(e))
   }
 }
+const removeReference = async (c: Concept, url: string) => {
+  try {
+    await api.updateConcept(c.id, { keep_reference_urls: (c.references ?? []).map((r) => r.url).filter((u) => u !== url) })
+    await load(true)
+  } catch (e) {
+    flash('error', apiError(e))
+  }
+}
+const findReferences = async () => {
+  try {
+    await api.findReferences(courseId)
+    await load(true)
+  } catch (e) {
+    flash('error', apiError(e))
+  }
+}
+
 const addConcept = async (u: Unit) => {
   if (!newConcept.value.trim()) return
   try {
@@ -387,7 +405,7 @@ const unpublish = async () => {
         <section class="rounded-lg border border-border bg-card p-5 mb-6">
           <h2 class="text-lg font-semibold mb-1">2. Organise with AI</h2>
           <p class="text-sm text-muted-foreground mb-4">
-            The AI reads every material, finds the key concepts and where each one appears (pages, slides), then builds units that teach those concepts in order, each linked to its sources. You can edit everything afterwards.
+            The AI reads every material, finds the key concepts and where each one appears (pages, slides, video times), then builds units that explain each concept step by step with an example, a common mistake and a self-check question, linked to its sources. It then searches the web for free resources to expand each concept. You can edit everything afterwards.
           </p>
           <div v-if="course.organise_status === 'processing'" class="flex items-center gap-2 text-sm">
             <Loader2 class="h-4 w-4 animate-spin text-primary" /> Organising your course… this usually takes under a minute.
@@ -402,6 +420,15 @@ const unpublish = async () => {
             <p v-if="organiseBlocked" class="mt-2 text-sm text-muted-foreground">{{ organiseBlocked }}</p>
             <p v-if="course.organise_status === 'failed' && course.organise_error" class="mt-2 text-sm text-destructive">{{ course.organise_error }}</p>
           </template>
+          <div v-if="units.length" class="mt-4 border-t border-border pt-4 flex flex-wrap items-center gap-3 text-sm">
+            <span class="font-medium">Expand-your-knowledge references:</span>
+            <span v-if="course.references_status === 'processing'" class="flex items-center gap-1 text-muted-foreground"><Loader2 class="h-4 w-4 animate-spin" />Searching the web for good resources…</span>
+            <span v-else-if="course.references_status === 'ready'" class="text-green-700 dark:text-green-400">added to each concept</span>
+            <span v-else-if="course.references_status === 'failed'" class="text-destructive">some units could not be searched</span>
+            <Button v-if="course.references_status !== 'processing'" type="button" variant="outline" class="h-8 px-3" @click="findReferences">
+              {{ course.references_status === 'idle' ? 'Find references' : 'Search again' }}
+            </Button>
+          </div>
         </section>
 
         <!-- 3. Units -->
@@ -463,6 +490,12 @@ const unpublish = async () => {
                             <p class="text-sm font-medium">{{ c.title }}</p>
                             <p class="text-xs text-muted-foreground line-clamp-2 mt-0.5">{{ c.explanation }}</p>
                             <ConceptSources class="mt-2" :sources="c.sources" />
+                            <div v-if="c.references?.length" class="mt-2 flex flex-wrap gap-1.5">
+                              <span v-for="r in c.references" :key="r.url" class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs">
+                                <a :href="r.url" target="_blank" rel="noopener" class="hover:underline">{{ r.site }}</a>
+                                <button type="button" class="opacity-60 hover:opacity-100 hover:text-destructive" title="Remove this reference" @click="removeReference(c, r.url)">✕</button>
+                              </span>
+                            </div>
                             <p v-if="!c.sources.length" class="mt-1 text-xs text-amber-700 dark:text-amber-400">No source linked</p>
                           </div>
                           <button type="button" class="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30" :disabled="ci === 0" title="Move up" @click="moveConcept(u, ci, -1)"><ChevronUp class="h-4 w-4" /></button>
