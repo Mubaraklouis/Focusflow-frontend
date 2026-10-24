@@ -337,7 +337,7 @@ const unpublish = async () => {
             <h2 class="text-lg font-semibold">1. Materials</h2>
             <span class="text-xs text-muted-foreground">{{ materials.length }} of {{ limits?.materials_per_course }}</span>
           </div>
-          <p class="text-sm text-muted-foreground mb-4">Add your notes, slides and videos. The AI reads each one.</p>
+          <p class="text-sm text-muted-foreground mb-4">Add your notes, slides and videos. The AI reads every file and watches every YouTube video to find the concepts it teaches.</p>
 
           <div class="rounded-lg border-2 border-dashed p-6 text-center transition-colors cursor-pointer"
             :class="dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'"
@@ -369,13 +369,13 @@ const unpublish = async () => {
                   <a :href="m.url" target="_blank" rel="noopener" class="font-medium hover:underline truncate">{{ m.title }}</a>
                   <span class="text-xs text-muted-foreground">{{ kindLabel[m.kind] }} {{ sizeLabel(m.size_bytes) }}</span>
                 </div>
-                <p v-if="m.status === 'ready' && m.digest?.summary && m.kind !== 'link' && m.kind !== 'video'" class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ m.digest.summary }}</p>
+                <p v-if="m.status === 'ready' && m.digest?.summary && m.kind !== 'link'" class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ m.digest.summary }}</p>
                 <p v-if="m.status === 'ready' && m.digest?.concepts?.length" class="text-xs text-primary mt-1">
                   {{ m.digest.concepts.length }} concepts found: {{ m.digest.concepts.slice(0, 4).map((c) => c.name).join(', ') }}{{ m.digest.concepts.length > 4 ? '…' : '' }}
                 </p>
                 <p v-if="m.status === 'failed'" class="text-xs text-destructive mt-1">{{ m.error }}</p>
               </div>
-              <span v-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />Reading…</span>
+              <span v-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching…' : 'Reading…' }}</span>
               <CheckCircle2 v-else-if="m.status === 'ready'" class="h-4 w-4 text-green-600 mt-0.5" />
               <button v-else-if="m.status === 'failed'" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />Retry</button>
               <button type="button" class="text-muted-foreground hover:text-destructive" title="Remove" @click="removeMaterial(m)"><Trash2 class="h-4 w-4" /></button>
