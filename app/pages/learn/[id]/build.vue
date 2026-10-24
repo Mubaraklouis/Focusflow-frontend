@@ -6,7 +6,7 @@ import {
   FileText, Presentation, PlayCircle, Link2, Upload, Loader2, CheckCircle2, AlertCircle, RotateCw, Trash2,
   Sparkles, ChevronUp, ChevronDown, Plus, Eye, Pencil, Globe, Lock, Rocket, Undo2, Users,
 } from 'lucide-vue-next'
-import { useLearn, apiError, kindLabel, partlyRead, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
+import { useLearn, apiError, kindLabel, partlyRead, clock, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
 import { renderMarkdown } from '~/utils/markdown'
 
@@ -394,11 +394,14 @@ const unpublish = async () => {
                 <p v-if="m.status === 'ready' && m.total_pages && m.read_pages && m.read_pages < m.total_pages" class="text-xs text-muted-foreground mt-1">
                   Pages 1–{{ m.read_pages }} of {{ m.total_pages }} read<template v-if="m.reading">. Reading the rest in parts; you can already organise, and new units are added as more pages are read.</template>
                 </p>
+                <p v-if="m.status === 'ready' && m.total_seconds && m.read_seconds && m.read_seconds < m.total_seconds" class="text-xs text-muted-foreground mt-1">
+                  {{ clock(m.read_seconds) }} of {{ clock(m.total_seconds) }} watched<template v-if="m.reading">. Watching the rest in parts; you can already organise, and new units are added as more is watched.</template>
+                </p>
                 <p v-if="m.status === 'failed' || (m.status === 'ready' && m.error)" class="text-xs text-destructive mt-1">{{ m.error }}</p>
               </div>
               <span v-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching…' : 'Reading…' }}</span>
-              <span v-else-if="m.reading" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />Reading more…</span>
-              <button v-else-if="partlyRead(m)" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />Continue reading</button>
+              <span v-else-if="m.reading" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching more…' : 'Reading more…' }}</span>
+              <button v-else-if="partlyRead(m)" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />{{ m.kind === 'video' ? 'Continue watching' : 'Continue reading' }}</button>
               <CheckCircle2 v-else-if="m.status === 'ready'" class="h-4 w-4 text-green-600 mt-0.5" />
               <button v-else-if="m.status === 'failed'" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />Retry</button>
               <button type="button" class="text-muted-foreground hover:text-destructive" title="Remove" @click="removeMaterial(m)"><Trash2 class="h-4 w-4" /></button>
