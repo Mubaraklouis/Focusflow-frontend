@@ -25,8 +25,16 @@ export interface Material {
   status: JobStatus
   error?: string
   digest: Digest
+  /** Long PDFs are read in parts: pages read so far, and whether the rest is still being read. */
+  total_pages?: number
+  read_pages?: number
+  reading?: boolean
   created_at: string
 }
+
+/** A long PDF whose reading stopped before the end (Retry continues it). */
+export const partlyRead = (m: Material) =>
+  m.status === 'ready' && !m.reading && !!m.read_pages && !!m.total_pages && m.read_pages < m.total_pages
 
 /** Where a concept can be checked, with a link that opens at the right place. */
 export interface ConceptSource {
@@ -87,6 +95,8 @@ export interface LearnCourse {
   published_at: string | null
   organise_status: JobStatus
   organise_error?: string
+  /** The run in progress only adds units for newly read pages. */
+  organise_more?: boolean
   organise_runs: number
   references_status: JobStatus
   units?: number
