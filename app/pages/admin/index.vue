@@ -20,6 +20,10 @@
             <Users class="w-4 h-4" />
             Manage Users
           </Button>
+          <Button @click="navigateTo('/admin/ai')" variant="outline" class="gap-2">
+            <Cpu class="w-4 h-4" />
+            AI usage
+          </Button>
           <Button @click="refreshData" :disabled="isLoading" variant="default" class="gap-2">
             <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isLoading }" />
             Refresh
@@ -190,7 +194,7 @@ import { Button } from '@/components/ui/button'
 import { 
   Users, Activity, UserPlus, TrendingUp, 
   ShieldAlert, RefreshCw, AlertCircle, 
-  GraduationCap, BookOpen, ShieldCheck 
+  GraduationCap, BookOpen, ShieldCheck, Cpu 
 } from 'lucide-vue-next'
 
 definePageMeta({ 
