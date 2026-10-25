@@ -23,6 +23,7 @@ export interface Material {
   youtube_id?: string
   size_bytes?: number
   status: JobStatus | 'paused'
+  position?: number
   error?: string
   digest: Digest
   /** Long PDFs are read in parts: pages read so far, and whether the rest is still being read. */
@@ -200,6 +201,9 @@ export function useLearn() {
     addLink: (id: number, body: { kind: 'video' | 'link'; url: string; title: string; note?: string }) =>
       send<Material>('POST', `courses/${id}/materials`, body),
     deleteMaterial: (mid: number) => send('DELETE', `materials/${mid}`),
+    renameMaterial: (mid: number, title: string) => send<Material>('PUT', `materials/${mid}`, { title }),
+    reorderMaterials: (id: number, materialIds: number[]) =>
+      send<Material[]>('PUT', `courses/${id}/materials/order`, { material_ids: materialIds }),
     retryMaterial: (mid: number) => send('POST', `materials/${mid}/retry`),
 
     organise: (id: number) => send('POST', `courses/${id}/organise`),
