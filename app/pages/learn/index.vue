@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Library, Plus, Compass, PencilRuler, CheckCircle2, Globe, Lock } from 'lucide-vue-next'
 import { useLearn, apiError, type MyLearning } from '~/composables/learn/useLearn'
+import AIAllowance from '~/components/learn/AIAllowance.vue'
 
 useHead({ title: 'My learning - FocusFlow' })
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -79,6 +80,7 @@ const createdCount = computed(() => data.value?.created.length ?? 0)
 
         <!-- Courses I created -->
         <section>
+          <AIAllowance :allowance="data.ai_allowance" class="mb-4" />
           <div class="flex items-baseline justify-between mb-3">
             <h2 class="text-lg font-semibold">Courses I created</h2>
             <span class="text-xs text-muted-foreground">Free plan: {{ createdCount }} of {{ data.limits.courses_per_user }} courses</span>
