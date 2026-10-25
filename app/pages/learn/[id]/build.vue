@@ -141,7 +141,7 @@ const runsLeft = computed(() => Math.max(0, (limits.value?.organise_runs_per_cou
 // The creator's own AI allowance is used up: say when it refills
 const aiBlocked = computed(() => (view.value?.ai_allowance && !view.value.ai_allowance.can_use_ai ? view.value.ai_allowance.message || 'Your AI allowance is used up for now.' : ''))
 const organiseBlocked = computed(() => {
-  if (isPublished.value) return 'Unpublish the course to organise it again.'
+  if (isPublished.value && units.value.length) return 'Unpublish the course to organise it again.'
   if (materials.value.some((m) => m.status === 'processing')) return 'Wait until every material has been read.'
   if (!readyCount.value) return 'Add at least one material first.'
   if (!runsLeft.value) return 'You have used all AI organise runs for this course. You can still edit units by hand.'
@@ -456,7 +456,7 @@ const unpublish = async () => {
           <h2 class="text-lg font-semibold mb-1">3. Units</h2>
           <p class="text-sm text-muted-foreground mb-4">Learners go through units in this order and must finish each one before the next opens.</p>
 
-          <div v-if="!units.length" class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          <div v-if="!units.length && !view.progress?.active" class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             No units yet. Organise with AI, or add a unit by hand below.
           </div>
 
@@ -525,7 +525,11 @@ const unpublish = async () => {
                         </div>
                       </template>
                     </li>
-                  </ol>
+                    <li v-if="course.organise_status === 'processing' || (view.progress?.active && !units.length)" class="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 flex items-center gap-3 text-sm animate-pulse">
+              <Loader2 class="h-4 w-4 animate-spin text-primary shrink-0" />
+              <span>{{ units.length ? 'The AI is writing the next unit…' : 'The AI is writing your first unit…' }} <span class="text-muted-foreground">Each unit appears here as soon as it is written.</span></span>
+            </li>
+          </ol>
                   <form class="mt-2 flex gap-2" @submit.prevent="addConcept(u)">
                     <Input v-model="newConcept" placeholder="Add a concept" maxlength="255" />
                     <Button type="submit" variant="outline" :disabled="!newConcept.trim()"><Plus class="h-4 w-4 mr-1" />Add</Button>
@@ -576,10 +580,11 @@ const unpublish = async () => {
               <input v-model="confirmRights" type="checkbox" class="mt-1">
               <span>I confirm I have the right to share these materials publicly (they are my own, or their licence allows sharing).</span>
             </label>
-            <Button type="button" :disabled="publishing || !units.length || (visibility === 'public' && !confirmRights)" @click="publish">
+            <Button type="button" :disabled="publishing || (!units.length && !materials.length) || (visibility === 'public' && !confirmRights)" @click="publish">
               <Rocket class="h-4 w-4 mr-2" />{{ publishing ? 'Publishing…' : 'Publish course' }}
             </Button>
-            <p v-if="!units.length" class="mt-2 text-sm text-muted-foreground">Add at least one unit first.</p>
+            <p v-if="!units.length && !materials.length" class="mt-2 text-sm text-muted-foreground">Add a material or a unit first.</p>
+            <p v-else-if="view.progress?.active || !units.length" class="mt-2 text-sm text-muted-foreground">You can publish now: learners see each unit as soon as the AI has written it.</p>
           </template>
           <template v-else>
             <p class="text-sm text-muted-foreground mb-4">
