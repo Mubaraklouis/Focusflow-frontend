@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Library, Plus, Compass, PencilRuler, CheckCircle2, Globe, Lock } from 'lucide-vue-next'
 import { useLearn, apiError, type MyLearning } from '~/composables/learn/useLearn'
 import AIAllowance from '~/components/learn/AIAllowance.vue'
+import BuildProgressCard from '~/components/learn/BuildProgress.vue'
 
 useHead({ title: 'My learning - FocusFlow' })
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -18,18 +19,27 @@ const data = ref<MyLearning | null>(null)
 const loading = ref(true)
 const error = ref('')
 
-const load = async () => {
-  loading.value = true
+const load = async (quiet = false) => {
+  if (!quiet) loading.value = true
   error.value = ''
   try {
     data.value = await api.me()
   } catch (e) {
-    error.value = apiError(e)
+    if (!quiet) error.value = apiError(e)
   } finally {
     loading.value = false
   }
 }
-onMounted(load)
+onMounted(() => load())
+
+// Refresh while a course is still being generated
+const generating = computed(() => Object.values(data.value?.progress ?? {}).some((p) => p?.active))
+let poll: ReturnType<typeof setInterval> | undefined
+watch(generating, (g) => {
+  clearInterval(poll)
+  if (g) poll = setInterval(() => load(true), 4000)
+})
+onBeforeUnmount(() => clearInterval(poll))
 
 const pct = (done: number, total: number) => (total ? Math.round((done / total) * 100) : 0)
 const createdCount = computed(() => data.value?.created.length ?? 0)
@@ -52,7 +62,7 @@ const createdCount = computed(() => data.value?.created.length ?? 0)
         <div v-for="i in 3" :key="i" class="h-20 rounded-lg bg-muted/60" />
       </div>
       <div v-else-if="error" class="bg-destructive/10 text-destructive p-4 rounded-lg">
-        {{ error }} <Button variant="outline" class="ml-3" @click="load">Try again</Button>
+        {{ error }} <Button variant="outline" class="ml-3" @click="load()">Try again</Button>
       </div>
 
       <template v-else-if="data">
@@ -105,6 +115,7 @@ const createdCount = computed(() => data.value?.created.length ?? 0)
                   {{ c.course_visibility === 'public' ? 'Public' : 'Private' }}
                 </span>
               </div>
+              <BuildProgressCard :progress="data.progress?.[String(c.course_id)]" compact />
             </NuxtLink>
           </div>
           <p v-if="!data.can_create_course && data.create_limit_reason" class="mt-3 text-sm text-muted-foreground">{{ data.create_limit_reason }}</p>
