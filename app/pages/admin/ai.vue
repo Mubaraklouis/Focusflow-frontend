@@ -67,6 +67,31 @@
         </div>
       </div>
 
+      <div v-if="data?.gemini_keys?.length" class="rounded-xl border border-border bg-card p-5">
+        <h2 class="text-lg font-semibold">Gemini keys</h2>
+        <p class="text-sm text-muted-foreground mt-1">
+          Requests take turns across {{ data.gemini_keys.length }} keys; a key over its quota rests until Google frees it and the next key takes the request. Keys of the same Google Cloud project share one quota.
+          {{ freeKeys }} of {{ data.gemini_keys.length }} keys can take requests now.
+        </p>
+        <div class="mt-3 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-left text-muted-foreground">
+              <tr><th class="py-2 pr-3 font-medium">Key</th><th class="py-2 pr-3 font-medium">Requests today</th><th class="py-2 pr-3 font-medium">Status</th></tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-for="k in data.gemini_keys" :key="k.key">
+                <td class="py-2 pr-3 font-medium">{{ k.key }}</td>
+                <td class="py-2 pr-3">{{ k.requests }} <span class="text-muted-foreground">({{ k.ok }} ok<template v-if="k.quota_errors">, {{ k.quota_errors }} over quota</template>)</span></td>
+                <td class="py-2 pr-3">
+                  <span v-if="!Object.keys(k.resting).length" class="text-green-700 dark:text-green-400">Available</span>
+                  <span v-for="(until, model) in k.resting" :key="model" class="block text-muted-foreground">{{ model }}: resting until {{ new Date(until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div v-if="data" class="rounded-xl border border-border bg-card p-5">
         <h2 class="text-lg font-semibold">Creators' AI allowance</h2>
         <p class="text-sm text-muted-foreground mt-1">
@@ -125,6 +150,7 @@ interface Quota {
   user_daily_usd: number
   user_monthly_usd: number
   users: { user_id: number; name: string; today_usd: number; month_usd: number; day_percent: number; month_percent: number }[]
+  gemini_keys?: { key: string; requests: number; ok: number; quota_errors: number; resting: Record<string, string> }[]
 }
 
 const { profile } = useProfile()
@@ -151,6 +177,7 @@ const untilReset = computed(() => {
   const min = Math.max(0, Math.round((Date.parse(data.value.resets_at) - Date.parse(data.value.now)) / 60000))
   return min >= 60 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${min} min`
 })
+const freeKeys = computed(() => (data.value?.gemini_keys ?? []).filter((k) => !Object.keys(k.resting).length).length)
 const n = (v: number) => v.toLocaleString()
 const ago = (iso: string) => {
   const min = Math.round((Date.now() - Date.parse(iso)) / 60000)
