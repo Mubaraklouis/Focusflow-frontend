@@ -67,6 +67,31 @@
         </div>
       </div>
 
+      <div v-if="data" class="rounded-xl border border-border bg-card p-5">
+        <h2 class="text-lg font-semibold">Creators' AI allowance</h2>
+        <p class="text-sm text-muted-foreground mt-1">
+          <template v-if="data.user_daily_usd || data.user_monthly_usd">
+            Each creator may use about<template v-if="data.user_daily_usd"> ${{ data.user_daily_usd.toFixed(2) }} a day</template><template v-if="data.user_daily_usd && data.user_monthly_usd"> and</template><template v-if="data.user_monthly_usd"> ${{ data.user_monthly_usd.toFixed(2) }} a month</template> of AI (days and months start at midnight UTC). Creators see it as a percentage left; admins have no limit.
+          </template>
+          <template v-else>No per-creator limit is set (AI_USER_DAILY_USD, AI_USER_MONTHLY_USD).</template>
+        </p>
+        <p v-if="!data.users.length" class="mt-3 text-sm text-muted-foreground">No creator has used AI this month.</p>
+        <div v-else class="mt-3 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-left text-muted-foreground">
+              <tr><th class="py-2 pr-3 font-medium">Creator</th><th class="py-2 pr-3 font-medium">Today</th><th class="py-2 pr-3 font-medium">This month</th></tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-for="u in data.users" :key="u.user_id">
+                <td class="py-2 pr-3">{{ u.name || `User ${u.user_id}` }}</td>
+                <td class="py-2 pr-3">${{ u.today_usd.toFixed(3) }}<span v-if="data.user_daily_usd" class="text-muted-foreground"> · {{ u.day_percent }}%</span></td>
+                <td class="py-2 pr-3">${{ u.month_usd.toFixed(3) }}<span v-if="data.user_monthly_usd" class="text-muted-foreground"> · {{ u.month_percent }}%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <p class="text-xs text-muted-foreground">
         Google does not report how much quota is left. Limits shown here come from Google's own error messages when a limit was hit; the full list is in Google AI Studio (Usage and rate limits).
       </p>
@@ -97,6 +122,9 @@ interface Quota {
   models: ModelQuota[]
   month_spend_usd: number
   monthly_budget_usd: number
+  user_daily_usd: number
+  user_monthly_usd: number
+  users: { user_id: number; name: string; today_usd: number; month_usd: number; day_percent: number; month_percent: number }[]
 }
 
 const { profile } = useProfile()

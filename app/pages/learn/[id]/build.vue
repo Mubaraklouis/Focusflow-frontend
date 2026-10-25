@@ -8,6 +8,7 @@ import {
 } from 'lucide-vue-next'
 import { useLearn, apiError, kindLabel, partlyRead, clock, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
+import AIAllowance from '~/components/learn/AIAllowance.vue'
 import { renderMarkdown } from '~/utils/markdown'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -136,11 +137,14 @@ const sizeLabel = (b?: number) => (b ? (b > 1048576 ? `${(b / 1048576).toFixed(1
 // ── organise ───────────────────────────────────────────────────────────
 const readyCount = computed(() => materials.value.filter((m) => m.status === 'ready').length)
 const runsLeft = computed(() => Math.max(0, (limits.value?.organise_runs_per_course ?? 0) - (course.value?.organise_runs ?? 0)))
+// The creator's own AI allowance is used up: say when it refills
+const aiBlocked = computed(() => (view.value?.ai_allowance && !view.value.ai_allowance.can_use_ai ? view.value.ai_allowance.message || 'Your AI allowance is used up for now.' : ''))
 const organiseBlocked = computed(() => {
   if (isPublished.value) return 'Unpublish the course to organise it again.'
   if (materials.value.some((m) => m.status === 'processing')) return 'Wait until every material has been read.'
   if (!readyCount.value) return 'Add at least one material first.'
   if (!runsLeft.value) return 'You have used all AI organise runs for this course. You can still edit units by hand.'
+  if (aiBlocked.value) return aiBlocked.value
   return ''
 })
 const organise = async () => {
@@ -348,6 +352,8 @@ const unpublish = async () => {
           <span class="flex-1">{{ notice.text }}</span>
           <button type="button" class="opacity-60 hover:opacity-100" @click="notice = null">✕</button>
         </div>
+
+        <AIAllowance :allowance="view.ai_allowance" compact class="mb-6" />
 
         <!-- 1. Materials -->
         <section class="rounded-lg border border-border bg-card p-5 mb-6">

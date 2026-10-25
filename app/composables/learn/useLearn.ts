@@ -122,6 +122,14 @@ export interface Limits {
   organise_runs_per_course: number
 }
 
+/** A creator's AI allowance: what share is used today and this month. */
+export interface AIAllowance {
+  unlimited: boolean
+  can_use_ai: boolean
+  message?: string
+  windows: { period: 'day' | 'month'; used_percent: number; resets_at: string }[]
+}
+
 export interface CreatorView {
   role: 'creator'
   course: LearnCourse
@@ -129,6 +137,7 @@ export interface CreatorView {
   units: Unit[]
   learners: number
   limits: Limits
+  ai_allowance?: AIAllowance
 }
 
 export interface LearnerView {
@@ -146,6 +155,7 @@ export interface MyLearning {
   limits: Limits
   can_create_course: boolean
   create_limit_reason: string
+  ai_allowance?: AIAllowance
 }
 
 export interface Category {
