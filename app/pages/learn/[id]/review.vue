@@ -21,6 +21,7 @@ const breadcrumbs = computed(() => [
   { title: course.value?.course_title || 'Course', href: `/learn/${courseId}/review`, current: true },
 ])
 
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 const writing = computed(() => course.value?.organise_status === 'processing' || (!!progress.value?.active && !units.value.length))
 
 // ── units ─────────────────────────────────────────────────────────────────
@@ -91,7 +92,7 @@ const unpublish = () =>
                 <button type="button" class="min-w-0 flex-1 text-left" :aria-expanded="editing === u.id" @click="toggleEdit(u)">
                   <p class="truncate text-sm font-medium">{{ u.title }}</p>
                   <p class="text-xs text-muted-foreground">
-                    {{ (u.concepts ?? []).length }} concepts · {{ (u.materials ?? []).length }} materials · {{ u.source === 'ai' ? 'drafted by AI' : 'written by you' }}
+                    {{ plural((u.concepts ?? []).length, 'concept') }} · {{ plural((u.materials ?? []).length, 'material') }} · {{ u.source === 'ai' ? 'drafted by AI' : 'written by you' }}
                   </p>
                 </button>
                 <div class="flex shrink-0 items-center">
