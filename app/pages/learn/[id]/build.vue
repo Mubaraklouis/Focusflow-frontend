@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   FileText, Presentation, PlayCircle, Link2, Upload, Loader2, CheckCircle2, AlertCircle, RotateCw, Trash2,
-  Sparkles, ChevronUp, ChevronDown, Plus, Eye, Pencil, Globe, Lock, Rocket, Undo2, Users,
+  Sparkles, ChevronUp, ChevronDown, Plus, Eye, Pencil, Globe, Lock, Rocket, Undo2, Users, Clock,
 } from 'lucide-vue-next'
 import { useLearn, apiError, kindLabel, partlyRead, clock, type CreatorView, type Material, type Unit, type MaterialKind, type Concept } from '~/composables/learn/useLearn'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
 import AIAllowance from '~/components/learn/AIAllowance.vue'
+import BuildProgressCard from '~/components/learn/BuildProgress.vue'
 import { renderMarkdown } from '~/utils/markdown'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -60,7 +61,7 @@ const load = async (quiet = false) => {
 // Refresh every 3 s while the AI is reading materials or organising
 const busy = computed(() =>
   materials.value.some((m) => m.status === 'processing' || m.reading) || course.value?.organise_status === 'processing' ||
-  course.value?.references_status === 'processing')
+  course.value?.references_status === 'processing' || !!view.value?.progress?.active)
 let poll: ReturnType<typeof setInterval> | undefined
 watch(busy, (b) => {
   clearInterval(poll)
@@ -353,6 +354,7 @@ const unpublish = async () => {
           <button type="button" class="opacity-60 hover:opacity-100" @click="notice = null">✕</button>
         </div>
 
+        <BuildProgressCard :progress="view.progress" class="mb-6" />
         <AIAllowance :allowance="view.ai_allowance" compact class="mb-6" />
 
         <!-- 1. Materials -->
@@ -403,9 +405,11 @@ const unpublish = async () => {
                 <p v-if="m.status === 'ready' && m.total_seconds && m.read_seconds && m.read_seconds < m.total_seconds" class="text-xs text-muted-foreground mt-1">
                   {{ clock(m.read_seconds) }} of {{ clock(m.total_seconds) }} watched<template v-if="m.reading">. Watching the rest in parts; you can already organise, and new units are added as more is watched.</template>
                 </p>
-                <p v-if="m.status === 'failed' || (m.status === 'ready' && m.error)" class="text-xs text-destructive mt-1">{{ m.error }}</p>
+                <p v-if="m.status === 'paused' || m.paused" class="text-xs text-muted-foreground mt-1">{{ m.error }}</p>
+                <p v-else-if="m.status === 'failed' || (m.status === 'ready' && m.error)" class="text-xs text-destructive mt-1">{{ m.error }}</p>
               </div>
-              <span v-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching…' : 'Reading…' }}</span>
+              <button v-if="m.status === 'paused'" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" title="Waiting for your AI allowance" @click="retry(m)"><Clock class="h-3.5 w-3.5" />Read now</button>
+              <span v-else-if="m.status === 'processing'" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching…' : 'Reading…' }}</span>
               <span v-else-if="m.reading" class="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 class="h-3.5 w-3.5 animate-spin" />{{ m.kind === 'video' ? 'Watching more…' : 'Reading more…' }}</span>
               <button v-else-if="partlyRead(m)" type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @click="retry(m)"><RotateCw class="h-3.5 w-3.5" />{{ m.kind === 'video' ? 'Continue watching' : 'Continue reading' }}</button>
               <CheckCircle2 v-else-if="m.status === 'ready'" class="h-4 w-4 text-green-600 mt-0.5" />
@@ -419,7 +423,7 @@ const unpublish = async () => {
         <section class="rounded-lg border border-border bg-card p-5 mb-6">
           <h2 class="text-lg font-semibold mb-1">2. Organise with AI</h2>
           <p class="text-sm text-muted-foreground mb-4">
-            The AI reads every material, finds the key concepts and where each one appears (pages, slides, video times), then builds units that explain each concept step by step with an example, a common mistake and a self-check question, linked to its sources. It then searches the web for free resources to expand each concept. You can edit everything afterwards.
+            This happens automatically once your materials are read: you can leave the page and come back. The AI reads every material, finds the key concepts and where each one appears (pages, slides, video times), then builds units that explain each concept step by step with an example, a common mistake and a self-check question, linked to its sources. It then searches the web for free resources to expand each concept. You can edit everything afterwards.
           </p>
           <div v-if="course.organise_status === 'processing'" class="flex items-center gap-2 text-sm">
             <Loader2 class="h-4 w-4 animate-spin text-primary" />

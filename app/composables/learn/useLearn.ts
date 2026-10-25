@@ -22,13 +22,15 @@ export interface Material {
   url: string
   youtube_id?: string
   size_bytes?: number
-  status: JobStatus
+  status: JobStatus | 'paused'
   error?: string
   digest: Digest
   /** Long PDFs are read in parts: pages read so far, and whether the rest is still being read. */
   total_pages?: number
   read_pages?: number
   reading?: boolean
+  /** later parts wait for the creator's AI allowance */
+  paused?: boolean
   /** Long videos are watched in parts (seconds). */
   total_seconds?: number
   read_seconds?: number
@@ -130,6 +132,16 @@ export interface AIAllowance {
   windows: { period: 'day' | 'month'; used_percent: number; resets_at: string }[]
 }
 
+/** How far the AI is with building a course in the background. */
+export interface BuildProgress {
+  active: boolean
+  percent: number
+  stage: 'reading' | 'organising' | 'adding' | 'references' | 'ready' | 'waiting' | 'failed'
+  label: string
+  more: boolean
+  later: boolean
+}
+
 export interface CreatorView {
   role: 'creator'
   course: LearnCourse
@@ -138,6 +150,7 @@ export interface CreatorView {
   learners: number
   limits: Limits
   ai_allowance?: AIAllowance
+  progress?: BuildProgress | null
 }
 
 export interface LearnerView {
@@ -147,6 +160,7 @@ export interface LearnerView {
   enrolled: boolean
   completed_units: number
   total_units: number
+  more_coming?: boolean
 }
 
 export interface MyLearning {
@@ -156,6 +170,7 @@ export interface MyLearning {
   can_create_course: boolean
   create_limit_reason: string
   ai_allowance?: AIAllowance
+  progress?: Record<string, BuildProgress | null>
 }
 
 export interface Category {

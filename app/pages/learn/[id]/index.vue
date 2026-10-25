@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Lock, CheckCircle2, PlayCircle, PencilRuler, Trophy, Layers } from 'lucide-vue-next'
+import { Lock, CheckCircle2, PlayCircle, PencilRuler, Trophy, Layers, Clock } from 'lucide-vue-next'
 import { useLearn, apiError, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -103,6 +103,9 @@ const join = async () => {
 
         <!-- Outline -->
         <h2 class="text-lg font-semibold mt-8 mb-3">Course outline</h2>
+        <p v-if="view.role === 'learner' && view.more_coming" class="-mt-1 mb-3 text-sm text-muted-foreground flex items-center gap-2">
+          <Clock class="h-4 w-4" />More units are coming: the rest of this course's materials is still being prepared.
+        </p>
         <ol class="space-y-2">
           <li v-for="(u, i) in units" :key="u.id">
             <NuxtLink v-if="view.role === 'creator' || !u.locked" :to="`/learn/${courseId}/unit/${u.id}`"
