@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Rocket, Globe, Lock, Eye, CheckCircle2, Circle } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Globe, Lock, Eye, CheckCircle2, Circle } from 'lucide-vue-next'
 import type { Unit } from '~/composables/learn/useLearn'
 import { useCourseBuilder, moved } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
@@ -166,7 +166,7 @@ const unpublish = () =>
 
       <template #next>
         <Button v-if="!isPublished" size="lg" type="button" :disabled="!canPublish || publishing" @click="publish">
-          <Loader2 v-if="publishing" class="mr-2 h-4 w-4 animate-spin" /><Rocket v-else class="mr-2 h-4 w-4" />{{ publishing ? 'Publishing…' : 'Publish course' }}
+          <Loader2 v-if="publishing" class="mr-2 h-4 w-4 animate-spin" />{{ publishing ? 'Publishing…' : 'Publish course' }}
         </Button>
         <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg" type="button"><Eye class="mr-2 h-4 w-4" />View as learner</Button></NuxtLink>
       </template>
