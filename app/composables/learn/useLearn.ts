@@ -38,6 +38,32 @@ export interface Material {
   created_at: string
 }
 
+/** Slides as written (F3.1): one page per slide, the teacher's text word for word. */
+export interface SlideRun { text: string; bold?: boolean; italic?: boolean; code?: boolean; link?: string }
+export interface SlideLine { level: number; bullet: boolean; runs: SlideRun[] }
+export interface SlideBlock {
+  type: 'text' | 'code' | 'image' | 'table' | 'diagram'
+  lines?: SlideLine[]
+  code?: string
+  src?: string
+  alt?: string
+  rows?: string[][]
+  header?: boolean
+}
+export interface SlidePage {
+  id: number
+  material_id: number
+  /** position in the presentation, from 1 */
+  number: number
+  title: string
+  section?: string
+  blocks: SlideBlock[]
+  notes?: string
+  hidden: boolean
+  /** drawn diagram, SmartArt or chart: learners are pointed to the original slide */
+  has_diagram: boolean
+}
+
 /** Seconds as m:ss or h:mm:ss. */
 export const clock = (sec = 0) => {
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
@@ -207,6 +233,7 @@ export function useLearn() {
     reorderMaterials: (id: number, materialIds: number[]) =>
       send<Material[]>('PUT', `courses/${id}/materials/order`, { material_ids: materialIds }),
     retryMaterial: (mid: number) => send('POST', `materials/${mid}/retry`),
+    slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),
 
     organise: (id: number) => send('POST', `courses/${id}/organise`),
     addUnit: (id: number, title: string, body = '') => send<Unit>('POST', `courses/${id}/units`, { title, body }),

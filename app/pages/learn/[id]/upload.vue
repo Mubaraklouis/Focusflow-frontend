@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Upload, Loader2, AlertCircle, X, Trash2, Link2 as LinkIcon } from 'lucide-vue-next'
+import { Upload, Loader2, AlertCircle, X, Trash2, Eye, Link2 as LinkIcon } from 'lucide-vue-next'
 import { apiError } from '~/composables/learn/useLearn'
 import { useCourseBuilder } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
@@ -126,6 +126,7 @@ const addLink = async () => {
               <p class="truncate text-[15px] font-medium" :title="m.title">{{ m.title }}</p>
               <MaterialState :material="m" @retry="b.retry(m)" />
             </div>
+            <NuxtLink v-if="m.kind === 'slides'" :to="`/learn/${courseId}/slides/${m.id}`" class="ff-icon-btn" :aria-label="`Preview ${m.title}`" title="Preview slides"><Eye class="h-[18px] w-[18px]" /></NuxtLink>
             <button type="button" class="ff-icon-btn hover:text-destructive" :aria-label="`Remove ${m.title}`" title="Remove" @click="b.removeMaterial(m)"><Trash2 class="h-[18px] w-[18px]" /></button>
           </li>
         </ul>
