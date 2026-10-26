@@ -132,3 +132,70 @@ html {
 .md-content table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
 .md-content th, .md-content td { border: 1px solid hsl(var(--border)); padding: 0.4em 0.6em; text-align: left; }
 .md-content hr { border-color: hsl(var(--border)); }
+
+/* ── Apple-style building blocks (course builder; see ui-design-principles §9) ──
+   Unlayered on purpose: these must win over the default classes of Input/Button. */
+.ff-group {
+    @apply overflow-hidden rounded-2xl border border-black/[0.06] bg-card dark:border-white/[0.08];
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
+}
+.dark .ff-group { box-shadow: none; }
+/* A chosen card (e.g. visibility option) */
+.ff-group.ff-selected { border-color: hsl(var(--primary)); box-shadow: 0 0 0 1px hsl(var(--primary)); }
+/* Rows inside a group, with an inset hairline between them (like iOS lists) */
+.ff-item { position: relative; }
+.ff-item + .ff-item::before {
+    content: '';
+    @apply absolute right-0 top-0 h-px bg-border;
+    left: var(--ff-inset, 4rem);
+}
+.ff-icon-btn {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:pointer-events-none disabled:opacity-30;
+}
+.ff-label { @apply mb-1.5 block px-1 text-[13px] font-medium text-muted-foreground; }
+.ff-field {
+    @apply h-10 w-full rounded-xl border border-transparent bg-foreground/[0.045] px-3.5 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground/70;
+}
+textarea.ff-field { @apply h-auto py-2.5; }
+.ff-field:focus, .ff-field:focus-visible {
+    @apply border-primary/40 bg-background outline-none;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12);
+}
+/* Segmented control: a row of buttons, the chosen one has aria-pressed="true" */
+.ff-segment { @apply inline-flex rounded-full bg-foreground/[0.05] p-1; }
+.ff-segment > button { @apply rounded-full px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors; }
+.ff-segment > button[aria-pressed='true'] { @apply bg-background text-foreground shadow-sm; }
+.ff-pill-sm { @apply rounded-full bg-foreground/[0.06] px-2.5 py-0.5 text-[12px] font-medium text-foreground transition-colors hover:bg-foreground/10; }
+
+/* Reading text, Apple Notes style: 17 px, generous lines and paragraphs.
+   Used for lessons (unit intro, concepts) and the builder's Preview. */
+.ff-prose { font-size: 17px; line-height: 1.65; color: hsl(var(--foreground)); overflow-wrap: break-word; }
+.ff-prose > * + * { margin-top: 1em; }
+.ff-prose p { margin-top: 1em; }
+.ff-prose > :first-child { margin-top: 0; }
+.ff-prose h1, .ff-prose h2, .ff-prose h3, .ff-prose h4 { font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; margin-top: 1.8em; margin-bottom: -0.35em; }
+.ff-prose h1 { font-size: 1.6em; }
+.ff-prose h2 { font-size: 1.35em; }
+.ff-prose h3 { font-size: 1.15em; font-weight: 650; }
+.ff-prose h4 { font-size: 1em; font-weight: 650; }
+.ff-prose ul, .ff-prose ol { padding-left: 1.4em; }
+.ff-prose ul { list-style: disc; }
+.ff-prose ol { list-style: decimal; }
+.ff-prose li { padding-left: 0.2em; }
+.ff-prose li + li { margin-top: 0.45em; }
+.ff-prose li::marker { color: hsl(var(--muted-foreground)); }
+.ff-prose ol > li::marker { font-weight: 600; }
+.ff-prose strong { font-weight: 650; }
+.ff-prose a { color: hsl(var(--primary)); text-decoration: none; }
+.ff-prose a:hover { text-decoration: underline; }
+.ff-prose blockquote { border-left: 3px solid hsl(var(--primary) / 0.5); border-radius: 2px; padding: 0.1em 0 0.1em 1em; color: hsl(var(--muted-foreground)); }
+.ff-prose code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.86em; background: hsl(var(--foreground) / 0.06); border-radius: 0.35rem; padding: 0.12em 0.4em; }
+.ff-prose pre { font-size: 14px; line-height: 1.55; background: hsl(var(--foreground) / 0.045); border-radius: 0.9rem; padding: 1rem 1.15rem; overflow-x: auto; }
+.ff-prose pre code { background: none; padding: 0; font-size: inherit; }
+.ff-prose img { border-radius: 0.9rem; }
+.ff-prose hr { border: 0; height: 1px; background: hsl(var(--border)); margin: 2em 0; }
+.ff-prose table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; border: 1px solid hsl(var(--border)); border-radius: 0.75rem; overflow: hidden; }
+.ff-prose th, .ff-prose td { padding: 0.55em 0.8em; text-align: left; border-bottom: 1px solid hsl(var(--border)); }
+.ff-prose tr:last-child td { border-bottom: 0; }
+.ff-prose th { font-weight: 600; background: hsl(var(--foreground) / 0.03); }
+@media (max-width: 640px) { .ff-prose { font-size: 16px; } }

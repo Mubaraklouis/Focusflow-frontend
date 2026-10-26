@@ -15,7 +15,6 @@ import {
     GraduationCap,
     Users,
     BarChart3,
-    Library,
     Compass
 } from 'lucide-vue-next';
 import { useLogout } from '~/composables/Auth/useLogout';
@@ -59,9 +58,8 @@ const userRole = computed(() => profile.value?.role || 'student');
 const navigationItems = computed<NavItem[]>(() => {
     const items: NavItem[] = [
         { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-        { title: 'My Learning', icon: Library, href: '/learn' },
-        { title: 'Browse Courses', icon: Compass, href: '/learn/browse' },
-        { title: 'Discover Courses', icon: BookOpen, href: '/courses' },
+        { title: 'My Learning', icon: BookOpen, href: '/learn' },
+        { title: 'Discover Courses', icon: Compass, href: '/courses' },
         { title: 'Quiz History', icon: ListTodo, href: '/quizzes' },
     ];
 
@@ -84,8 +82,9 @@ const navigationItems = computed<NavItem[]>(() => {
 
 const route = useRoute();
 
+// A section stays highlighted on its sub-pages (e.g. /learn/3 → My Learning)
 const isActiveRoute = (href: string) => {
-    return route.path === href;
+    return route.path === href || route.path.startsWith(href + '/');
 };
 
 const toggleCollapse = () => {

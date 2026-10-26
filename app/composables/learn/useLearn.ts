@@ -172,6 +172,8 @@ export interface MyLearning {
   create_limit_reason: string
   ai_allowance?: AIAllowance
   progress?: Record<string, BuildProgress | null>
+  /** card image per course id (first YouTube thumbnail) */
+  covers?: Record<string, string>
 }
 
 export interface Category {
@@ -193,7 +195,7 @@ export function useLearn() {
 
   return {
     me: () => get<MyLearning>('me'),
-    browse: (q?: string) => get<(LearnCourse & { units: number; learners: number })[]>('browse', q ? { q } : undefined),
+    browse: (q?: string) => get<(LearnCourse & { units: number; learners: number; cover?: string })[]>('browse', q ? { q } : undefined),
     categories: () => get<Category[]>('categories'),
     course: (id: number) => get<CreatorView | LearnerView>(`courses/${id}`),
     unit: (uid: number) => get<Unit>(`units/${uid}`),
