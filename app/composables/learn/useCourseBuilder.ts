@@ -8,7 +8,16 @@ export const BUILD_STEPS = [
   { key: 'organise', label: 'Organise' },
   { key: 'review', label: 'Review' },
 ] as const
-export type BuildStep = (typeof BUILD_STEPS)[number]['key']
+/** Slides as written: the teacher cuts the slides into units instead of the AI organising. */
+export const SLIDES_STEPS = [
+  { key: 'upload', label: 'Upload' },
+  { key: 'units', label: 'Units' },
+  { key: 'review', label: 'Review' },
+] as const
+export type BuildStep = (typeof BUILD_STEPS)[number]['key'] | (typeof SLIDES_STEPS)[number]['key']
+export const buildSteps = (mode?: string) => (mode === 'slides' ? SLIDES_STEPS : BUILD_STEPS)
+/** The step after Upload for this build mode. */
+export const middleStep = (mode?: string) => (mode === 'slides' ? 'units' : 'organise')
 
 export const kindIcon: Record<MaterialKind, any> = { pdf: FileText, slides: Presentation, video: PlayCircle, link: Link2 }
 /** ids with the item at index moved by delta (-1 up, +1 down); null at the ends. */
@@ -40,6 +49,7 @@ export function useCourseBuilder(courseId: number) {
   const limits = computed(() => view.value?.limits)
   const progress = computed(() => view.value?.progress ?? null)
   const isPublished = computed(() => course.value?.course_status === 'published')
+  const slidesMode = computed(() => course.value?.build_mode === 'slides')
 
   const flash = (kind: 'error' | 'ok', text: string) => {
     notice.value = { kind, text }
@@ -111,7 +121,7 @@ export function useCourseBuilder(courseId: number) {
 
   return {
     api, view, loading, loadError, notice, flash, load, run,
-    course, materials, units, limits, progress, isPublished, busy,
+    course, materials, units, limits, progress, isPublished, slidesMode, busy,
     readyCount, runsLeft, aiBlocked, organiseBlocked,
     removeMaterial, retry,
   }

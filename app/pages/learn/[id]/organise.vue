@@ -15,6 +15,8 @@ definePageMeta({ layout: false, middleware: ['auth'] })
 
 const courseId = Number(useRoute().params.id)
 const b = useCourseBuilder(courseId)
+// Slides courses are cut into units by the teacher, not organised by the AI
+watch(() => b.course.value?.build_mode, (m) => { if (m === 'slides') navigateTo(`/learn/${courseId}/units`, { replace: true }) }, { immediate: true })
 const { course, materials, units, progress, loading, loadError, notice, organiseBlocked } = b
 
 useHead(() => ({ title: `Organise materials · ${course.value?.course_title || 'Course'} - FocusFlow` }))

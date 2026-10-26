@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Globe, Lock, Eye, CheckCircle2, Circle } from 'lucide-vue-next'
 import type { Unit } from '~/composables/learn/useLearn'
-import { useCourseBuilder, moved } from '~/composables/learn/useCourseBuilder'
+import { useCourseBuilder, moved, middleStep } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
 import UnitEditor from '~/components/learn/UnitEditor.vue'
 
@@ -13,7 +13,11 @@ definePageMeta({ layout: false, middleware: ['auth'] })
 
 const courseId = Number(useRoute().params.id)
 const b = useCourseBuilder(courseId)
-const { course, materials, units, progress, isPublished, loading, loadError, notice } = b
+const { course, materials, units, progress, isPublished, slidesMode, loading, loadError, notice } = b
+const rangeLabel = (u: Unit) => (u.slides ?? []).map((r) => {
+  const m = materials.value.find((x) => x.id === r.material_id)
+  return `${r.first_page === r.last_page ? `Slide ${r.first_page}` : `Slides ${r.first_page}–${r.last_page}`}${m ? ` · ${m.title}` : ''}`
+}).join(', ')
 
 useHead(() => ({ title: `Review units · ${course.value?.course_title || 'Course'} - FocusFlow` }))
 const breadcrumbs = computed(() => [
@@ -53,9 +57,11 @@ const refsStatus = computed(() => course.value?.references_status)
 const visibility = ref<'public' | 'private'>('public')
 const agreed = ref(false)
 const publishing = ref(false)
-const canPublish = computed(() => agreed.value && (units.value.length > 0 || materials.value.length > 0))
+// A slides course needs units; an AI course may still be writing them
+const hasContent = computed(() => units.value.length > 0 || (!slidesMode.value && materials.value.length > 0))
+const canPublish = computed(() => agreed.value && hasContent.value)
 const publishHint = computed(() => {
-  if (!units.value.length && !materials.value.length) return 'Add a material or a unit first.'
+  if (!hasContent.value) return slidesMode.value ? 'Cut your slides into units first.' : 'Add a material or a unit first.'
   if (!agreed.value) return 'Turn on "I agree" to publish.'
   return ''
 })
@@ -73,37 +79,40 @@ const unpublish = () =>
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
     <StepShell
-      :course-id="courseId" step="review"
+      :course-id="courseId" step="review" :mode="course?.build_mode"
       title="Review your units"
       :subtitle="isPublished ? 'Your course is live.' : 'Check the units, then publish.'"
       :loading="loading" :load-error="loadError" :notice="notice" @dismiss-notice="notice = null"
-      :back-to="`/learn/${courseId}/organise`"
+      :back-to="`/learn/${courseId}/${middleStep(course?.build_mode)}`"
       :next-hint="isPublished ? '' : publishHint">
       <div class="space-y-8">
         <!-- Units -->
         <div class="space-y-3">
           <div v-if="!units.length && !writing" class="ff-group p-8 text-center text-[15px] text-muted-foreground">
             No units yet.
+            <NuxtLink v-if="slidesMode" :to="`/learn/${courseId}/units`" class="mt-4 block"><Button size="lg" variant="tinted">Cut slides into units</Button></NuxtLink>
           </div>
           <ol v-else class="ff-group">
             <li v-for="(u, i) in units" :key="u.id" class="ff-item">
               <!-- On phones the actions drop below the title, so the title stays readable -->
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-[15px] font-semibold tabular-nums text-primary">{{ i + 1 }}</span>
-                <button type="button" class="min-w-0 flex-1 basis-56 text-left" :aria-expanded="editing === u.id" @click="toggleEdit(u)">
+                <button type="button" class="min-w-0 flex-1 basis-56 text-left" :aria-expanded="editing === u.id" @click="slidesMode ? navigateTo(`/learn/${courseId}/units`) : toggleEdit(u)">
                   <p class="line-clamp-2 break-words text-[15px] font-medium" :title="u.title">{{ u.title }}</p>
-                  <p class="text-[13px] text-muted-foreground">
+                  <p v-if="slidesMode" class="truncate text-[13px] text-muted-foreground">{{ rangeLabel(u) }}</p>
+                  <p v-else class="text-[13px] text-muted-foreground">
                     {{ plural((u.concepts ?? []).length, 'concept') }} · {{ plural((u.materials ?? []).length, 'material') }}
                   </p>
                 </button>
                 <div class="ml-auto flex shrink-0 items-center">
                   <button type="button" class="ff-icon-btn" :disabled="i === 0" :aria-label="`Move ${u.title} up`" title="Move up" @click="move(i, -1)"><ChevronUp class="h-[18px] w-[18px]" /></button>
                   <button type="button" class="ff-icon-btn" :disabled="i === units.length - 1" :aria-label="`Move ${u.title} down`" title="Move down" @click="move(i, 1)"><ChevronDown class="h-[18px] w-[18px]" /></button>
-                  <button type="button" class="ff-icon-btn" :class="editing === u.id ? 'bg-primary/10 text-primary' : ''" :aria-label="`Edit ${u.title}`" title="Edit" @click="toggleEdit(u)"><Pencil class="h-[18px] w-[18px]" /></button>
+                  <NuxtLink v-if="slidesMode" :to="`/learn/${courseId}/units`" class="ff-icon-btn" :aria-label="`Change ${u.title}`" title="Change in Units"><Pencil class="h-[18px] w-[18px]" /></NuxtLink>
+                  <button v-else type="button" class="ff-icon-btn" :class="editing === u.id ? 'bg-primary/10 text-primary' : ''" :aria-label="`Edit ${u.title}`" title="Edit" @click="toggleEdit(u)"><Pencil class="h-[18px] w-[18px]" /></button>
                   <button type="button" class="ff-icon-btn hover:text-destructive" :aria-label="`Delete ${u.title}`" title="Delete" @click="removeUnit(u)"><Trash2 class="h-[18px] w-[18px]" /></button>
                 </div>
               </div>
-              <UnitEditor v-if="editing === u.id" :unit="u" :materials="materials"
+              <UnitEditor v-if="editing === u.id && !slidesMode" :unit="u" :materials="materials"
                 @changed="b.load(true)" @close="editing = null" @error="(msg) => b.flash('error', msg)"
                 @saved="editing = null; b.flash('ok', 'Unit saved.')" />
             </li>
@@ -114,13 +123,13 @@ const unpublish = () =>
             </li>
           </ol>
 
-          <form class="flex gap-2" @submit.prevent="addUnit">
+          <form v-if="!slidesMode" class="flex gap-2" @submit.prevent="addUnit">
             <Input v-model="newUnit" class="ff-field" placeholder="New unit title" maxlength="255" aria-label="New unit title" />
             <Button size="lg" type="submit" variant="tinted" :disabled="!newUnit.trim()"><Plus class="mr-1 h-4 w-4" />Add unit</Button>
           </form>
 
           <!-- Further reading links: a quiet extra -->
-          <p v-if="units.length" class="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[13px] text-muted-foreground">
+          <p v-if="units.length && !slidesMode" class="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[13px] text-muted-foreground">
             <template v-if="refsStatus === 'processing'"><Loader2 class="h-3.5 w-3.5 animate-spin" />Finding further reading…</template>
             <template v-else-if="refsStatus === 'ready'">Further reading added.</template>
             <template v-else-if="refsStatus === 'failed'">Some further reading is missing.</template>

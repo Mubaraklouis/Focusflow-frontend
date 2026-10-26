@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useLearn, apiError, LANGUAGES, type Category } from '~/composables/learn/useLearn'
+import { Presentation, Sparkles, CheckCircle2, Circle } from 'lucide-vue-next'
+import { useLearn, apiError, LANGUAGES, type Category, type BuildMode } from '~/composables/learn/useLearn'
 
 useHead({ title: 'Create a course - FocusFlow' })
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -16,7 +17,12 @@ const breadcrumbs = [
 
 const api = useLearn()
 const categories = ref<Category[]>([])
-const form = ref({ title: '', description: '', category: 0, language: 'en' })
+const form = ref<{ title: string; description: string; category: number; language: string; mode: BuildMode }>({ title: '', description: '', category: 0, language: 'en', mode: 'slides' })
+// F1.10: how the course is built. Teachers start from their own slides.
+const modes = [
+  { v: 'slides' as const, icon: Presentation, name: 'Use my slides as written', note: 'Learners read your slides. AI only helps with structure.' },
+  { v: 'ai' as const, icon: Sparkles, name: 'Let AI write lessons', note: 'AI reads your files and writes the lessons. You edit them.' },
+]
 const saving = ref(false)
 const error = ref('')
 const limitReason = ref('')
@@ -46,6 +52,7 @@ const submit = async () => {
     body.append('course_category_id', String(form.value.category))
     body.append('course_language', form.value.language)
     body.append('course_visibility', 'private')
+    body.append('build_mode', form.value.mode)
     const course = await $fetch<{ course_id: number }>('/api/courses', { method: 'POST', body })
     await navigateTo(`/learn/${course.course_id}/upload`)
   } catch (e) {
@@ -91,6 +98,18 @@ const submit = async () => {
             <select id="lang" v-model="form.language" class="ff-field">
               <option v-for="l in LANGUAGES" :key="l.code" :value="l.code">{{ l.name }}</option>
             </select>
+          </div>
+        </div>
+        <div>
+          <p class="ff-label">How do you want to build it?</p>
+          <div class="grid gap-3" role="radiogroup" aria-label="How to build the course">
+            <label v-for="o in modes" :key="o.v" class="ff-group flex cursor-pointer items-center gap-3 p-4 transition-shadow"
+              :class="{ 'ff-selected': form.mode === o.v }">
+              <input v-model="form.mode" type="radio" name="mode" :value="o.v" class="sr-only">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-primary"><component :is="o.icon" class="h-[18px] w-[18px]" /></span>
+              <span class="min-w-0 flex-1"><span class="block text-[15px] font-medium">{{ o.name }}</span><span class="text-[13px] text-muted-foreground">{{ o.note }}</span></span>
+              <CheckCircle2 v-if="form.mode === o.v" class="h-5 w-5 shrink-0 text-primary" /><Circle v-else class="h-5 w-5 shrink-0 text-foreground/20" />
+            </label>
           </div>
         </div>
         <p v-if="error" role="alert" class="text-[15px] text-destructive">{{ error }}</p>

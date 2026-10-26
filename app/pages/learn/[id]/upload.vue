@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Upload, Loader2, AlertCircle, X, Trash2, Eye, Link2 as LinkIcon } from 'lucide-vue-next'
 import { apiError } from '~/composables/learn/useLearn'
-import { useCourseBuilder } from '~/composables/learn/useCourseBuilder'
+import { useCourseBuilder, middleStep } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
 import KindTile from '~/components/learn/KindTile.vue'
 import MaterialState from '~/components/learn/MaterialState.vue'
@@ -14,7 +14,9 @@ definePageMeta({ layout: false, middleware: ['auth'] })
 
 const courseId = Number(useRoute().params.id)
 const b = useCourseBuilder(courseId)
-const { course, materials, limits, loading, loadError, notice } = b
+const { course, materials, limits, loading, loadError, notice, slidesMode } = b
+// Slides as written takes PowerPoint only for now (PDF pages come later, F3.2)
+const fileRule = computed(() => (slidesMode.value ? /\.pptx$/i : /\.(pdf|pptx)$/i))
 
 useHead(() => ({ title: `Upload materials · ${course.value?.course_title || 'Course'} - FocusFlow` }))
 const breadcrumbs = computed(() => [
@@ -40,8 +42,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const uploadFiles = async (files: FileList | File[]) => {
   for (const file of Array.from(files)) {
     failed.value = failed.value.filter((f) => f.name !== file.name)
-    if (!/\.(pdf|pptx)$/i.test(file.name)) {
-      failed.value.push({ name: file.name, reason: 'Only PDF or PowerPoint files.' })
+    if (!fileRule.value.test(file.name)) {
+      failed.value.push({ name: file.name, reason: slidesMode.value ? 'Only PowerPoint (.pptx) files for now.' : 'Only PDF or PowerPoint files.' })
       continue
     }
     uploading.value.push(file.name)
@@ -81,13 +83,13 @@ const addLink = async () => {
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
     <StepShell
-      :course-id="courseId" step="upload"
-      title="Upload your materials"
-      subtitle="The AI reads each file as it arrives."
+      :course-id="courseId" step="upload" :mode="course?.build_mode"
+      :title="slidesMode ? 'Upload your slides' : 'Upload your materials'"
+      :subtitle="slidesMode ? 'Learners will read them as you wrote them.' : 'The AI reads each file as it arrives.'"
       :loading="loading" :load-error="loadError" :notice="notice" @dismiss-notice="notice = null"
       back-to="/learn" back-label="My courses"
       :skip-to="`/learn/${courseId}/review`" skip-label="Skip"
-      :next-to="`/learn/${courseId}/organise`" :next-disabled="!materials.length && !uploading.length"
+      :next-to="`/learn/${courseId}/${middleStep(course?.build_mode)}`" :next-disabled="!materials.length && !uploading.length"
       :next-hint="!materials.length && !uploading.length ? 'Upload a file to continue.' : ''">
       <div class="space-y-6">
         <!-- The one job: drop files here -->
@@ -99,8 +101,8 @@ const addLink = async () => {
           @click="fileInput?.click()" @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()">
           <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary"><Upload class="h-6 w-6" /></span>
           <p class="text-[17px] font-semibold text-foreground">Drop files or click to choose</p>
-          <p class="mt-1 text-[13px] text-muted-foreground">PDF or PowerPoint · up to {{ maxMB }} MB</p>
-          <input ref="fileInput" type="file" class="hidden" multiple accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation" @change="onPick">
+          <p class="mt-1 text-[13px] text-muted-foreground">{{ slidesMode ? 'PowerPoint (.pptx)' : 'PDF or PowerPoint' }} · up to {{ maxMB }} MB</p>
+          <input ref="fileInput" type="file" class="hidden" multiple :accept="slidesMode ? '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation' : '.pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation'" @change="onPick">
         </div>
 
         <!-- What was uploaded, and how it is going -->
@@ -132,7 +134,7 @@ const addLink = async () => {
         </ul>
 
         <!-- Secondary: videos and links -->
-        <div>
+        <div v-if="!slidesMode">
           <Button v-if="!showLink" size="lg" type="button" variant="tinted" @click="showLink = true">
             <LinkIcon class="mr-2 h-4 w-4" />Add video or link
           </Button>
@@ -150,7 +152,7 @@ const addLink = async () => {
           </form>
         </div>
 
-        <p v-if="allowanceLeft" class="px-1 text-[13px] text-muted-foreground">{{ allowanceLeft }}</p>
+        <p v-if="allowanceLeft && !slidesMode" class="px-1 text-[13px] text-muted-foreground">{{ allowanceLeft }}</p>
       </div>
     </StepShell>
   </NuxtLayout>

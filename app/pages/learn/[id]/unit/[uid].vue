@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { useLearn, apiError, kindLabel, type Unit, type Concept, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
+import { useLearn, apiError, kindLabel, type Unit, type Concept, type CreatorView, type LearnerView, type UnitDeck, type SlidePage } from '~/composables/learn/useLearn'
 import { renderMarkdown } from '~/utils/markdown'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
+import SlideView from '~/components/learn/SlideView.vue'
 
 // A unit is read one screen at a time: intro (if any) → one concept per
-// screen → end of unit (recap, materials, Mark as done). The screen is
+// screen → end of unit (recap, materials, Mark as done). A slides unit
+// (F3.7) shows one slide per screen; its last slide finishes the unit. The screen is
 // ?step=N so the browser's back button and reloads keep the place.
 definePageMeta({ layout: false, middleware: ['auth'] })
 
@@ -22,6 +24,8 @@ const error = ref('')
 const locked = ref(false)
 const completing = ref(false)
 const courseDone = ref(false)
+const decks = ref<UnitDeck[]>([])
+const slidesUnit = computed(() => !!unit.value?.slides?.length)
 
 const isCreator = computed(() => outline.value?.role === 'creator')
 const units = computed(() => outline.value?.units ?? [])
@@ -30,15 +34,20 @@ const next = computed(() => (index.value >= 0 ? units.value[index.value + 1] ?? 
 
 const videos = computed(() => (unit.value?.materials ?? []).filter((m) => m.kind === 'video' && m.youtube_id))
 
-type Screen = { kind: 'intro' } | { kind: 'concept'; c: Concept; n: number } | { kind: 'end' }
+type Screen = { kind: 'intro' } | { kind: 'concept'; c: Concept; n: number } | { kind: 'slide'; page: SlidePage; deck: UnitDeck; n: number } | { kind: 'end' }
 const screens = computed<Screen[]>(() => {
   if (!unit.value) return []
   const out: Screen[] = []
   if (unit.value.body?.trim() || videos.value.length) out.push({ kind: 'intro' })
   ;(unit.value.concepts ?? []).forEach((c, i) => out.push({ kind: 'concept', c, n: i + 1 }))
-  out.push({ kind: 'end' })
+  let n = 0
+  for (const deck of decks.value) for (const page of deck.pages) out.push({ kind: 'slide', page, deck, n: ++n })
+  if (!slidesUnit.value || courseDone.value || !n) out.push({ kind: 'end' })
   return out
 })
+const slideCount = computed(() => screens.value.filter((s) => s.kind === 'slide').length)
+// The screen with the finishing buttons: the end screen, or a slides unit's last slide
+const finalScreen = computed(() => step.value === screens.value.length - 1)
 const step = computed(() => Math.min(Math.max(0, Number(route.query.step) || 0), Math.max(0, screens.value.length - 1)))
 const screen = computed(() => screens.value[step.value])
 const conceptCount = computed(() => unit.value?.concepts?.length ?? 0)
@@ -70,6 +79,7 @@ const load = async () => {
   try {
     outline.value = await api.course(courseId)
     unit.value = await api.unit(unitId.value)
+    decks.value = unit.value.slides?.length ? await api.unitPages(unitId.value) : []
   } catch (e: any) {
     if (e?.statusCode === 403 || e?.status === 403) locked.value = true
     else error.value = apiError(e, 'This unit is not available.')
@@ -85,7 +95,10 @@ const complete = async () => {
   try {
     const res = await api.completeUnit(unitId.value)
     if (unit.value) unit.value.completed = true
-    if (res.course_completed) courseDone.value = true
+    if (res.course_completed) {
+      courseDone.value = true
+      if (slidesUnit.value) await go(screens.value.length - 1) // the end screen appears
+    }
     else if (next.value) await navigateTo(`/learn/${courseId}/unit/${next.value.id}`)
   } catch (e) {
     error.value = apiError(e)
@@ -159,6 +172,13 @@ const complete = async () => {
           </section>
         </article>
 
+        <!-- One slide (slides as written) -->
+        <article v-else-if="screen.kind === 'slide'">
+          <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} · Slide {{ screen.n }} of {{ slideCount }}</p>
+          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ screen.page.title || unit.title }}</h1>
+          <SlideView v-if="screen.page.blocks.length" class="mt-6" :page="screen.page" :material-url="screen.deck.url" :material-title="screen.deck.title" />
+        </article>
+
         <!-- End of unit -->
         <article v-else>
           <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} of {{ units.length }}</p>
@@ -197,10 +217,10 @@ const complete = async () => {
             <Button v-if="step > 0" size="lg" variant="gray" @click="go(step - 1)">Back</Button>
             <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg" variant="gray">Course</Button></NuxtLink>
             <div class="ml-auto">
-              <Button v-if="screen.kind !== 'end'" size="lg" @click="go(step + 1)">Next</Button>
+              <Button v-if="!finalScreen" size="lg" @click="go(step + 1)">Next</Button>
               <NuxtLink v-else-if="courseDone" :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>
               <Button v-else-if="!isCreator && !unit.completed" size="lg" :disabled="completing" @click="complete">
-                {{ completing ? 'Saving…' : 'Mark as done' }}
+                {{ completing ? 'Saving…' : slidesUnit ? 'Finish unit' : 'Mark as done' }}
               </Button>
               <NuxtLink v-else-if="next" :to="`/learn/${courseId}/unit/${next.id}`"><Button size="lg">Next unit</Button></NuxtLink>
               <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>

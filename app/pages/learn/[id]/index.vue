@@ -32,6 +32,7 @@ watch(view, () => {
 })
 const NuxtLink = resolveComponent('NuxtLink')
 const conceptsIn = (u: Unit) => u.concept_names?.length ?? u.concepts?.length ?? 0
+const slidesIn = (u: Unit) => (u.slides ?? []).reduce((n, r) => n + (r.count ?? r.last_page - r.first_page + 1), 0)
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 
 useHead(() => ({ title: `${course.value?.course_title || 'Course'} - FocusFlow` }))
@@ -137,7 +138,8 @@ const join = async () => {
                   :class="u.completed ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-primary/10 text-primary'">{{ units.indexOf(u) + 1 }}</span>
                 <span class="min-w-0 flex-1">
                   <span class="line-clamp-2 break-words text-[15px] font-medium">{{ u.title }}</span>
-                  <span v-if="conceptsIn(u)" class="text-[13px] text-muted-foreground">{{ plural(conceptsIn(u), 'concept') }}</span>
+                  <span v-if="slidesIn(u)" class="text-[13px] text-muted-foreground">{{ plural(slidesIn(u), 'slide') }}</span>
+                  <span v-else-if="conceptsIn(u)" class="text-[13px] text-muted-foreground">{{ plural(conceptsIn(u), 'concept') }}</span>
                 </span>
                 <span v-if="u.completed" class="shrink-0 text-[13px] font-medium text-green-700 dark:text-green-400">Done</span>
                 <span v-else-if="u.locked && view.role !== 'creator'" class="shrink-0 text-[13px] text-muted-foreground">Locked</span>

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, CheckCircle2, Check, X, Loader2 } from 'lucide-vue-next'
-import { BUILD_STEPS, type BuildStep } from '~/composables/learn/useCourseBuilder'
+import { buildSteps, type BuildStep } from '~/composables/learn/useCourseBuilder'
 
 // The frame of every course-building step: step indicator at the top, one
 // column of content, and Back / Skip / Next in the same place on every step
@@ -10,6 +10,8 @@ import { BUILD_STEPS, type BuildStep } from '~/composables/learn/useCourseBuilde
 const props = defineProps<{
   courseId: number
   step: BuildStep
+  /** the course's build mode: slides courses have a Units step instead of Organise */
+  mode?: string
   title: string
   subtitle?: string
   loading?: boolean
@@ -28,7 +30,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ next: []; 'dismiss-notice': [] }>()
 
-const current = computed(() => BUILD_STEPS.findIndex((s) => s.key === props.step))
+const steps = computed(() => buildSteps(props.mode))
+const current = computed(() => steps.value.findIndex((s) => s.key === props.step))
 const stepTo = (key: string) => `/learn/${props.courseId}/${key}`
 const onNext = () => {
   if (props.nextTo) navigateTo(props.nextTo)
@@ -41,7 +44,7 @@ const onNext = () => {
     <!-- 1 · 2 · 3 as a segmented control -->
     <nav aria-label="Course building steps" class="mb-8 flex justify-center">
       <ol class="inline-flex rounded-full bg-foreground/[0.05] p-1 text-[13px] font-medium">
-        <li v-for="(s, i) in BUILD_STEPS" :key="s.key">
+        <li v-for="(s, i) in steps" :key="s.key">
           <NuxtLink v-if="i < current" :to="stepTo(s.key)"
             class="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-muted-foreground transition-colors hover:text-foreground">
             <Check class="h-3.5 w-3.5 text-primary" /><span class="hidden sm:inline">{{ s.label }}</span>

@@ -120,7 +120,14 @@ export interface Unit {
   materials?: Material[]
   concepts?: Concept[]
   concept_names?: string[]
+  /** slides as written: the slide ranges this unit reads */
+  slides?: SlideRange[]
 }
+
+export interface SlideRange { material_id: number; first_page: number; last_page: number; /** slides learners see */ count?: number }
+/** One deck of a unit with the slides the unit reads (hidden slides left out). */
+export interface UnitDeck { material_id: number; title: string; url: string; first_page: number; last_page: number; pages: SlidePage[] }
+export type BuildMode = 'ai' | 'slides'
 
 export interface LearnCourse {
   course_id: number
@@ -133,6 +140,8 @@ export interface LearnCourse {
   course_visibility: 'public' | 'private'
   course_language: string
   course_status: 'draft' | 'published'
+  /** slides = "use my slides as written"; ai = "let AI write lessons" */
+  build_mode?: BuildMode
   published_at: string | null
   organise_status: JobStatus
   organise_error?: string
@@ -234,6 +243,10 @@ export function useLearn() {
       send<Material[]>('PUT', `courses/${id}/materials/order`, { material_ids: materialIds }),
     retryMaterial: (mid: number) => send('POST', `materials/${mid}/retry`),
     slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),
+    unitPages: (uid: number) => get<UnitDeck[]>(`units/${uid}/pages`),
+    setBuildMode: (id: number, mode: BuildMode) => send<LearnCourse>('PUT', `courses/${id}/build-mode`, { build_mode: mode }),
+    saveSlideUnits: (id: number, units: { id?: number; title: string; material_id: number; first_page: number; last_page: number }[]) =>
+      send<{ id: number; title: string; slides: SlideRange[] }[]>('PUT', `courses/${id}/slide-units`, { units }),
 
     organise: (id: number) => send('POST', `courses/${id}/organise`),
     addUnit: (id: number, title: string, body = '') => send<Unit>('POST', `courses/${id}/units`, { title, body }),
