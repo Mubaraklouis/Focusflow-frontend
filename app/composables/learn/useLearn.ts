@@ -64,6 +64,19 @@ export interface SlidePage {
   has_diagram: boolean
 }
 
+export interface AnswerIn { index: number; choice?: number | null; choices?: number[]; answer?: string }
+
+export const QUESTION_KINDS: { v: QuestionKind; label: string }[] = [
+  { v: 'mcq', label: 'One answer' }, { v: 'multi', label: 'Several answers' }, { v: 'truefalse', label: 'True or false' },
+  { v: 'short', label: 'Short answer' }, { v: 'explain', label: 'Written answer' },
+]
+export const QUIZ_LEVELS: { v: Exclude<QuizLevel, 'custom'>; label: string; note: string }[] = [
+  { v: 'practice', label: 'Practice', note: 'No timer, unlimited tries, answers shown after each question. Never blocks.' },
+  { v: 'standard', label: 'Standard', note: '3 attempts, answers shown once passed or out of tries. Blocks the next unit until passed.' },
+  { v: 'strict', label: 'Strict', note: 'Timer with auto-submit, 2 attempts, no going back, tab and paste tracking, you review the marks.' },
+  { v: 'supervised', label: 'Supervised exam', note: 'Strict, plus an access code you give out in the room and follow-up questions on answers.' },
+]
+
 /** Seconds as m:ss or h:mm:ss. */
 export const clock = (sec = 0) => {
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
@@ -122,7 +135,87 @@ export interface Unit {
   concept_names?: string[]
   /** slides as written: the slide ranges this unit reads */
   slides?: SlideRange[]
+  /** lesson, or quiz: a test placed anywhere in the course (F2.2) */
+  kind?: 'lesson' | 'quiz'
+  /** quiz: lessons it covers (empty = every lesson before it) */
+  covers?: number[]
+  final?: boolean
+  /** practice or not-ready quizzes never block the next unit */
+  optional?: boolean
+  test?: TestSummary | null
 }
+
+// ── Quizzes (FEATURES.md M2) ───────────────────────────────────────────────
+export type QuestionKind = 'mcq' | 'multi' | 'truefalse' | 'short' | 'explain'
+export type QuizLevel = 'practice' | 'standard' | 'strict' | 'supervised' | 'custom'
+export type ShowAnswers = 'after_question' | 'when_finished' | 'after_submit' | 'after_close' | 'never'
+export interface Question {
+  id: number
+  unit_id: number
+  kind: QuestionKind
+  prompt: string
+  options: string[]
+  correct: number
+  corrects?: number[]
+  answer_guide: string
+  concept: string
+  source: 'ai' | 'edited' | 'manual'
+}
+export interface TestSettings {
+  unit_id: number
+  enabled: boolean
+  questions_per_test: number
+  pass_mark: number
+  time_limit_minutes: number
+  max_attempts: number
+  teacher_review: boolean
+  track_tab: boolean
+  track_paste: boolean
+  pool_status: JobStatus
+  pool_error?: string
+  pool_runs: number
+  level: QuizLevel
+  practice: boolean
+  show_answers: ShowAnswers
+  all_on_one_page: boolean
+  no_back: boolean
+  opens_at: string | null
+  closes_at: string | null
+  access_code?: string
+  explain_answers: boolean
+  camera: boolean
+}
+export interface TestSummary { enabled: boolean; questions?: number; pool_status?: string; pending_reviews?: number; passed?: boolean }
+export interface CreatorTest { role: 'creator'; unit: Unit; settings: TestSettings; questions: Question[]; ai_available: boolean }
+export interface LearnerSettings {
+  questions: number; pass_mark: number; time_limit_minutes: number; max_attempts: number; teacher_review: boolean
+  track_tab: boolean; track_paste: boolean; level: QuizLevel; practice: boolean; show_answers: ShowAnswers
+  all_on_one_page: boolean; no_back: boolean; opens_at: string | null; closes_at: string | null
+  needs_code: boolean; explain_answers: boolean; camera: boolean
+}
+export interface LearnerItem {
+  kind: QuestionKind; prompt: string; options?: string[]; choice: number | null; choices?: number[]; answer: string
+  mark?: number | null; feedback?: string; teacher_note?: string; correct?: number; corrects?: number[]; answer_guide?: string
+}
+export interface LearnerAttempt {
+  id: number; unit_id: number; number: number
+  status: 'in_progress' | 'marking' | 'explain' | 'review' | 'done'
+  items: LearnerItem[]; started_at: string; deadline: string | null; submitted_at: string | null; auto_submitted: boolean
+  score_percent: number | null; passed: boolean; pass_mark: number; track_tab: boolean; track_paste: boolean
+  all_on_one_page: boolean; no_back: boolean; show_answers: ShowAnswers; camera: boolean
+  followups?: { question: string; answer: string }[]; message?: string; server_time: string
+}
+export interface LearnerTest {
+  role: 'learner'; unit: { id: number; title: string; course_id: number }; settings: LearnerSettings
+  attempts: LearnerAttempt[]; can_start: boolean; reason: string; in_progress_attempt_id: number | null
+}
+export interface AttemptRow {
+  id: number; unit_id: number; unit_title: string; learner_id: number; learner_name: string; number: number
+  status: string; score_percent: number; passed: boolean; submitted_at: string | null; auto_submitted: boolean
+  evidence: Record<string, number>; mark_error?: string; consistency?: string; snapshots?: number
+}
+export interface ImportResult { questions: Question[]; errors: { line: number; message: string }[]; saved: number }
+export interface Certificate { code: string; course_id: number; learner_name: string; course_title: string; creator_name: string; final_score?: number; issued_at: string }
 
 export interface SlideRange { material_id: number; first_page: number; last_page: number; /** slides learners see */ count?: number }
 /** One deck of a unit with the slides the unit reads (hidden slides left out). */
@@ -242,6 +335,30 @@ export function useLearn() {
     reorderMaterials: (id: number, materialIds: number[]) =>
       send<Material[]>('PUT', `courses/${id}/materials/order`, { material_ids: materialIds }),
     retryMaterial: (mid: number) => send('POST', `materials/${mid}/retry`),
+    // quizzes
+    test: (uid: number) => get<CreatorTest | LearnerTest>(`units/${uid}/test`),
+    updateTest: (uid: number, body: Partial<Omit<TestSettings, 'opens_at' | 'closes_at'>> & { opens_at?: string; closes_at?: string; new_access_code?: boolean }) =>
+      send<TestSettings>('PUT', `units/${uid}/test`, body),
+    addQuestion: (uid: number, q: Partial<Question>) => send<Question>('POST', `units/${uid}/questions`, q),
+    updateQuestion: (qid: number, q: Partial<Question>) => send<Question>('PUT', `questions/${qid}`, q),
+    deleteQuestion: (qid: number) => send('DELETE', `questions/${qid}`),
+    generateQuestions: (uid: number) => send('POST', `units/${uid}/questions/generate`),
+    importQuestions: (uid: number, format: 'csv' | 'gift' | 'aiken', text: string, save: boolean) =>
+      send<ImportResult>('POST', `units/${uid}/questions/import`, { format, text, save }),
+    createQuiz: (id: number, body: { title?: string; after_unit_id?: number; covers?: number[]; final?: boolean; practice?: boolean }) =>
+      send<Unit>('POST', `courses/${id}/quizzes`, body),
+    updateQuiz: (uid: number, body: { title?: string; covers?: number[] }) => send<Unit>('PUT', `units/${uid}/quiz`, body),
+    startTest: (uid: number, accessCode?: string) => send<LearnerAttempt>('POST', `units/${uid}/test/start`, accessCode ? { access_code: accessCode } : {}),
+    attempt: (aid: number) => get<any>(`attempts/${aid}`),
+    saveAnswers: (aid: number, answers: AnswerIn[]) => send('PUT', `attempts/${aid}/answers`, { answers }),
+    submitTest: (aid: number, answers: AnswerIn[]) => send<LearnerAttempt>('POST', `attempts/${aid}/submit`, { answers }),
+    logEvents: (aid: number, events: string[]) => send('POST', `attempts/${aid}/events`, { events }),
+    checkAnswer: (aid: number, index: number) => send<{ index: number; correct?: number; corrects?: number[]; right?: boolean; answer_guide?: string }>('POST', `attempts/${aid}/check`, { index }),
+    explain: (aid: number, answers: string[]) => send<LearnerAttempt>('POST', `attempts/${aid}/explain`, { answers }),
+    courseAttempts: (id: number, status: 'review' | 'done' | 'marking' | 'all' = 'review') => get<AttemptRow[]>(`courses/${id}/attempts`, { status }),
+    reviewAttempt: (aid: number, marks: { index: number; mark: number; note?: string }[]) => send('POST', `attempts/${aid}/review`, { marks }),
+    certificate: (code: string) => $fetch<{ data: Certificate }>(`/api/certificates/${encodeURIComponent(code)}`).then((r) => r.data),
+
     slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),
     unitPages: (uid: number) => get<UnitDeck[]>(`units/${uid}/pages`),
     setBuildMode: (id: number, mode: BuildMode) => send<LearnCourse>('PUT', `courses/${id}/build-mode`, { build_mode: mode }),
