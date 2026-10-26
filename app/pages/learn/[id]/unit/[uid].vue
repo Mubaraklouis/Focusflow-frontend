@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { FileText, Presentation, Link2, ExternalLink, CheckCircle2, ArrowLeft, ArrowRight, Trophy, Lock, Telescope } from 'lucide-vue-next'
-import { useLearn, apiError, kindLabel, type Unit, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
+import { useLearn, apiError, kindLabel, type Unit, type Concept, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
 import { renderMarkdown } from '~/utils/markdown'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
 
+// A unit is read one screen at a time: intro (if any) → one concept per
+// screen → end of unit (recap, materials, Mark as done). The screen is
+// ?step=N so the browser's back button and reloads keep the place.
 definePageMeta({ layout: false, middleware: ['auth'] })
 
 const route = useRoute()
@@ -22,15 +24,42 @@ const completing = ref(false)
 const courseDone = ref(false)
 
 const isCreator = computed(() => outline.value?.role === 'creator')
-const index = computed(() => (outline.value?.units ?? []).findIndex((u) => u.id === unitId.value))
-const prev = computed(() => (index.value > 0 ? outline.value!.units[index.value - 1] : null))
-const next = computed(() => (outline.value && index.value >= 0 ? outline.value.units[index.value + 1] ?? null : null))
+const units = computed(() => outline.value?.units ?? [])
+const index = computed(() => units.value.findIndex((u) => u.id === unitId.value))
+const next = computed(() => (index.value >= 0 ? units.value[index.value + 1] ?? null : null))
+
+const videos = computed(() => (unit.value?.materials ?? []).filter((m) => m.kind === 'video' && m.youtube_id))
+
+type Screen = { kind: 'intro' } | { kind: 'concept'; c: Concept; n: number } | { kind: 'end' }
+const screens = computed<Screen[]>(() => {
+  if (!unit.value) return []
+  const out: Screen[] = []
+  if (unit.value.body?.trim() || videos.value.length) out.push({ kind: 'intro' })
+  ;(unit.value.concepts ?? []).forEach((c, i) => out.push({ kind: 'concept', c, n: i + 1 }))
+  out.push({ kind: 'end' })
+  return out
+})
+const step = computed(() => Math.min(Math.max(0, Number(route.query.step) || 0), Math.max(0, screens.value.length - 1)))
+const screen = computed(() => screens.value[step.value])
+const conceptCount = computed(() => unit.value?.concepts?.length ?? 0)
+
+const go = async (n: number) => {
+  await navigateTo({ query: { ...route.query, step: n || undefined } }, { replace: true })
+  document.querySelector('main')?.scrollTo({ top: 0 })
+}
+const onKey = (e: KeyboardEvent) => {
+  if ((e.target as HTMLElement)?.closest('input, textarea, iframe')) return
+  if (e.key === 'ArrowRight' && step.value < screens.value.length - 1) go(step.value + 1)
+  if (e.key === 'ArrowLeft' && step.value > 0) go(step.value - 1)
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 useHead(() => ({ title: `${unit.value?.title || 'Unit'} - FocusFlow` }))
 const breadcrumbs = computed(() => [
   { title: 'My learning', href: '/learn' },
   { title: outline.value?.course.course_title || 'Course', href: `/learn/${courseId}` },
-  { title: unit.value?.title || 'Unit', href: route.fullPath, current: true },
+  { title: unit.value?.title || 'Unit', href: route.path, current: true },
 ])
 
 const load = async () => {
@@ -64,110 +93,120 @@ const complete = async () => {
     completing.value = false
   }
 }
-
-const videos = computed(() => (unit.value?.materials ?? []).filter((m) => m.kind === 'video' && m.youtube_id))
-const docs = computed(() => (unit.value?.materials ?? []).filter((m) => m.kind !== 'video'))
-const docIcon = { pdf: FileText, slides: Presentation, link: Link2, video: Link2 } as const
 </script>
 
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
-    <div class="container mx-auto px-4 py-8 max-w-3xl">
-      <NuxtLink :to="`/learn/${courseId}`" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft class="h-4 w-4" /> Course outline
-      </NuxtLink>
-
-      <div v-if="loading" class="space-y-4 animate-pulse">
-        <div class="h-9 w-2/3 rounded bg-muted/60" /><div class="aspect-video rounded-lg bg-muted/60" /><div class="h-40 rounded-lg bg-muted/60" />
+    <div class="mx-auto max-w-2xl px-4 pt-6 pb-32 sm:pt-10 sm:pb-12">
+      <div v-if="loading" class="space-y-4" aria-busy="true">
+        <div class="h-1.5 animate-pulse rounded-full bg-muted" />
+        <div class="h-8 w-2/3 animate-pulse rounded-lg bg-muted" />
+        <div class="h-48 animate-pulse rounded-2xl bg-muted" />
       </div>
 
-      <div v-else-if="locked" class="rounded-lg border border-border bg-card p-8 text-center">
-        <Lock class="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-        <p class="font-medium">This unit is locked.</p>
-        <p class="text-sm text-muted-foreground mt-1">Finish the previous unit to open it.</p>
-        <NuxtLink :to="`/learn/${courseId}`"><Button class="mt-4" variant="outline">Back to the outline</Button></NuxtLink>
+      <div v-else-if="locked" class="ff-group p-8 text-center">
+        <p class="text-[17px] font-semibold">This unit is locked</p>
+        <p class="mt-1 text-[15px] text-muted-foreground">Finish the unit before it first.</p>
+        <NuxtLink :to="`/learn/${courseId}`"><Button size="lg" variant="gray" class="mt-5">Back to course</Button></NuxtLink>
       </div>
 
-      <div v-else-if="error" class="bg-destructive/10 text-destructive p-4 rounded-lg">{{ error }}</div>
+      <div v-else-if="error" class="rounded-2xl bg-destructive/10 p-4 text-[15px] text-destructive">
+        {{ error }} <NuxtLink :to="`/learn/${courseId}`" class="ml-2 underline">Back to course</NuxtLink>
+      </div>
 
-      <article v-else-if="unit">
-        <p class="text-sm text-primary font-medium">Unit {{ index + 1 }} of {{ outline?.units.length }}</p>
-        <h1 class="text-3xl font-bold text-foreground mt-1 mb-6">{{ unit.title }}</h1>
-
-        <div v-for="v in videos" :key="v.id" class="mb-6">
-          <div class="aspect-video overflow-hidden rounded-lg border border-border bg-black">
-            <iframe class="h-full w-full" :src="`https://www.youtube-nocookie.com/embed/${v.youtube_id}`" :title="v.title"
-              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" />
-          </div>
-          <p class="text-sm text-muted-foreground mt-2">{{ v.title }}</p>
+      <template v-else-if="unit && screen">
+        <!-- Where am I: a thin bar, one segment per screen -->
+        <div class="mb-6 flex gap-1" aria-hidden="true">
+          <span v-for="(_, i) in screens" :key="i" class="h-1 flex-1 rounded-full transition-colors"
+            :class="i <= step ? 'bg-primary' : 'bg-foreground/[0.08]'" />
         </div>
 
-        <div v-if="unit.body" class="md-content" v-html="renderMarkdown(unit.body)" />
-
-        <!-- Concepts: each explained, with where to check it in the sources -->
-        <section v-if="unit.concepts?.length" class="mt-8 space-y-5">
-          <h2 class="text-lg font-semibold">Key concepts</h2>
-          <div v-for="(c, i) in unit.concepts" :key="c.id" :id="`concept-${c.id}`"
-            class="rounded-lg border border-border bg-card p-5">
-            <h3 class="font-semibold text-foreground flex items-baseline gap-2">
-              <span class="text-primary text-sm">{{ i + 1 }}.</span>{{ c.title }}
-            </h3>
-            <div v-if="c.explanation" class="md-content mt-2 text-[0.95rem]" v-html="renderMarkdown(c.explanation)" />
-            <div v-if="c.sources.length" class="mt-4 border-t border-border pt-3">
-              <p class="text-xs text-muted-foreground mb-2">Want to understand this better? Check the source:</p>
-              <ConceptSources :sources="c.sources" />
+        <!-- Intro -->
+        <article v-if="screen.kind === 'intro'">
+          <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} of {{ units.length }}</p>
+          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{{ unit.title }}</h1>
+          <div v-for="v in videos" :key="v.id" class="mt-6">
+            <div class="aspect-video overflow-hidden rounded-2xl bg-black">
+              <iframe class="h-full w-full" :src="`https://www.youtube-nocookie.com/embed/${v.youtube_id}`" :title="v.title"
+                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" />
             </div>
-            <div v-if="c.references?.length" class="mt-4 border-t border-border pt-3">
-              <p class="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1"><Telescope class="h-3.5 w-3.5" />Expand your knowledge</p>
-              <ul class="space-y-1.5">
-                <li v-for="r in c.references" :key="r.url">
-                  <a :href="r.url" target="_blank" rel="noopener noreferrer nofollow" class="group block rounded-md px-2 py-1.5 -mx-2 hover:bg-accent">
-                    <span class="text-sm font-medium text-primary group-hover:underline">{{ r.title }}</span>
-                    <span class="text-xs text-muted-foreground"> · {{ r.site }}</span>
-                    <span v-if="r.why" class="block text-xs text-muted-foreground">{{ r.why }}</span>
-                  </a>
-                </li>
-              </ul>
+            <p class="mt-2 px-1 text-[13px] text-muted-foreground">{{ v.title }}</p>
+          </div>
+          <div v-if="unit.body" class="md-content mt-6 text-[15px]" v-html="renderMarkdown(unit.body)" />
+        </article>
+
+        <!-- One concept -->
+        <article v-else-if="screen.kind === 'concept'">
+          <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} · Concept {{ screen.n }} of {{ conceptCount }}</p>
+          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{{ screen.c.title }}</h1>
+          <div v-if="screen.c.explanation" class="md-content mt-5 text-[15px]" v-html="renderMarkdown(screen.c.explanation)" />
+
+          <section v-if="screen.c.sources.length" class="mt-8">
+            <h2 class="ff-label">Check the source</h2>
+            <ConceptSources :sources="screen.c.sources" />
+          </section>
+          <section v-if="screen.c.references?.length" class="mt-6">
+            <h2 class="ff-label">Further reading</h2>
+            <ul class="ff-group">
+              <li v-for="r in screen.c.references" :key="r.url" class="ff-item" style="--ff-inset: 1rem">
+                <a :href="r.url" target="_blank" rel="noopener noreferrer nofollow" class="block px-4 py-3 transition-colors hover:bg-foreground/[0.03]">
+                  <span class="block text-[15px] font-medium text-primary">{{ r.title }}</span>
+                  <span class="text-[13px] text-muted-foreground">{{ r.site }}<template v-if="r.why"> · {{ r.why }}</template></span>
+                </a>
+              </li>
+            </ul>
+          </section>
+        </article>
+
+        <!-- End of unit -->
+        <article v-else>
+          <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} of {{ units.length }}</p>
+          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{{ courseDone ? 'You finished the course' : 'End of unit' }}</h1>
+          <p class="mt-1 text-[15px] text-muted-foreground">{{ unit.title }}</p>
+
+          <section v-if="conceptCount" class="mt-7">
+            <h2 class="ff-label">You covered</h2>
+            <ol class="ff-group" style="--ff-inset: 2.75rem">
+              <li v-for="(c, i) in unit.concepts" :key="c.id" class="ff-item">
+                <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-foreground/[0.03]"
+                  @click="go(screens.findIndex((s) => s.kind === 'concept' && s.c.id === c.id))">
+                  <span class="w-4 shrink-0 text-right text-[13px] font-semibold tabular-nums text-muted-foreground">{{ i + 1 }}</span>
+                  <span class="text-[15px]">{{ c.title }}</span>
+                </button>
+              </li>
+            </ol>
+          </section>
+
+          <section v-if="unit.materials?.length" class="mt-6">
+            <h2 class="ff-label">Materials</h2>
+            <ul class="ff-group">
+              <li v-for="m in unit.materials" :key="m.id" class="ff-item" style="--ff-inset: 1rem">
+                <a :href="m.url" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.03]">
+                  <span class="min-w-0 truncate text-[15px]">{{ m.title }}</span>
+                  <span class="shrink-0 text-[13px] text-muted-foreground">{{ kindLabel[m.kind] }}</span>
+                </a>
+              </li>
+            </ul>
+          </section>
+        </article>
+
+        <!-- Back · Next: same place on every screen; frosted bar on phones -->
+        <div class="fixed inset-x-0 bottom-0 z-10 border-t border-border/60 bg-background/75 backdrop-blur-xl sm:static sm:mt-10 sm:border-0 sm:bg-transparent sm:backdrop-blur-none">
+          <div class="mx-auto flex max-w-2xl items-center gap-2 px-4 py-3 sm:px-0 sm:py-0">
+            <Button v-if="step > 0" size="lg" variant="gray" @click="go(step - 1)">Back</Button>
+            <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg" variant="gray">Course</Button></NuxtLink>
+            <div class="ml-auto">
+              <Button v-if="screen.kind !== 'end'" size="lg" @click="go(step + 1)">Next</Button>
+              <NuxtLink v-else-if="courseDone" :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>
+              <Button v-else-if="!isCreator && !unit.completed" size="lg" :disabled="completing" @click="complete">
+                {{ completing ? 'Saving…' : 'Mark as done' }}
+              </Button>
+              <NuxtLink v-else-if="next" :to="`/learn/${courseId}/unit/${next.id}`"><Button size="lg">Next unit</Button></NuxtLink>
+              <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>
             </div>
           </div>
-        </section>
-
-        <section v-if="docs.length" class="mt-8">
-          <h2 class="text-lg font-semibold mb-3">All materials for this unit</h2>
-          <ul class="space-y-2">
-            <li v-for="m in docs" :key="m.id">
-              <a :href="m.url" target="_blank" rel="noopener noreferrer"
-                class="flex items-center gap-3 rounded-lg border border-border bg-card p-3 hover:border-primary/50 transition-colors">
-                <component :is="docIcon[m.kind]" class="h-5 w-5 text-muted-foreground" />
-                <span class="flex-1 font-medium">{{ m.title }}</span>
-                <span class="text-xs text-muted-foreground">{{ kindLabel[m.kind] }}</span>
-                <ExternalLink class="h-4 w-4 text-muted-foreground" />
-              </a>
-            </li>
-          </ul>
-        </section>
-
-        <div v-if="courseDone" class="mt-10 rounded-lg border border-green-500/40 bg-green-500/10 p-6 text-center">
-          <Trophy class="h-10 w-10 mx-auto text-green-600 mb-2" />
-          <p class="text-lg font-semibold">You finished the course!</p>
-          <NuxtLink :to="`/learn/${courseId}`"><Button class="mt-4" variant="outline">Back to the course</Button></NuxtLink>
         </div>
-
-        <div v-else class="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
-          <NuxtLink v-if="prev" :to="`/learn/${courseId}/unit/${prev.id}`"><Button variant="outline" class="max-w-[16rem]" :title="prev.title"><ArrowLeft class="h-4 w-4 mr-1 shrink-0" /><span class="truncate">{{ prev.title }}</span></Button></NuxtLink>
-          <span v-else />
-          <template v-if="!isCreator">
-            <span v-if="unit.completed" class="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-              <CheckCircle2 class="h-4 w-4" /> Finished
-              <NuxtLink v-if="next" :to="`/learn/${courseId}/unit/${next.id}`"><Button class="ml-2">Next unit<ArrowRight class="h-4 w-4 ml-1" /></Button></NuxtLink>
-            </span>
-            <Button v-else :disabled="completing" @click="complete">
-              <CheckCircle2 class="h-4 w-4 mr-2" />{{ completing ? 'Saving…' : next ? 'Mark as done and continue' : 'Mark as done' }}
-            </Button>
-          </template>
-          <NuxtLink v-else-if="next" :to="`/learn/${courseId}/unit/${next.id}`"><Button variant="outline">Next unit<ArrowRight class="h-4 w-4 ml-1" /></Button></NuxtLink>
-        </div>
-      </article>
+      </template>
     </div>
   </NuxtLayout>
 </template>

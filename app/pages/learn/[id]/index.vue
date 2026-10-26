@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Lock, CheckCircle2, PlayCircle, PencilRuler, Trophy, Layers, Clock } from 'lucide-vue-next'
-import { useLearn, apiError, type CreatorView, type LearnerView } from '~/composables/learn/useLearn'
+import { useLearn, apiError, type CreatorView, type LearnerView, type Unit } from '~/composables/learn/useLearn'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
 
@@ -21,6 +20,19 @@ const units = computed(() => view.value?.units ?? [])
 const pct = computed(() => (learner.value?.total_units ? Math.round((learner.value.completed_units / learner.value.total_units) * 100) : 0))
 const finished = computed(() => !!learner.value && learner.value.total_units > 0 && learner.value.completed_units >= learner.value.total_units)
 const nextUnit = computed(() => units.value.find((u) => !u.locked && !u.completed))
+
+// Units, a page at a time; opens on the page with the learner's next unit
+const PER_PAGE = 8
+const page = ref(0)
+const pages = computed(() => Math.max(1, Math.ceil(units.value.length / PER_PAGE)))
+const shown = computed(() => units.value.slice(page.value * PER_PAGE, (page.value + 1) * PER_PAGE))
+watch(view, () => {
+  const at = nextUnit.value ? units.value.indexOf(nextUnit.value) : 0
+  page.value = Math.floor(Math.max(0, at) / PER_PAGE)
+})
+const NuxtLink = resolveComponent('NuxtLink')
+const conceptsIn = (u: Unit) => u.concept_names?.length ?? u.concepts?.length ?? 0
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 
 useHead(() => ({ title: `${course.value?.course_title || 'Course'} - FocusFlow` }))
 const breadcrumbs = computed(() => [
@@ -57,76 +69,90 @@ const join = async () => {
 
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
-    <div class="container mx-auto px-4 py-8 max-w-3xl">
-      <div v-if="loading" class="space-y-4 animate-pulse">
-        <div class="h-10 w-2/3 rounded bg-muted/60" /><div class="h-24 rounded-lg bg-muted/60" /><div class="h-64 rounded-lg bg-muted/60" />
+    <!-- One job: see the units and start learning -->
+    <div class="mx-auto max-w-2xl px-4 pt-8 pb-16 sm:pt-12">
+      <div v-if="loading" class="space-y-4" aria-busy="true">
+        <div class="h-8 w-2/3 animate-pulse rounded-lg bg-muted" />
+        <div class="h-4 w-full animate-pulse rounded bg-muted" />
+        <div class="ff-group mt-8 h-24 animate-pulse" />
+        <div class="ff-group h-64 animate-pulse" />
       </div>
-      <div v-else-if="error" class="bg-destructive/10 text-destructive p-4 rounded-lg">
-        {{ error }} <NuxtLink to="/learn/browse" class="underline ml-2">Browse courses</NuxtLink>
+      <div v-else-if="error" class="rounded-2xl bg-destructive/10 p-4 text-[15px] text-destructive">
+        {{ error }} <NuxtLink to="/learn/browse" class="ml-2 underline">Browse courses</NuxtLink>
       </div>
 
       <template v-else-if="view && course">
-        <span v-if="course.category?.category_name" class="text-sm text-primary font-medium">{{ course.category.category_name }}</span>
-        <h1 class="text-3xl font-bold text-foreground mt-1">{{ course.course_title }}</h1>
-        <p v-if="course.course_description" class="mt-3 text-muted-foreground whitespace-pre-line">{{ course.course_description }}</p>
+        <header>
+          <p v-if="course.category?.category_name" class="text-[13px] font-medium text-primary">{{ course.category.category_name }}</p>
+          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">{{ course.course_title }}</h1>
+          <p v-if="course.course_description" class="mt-2 line-clamp-3 whitespace-pre-line text-[15px] text-muted-foreground">{{ course.course_description }}</p>
+        </header>
 
-        <!-- Creator looking at their own course -->
-        <div v-if="view.role === 'creator'" class="mt-6 rounded-lg border border-border bg-card p-4 flex items-center justify-between gap-3">
-          <span class="text-sm text-muted-foreground">This is your course.</span>
-          <NuxtLink :to="`/learn/${courseId}/build`"><Button variant="outline"><PencilRuler class="h-4 w-4 mr-2" />Edit course</Button></NuxtLink>
-        </div>
-
-        <!-- Learner progress / join -->
-        <div v-else class="mt-6 rounded-lg border border-border bg-card p-5">
-          <template v-if="!learner?.enrolled">
+        <!-- The one action -->
+        <section class="ff-group mt-7 p-4">
+          <div v-if="view.role === 'creator'" class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="text-[15px] font-medium">Your course</p>
+              <p class="text-[13px] text-muted-foreground">{{ plural(units.length, 'unit') }} · {{ course.course_status === 'published' ? 'Live' : 'Draft' }}</p>
+            </div>
+            <NuxtLink :to="`/learn/${courseId}/build`"><Button size="lg">Edit course</Button></NuxtLink>
+          </div>
+          <div v-else-if="!learner?.enrolled" class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="text-[15px] font-medium">{{ plural(units.length, 'unit') }} · Free</p>
+              <p class="text-[13px] text-muted-foreground">Units open one at a time.</p>
+            </div>
+            <Button size="lg" :disabled="joining" @click="join">{{ joining ? 'Joining…' : 'Join course' }}</Button>
+          </div>
+          <div v-else class="space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p class="font-medium flex items-center gap-2"><Layers class="h-4 w-4" />{{ units.length }} units · Free</p>
-                <p class="text-sm text-muted-foreground mt-1">Join to start. Each unit opens when you finish the one before it.</p>
+                <p class="text-[15px] font-medium">{{ finished ? 'Course finished' : `${learner.completed_units} of ${learner.total_units} units done` }}</p>
+                <p v-if="nextUnit" class="line-clamp-1 text-[13px] text-muted-foreground">Next: {{ nextUnit.title }}</p>
               </div>
-              <Button :disabled="joining" @click="join">{{ joining ? 'Joining…' : 'Join course' }}</Button>
-            </div>
-          </template>
-          <template v-else>
-            <div class="flex items-center justify-between gap-3 mb-2">
-              <p class="font-medium">{{ learner.completed_units }} of {{ learner.total_units }} units finished</p>
               <NuxtLink v-if="nextUnit" :to="`/learn/${courseId}/unit/${nextUnit.id}`">
-                <Button><PlayCircle class="h-4 w-4 mr-2" />{{ learner.completed_units ? 'Continue' : 'Start' }}</Button>
+                <Button size="lg">{{ learner.completed_units ? 'Continue' : 'Start' }}</Button>
               </NuxtLink>
             </div>
-            <div class="h-2 rounded-full bg-muted overflow-hidden"><div class="h-full bg-primary transition-all" :style="{ width: pct + '%' }" /></div>
-            <p v-if="finished" class="mt-3 flex items-center gap-2 text-green-700 dark:text-green-400 font-medium">
-              <Trophy class="h-5 w-5" /> You finished this course!
-            </p>
-          </template>
-        </div>
-
-        <!-- Outline -->
-        <h2 class="text-lg font-semibold mt-8 mb-3">Course outline</h2>
-        <p v-if="view.role === 'learner' && view.more_coming" class="-mt-1 mb-3 text-sm text-muted-foreground flex items-center gap-2">
-          <Clock class="h-4 w-4" />More units are coming: the rest of this course's materials is still being prepared.
-        </p>
-        <ol class="space-y-2">
-          <li v-for="(u, i) in units" :key="u.id">
-            <NuxtLink v-if="view.role === 'creator' || !u.locked" :to="`/learn/${courseId}/unit/${u.id}`"
-              class="flex items-center gap-3 rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
-              <CheckCircle2 v-if="u.completed" class="h-5 w-5 text-green-600 shrink-0" />
-              <span v-else class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">{{ i + 1 }}</span>
-              <span class="min-w-0">
-                <span class="font-medium block">{{ u.title }}</span>
-                <span v-if="u.concept_names?.length" class="text-xs text-muted-foreground line-clamp-1">{{ u.concept_names.join(' · ') }}</span>
-              </span>
-            </NuxtLink>
-            <div v-else class="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4 text-muted-foreground">
-              <Lock class="h-5 w-5 shrink-0" />
-              <span class="min-w-0">
-                <span class="block">{{ u.title }}</span>
-                <span v-if="u.concept_names?.length" class="text-xs line-clamp-1">{{ u.concept_names.join(' · ') }}</span>
-              </span>
-              <span class="ml-auto text-xs">{{ learner?.enrolled ? 'Finish the previous unit' : 'Join to unlock' }}</span>
+            <div class="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]" role="progressbar" :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100">
+              <div class="h-full rounded-full bg-primary transition-all" :style="{ width: pct + '%' }" />
             </div>
-          </li>
-        </ol>
+          </div>
+        </section>
+
+        <!-- Units -->
+        <section class="mt-8">
+          <div class="mb-2 flex items-baseline justify-between px-1">
+            <h2 class="text-[17px] font-semibold">Units</h2>
+            <span v-if="pages > 1" class="text-[13px] tabular-nums text-muted-foreground">{{ page * PER_PAGE + 1 }}–{{ Math.min((page + 1) * PER_PAGE, units.length) }} of {{ units.length }}</span>
+          </div>
+          <div v-if="!units.length" class="ff-group p-8 text-center text-[15px] text-muted-foreground">No units yet.</div>
+          <ol v-else class="ff-group">
+            <li v-for="u in shown" :key="u.id" class="ff-item">
+              <component :is="view.role === 'creator' || !u.locked ? NuxtLink : 'div'"
+                :to="view.role === 'creator' || !u.locked ? `/learn/${courseId}/unit/${u.id}` : undefined"
+                class="flex items-center gap-3 px-4 py-3"
+                :class="view.role === 'creator' || !u.locked ? 'transition-colors hover:bg-foreground/[0.03]' : 'opacity-50'">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[15px] font-semibold tabular-nums"
+                  :class="u.completed ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-primary/10 text-primary'">{{ units.indexOf(u) + 1 }}</span>
+                <span class="min-w-0 flex-1">
+                  <span class="line-clamp-2 break-words text-[15px] font-medium">{{ u.title }}</span>
+                  <span v-if="conceptsIn(u)" class="text-[13px] text-muted-foreground">{{ plural(conceptsIn(u), 'concept') }}</span>
+                </span>
+                <span v-if="u.completed" class="shrink-0 text-[13px] font-medium text-green-700 dark:text-green-400">Done</span>
+                <span v-else-if="u.locked && view.role !== 'creator'" class="shrink-0 text-[13px] text-muted-foreground">Locked</span>
+              </component>
+            </li>
+          </ol>
+          <p v-if="view.role === 'learner' && view.more_coming" class="mt-2 px-1 text-[13px] text-muted-foreground">More units coming.</p>
+
+          <!-- Pages -->
+          <nav v-if="pages > 1" class="mt-4 flex items-center justify-between" aria-label="Unit pages">
+            <Button size="lg" variant="gray" :disabled="page === 0" @click="page--">Previous</Button>
+            <span class="text-[13px] tabular-nums text-muted-foreground">Page {{ page + 1 }} of {{ pages }}</span>
+            <Button size="lg" variant="gray" :disabled="page >= pages - 1" @click="page++">Next</Button>
+          </nav>
+        </section>
       </template>
     </div>
   </NuxtLayout>
