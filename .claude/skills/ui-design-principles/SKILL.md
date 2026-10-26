@@ -196,3 +196,17 @@ Clean, soft depth, no hard boxes. Building blocks live in
   (`bg-background/75 backdrop-blur-xl`).
 - On phones, row actions wrap below the text (`flex-wrap`, text `basis-48`
   to `basis-56`, actions `ml-auto`), never squeeze it.
+
+### Reading pages (lessons)
+
+Lesson text reads like Apple Notes: a wide calm column (`max-w-3xl`,
+`px-5 sm:px-8`), no card around the text, title `text-[28px] sm:text-[34px]
+font-bold`, and the Markdown in `ff-prose` (17 px / 16 px on phones, 1.65
+line height, 1 em between paragraphs, spaced headings, rounded code blocks).
+Sources and further reading sit below a hairline, after the text.
+`md-content` is the old compact style; use `ff-prose` for anything people read.
+
+### Header
+
+Breadcrumbs never get squeezed: below `xl` only the last two crumbs
+(parent › current) show and the search box becomes an icon.

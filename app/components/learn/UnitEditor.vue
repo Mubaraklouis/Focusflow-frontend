@@ -75,7 +75,7 @@ const addConcept = async () => {
         <button type="button" :aria-pressed="preview" @click="preview = true">Preview</button>
       </div>
       <textarea v-if="!preview" v-model="draft.body" rows="8" aria-label="Unit introduction" class="ff-field" placeholder="Unit introduction" />
-      <div v-else class="md-content min-h-32 rounded-xl bg-background p-4" v-html="renderMarkdown(draft.body)" />
+      <div v-else class="ff-prose min-h-32 rounded-xl bg-background p-4" v-html="renderMarkdown(draft.body)" />
     </div>
 
     <!-- Concepts -->

@@ -97,7 +97,8 @@ const complete = async () => {
 
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
-    <div class="mx-auto max-w-2xl px-4 pt-6 pb-32 sm:pt-10 sm:pb-12">
+    <!-- Reading page: wide, calm column (Apple Notes feel) -->
+    <div class="mx-auto max-w-3xl px-5 pt-6 pb-32 sm:px-8 sm:pt-10 sm:pb-16">
       <div v-if="loading" class="space-y-4" aria-busy="true">
         <div class="h-1.5 animate-pulse rounded-full bg-muted" />
         <div class="h-8 w-2/3 animate-pulse rounded-lg bg-muted" />
@@ -116,7 +117,7 @@ const complete = async () => {
 
       <template v-else-if="unit && screen">
         <!-- Where am I: a thin bar, one segment per screen -->
-        <div class="mb-6 flex gap-1" aria-hidden="true">
+        <div class="mb-8 flex gap-1" aria-hidden="true">
           <span v-for="(_, i) in screens" :key="i" class="h-1 flex-1 rounded-full transition-colors"
             :class="i <= step ? 'bg-primary' : 'bg-foreground/[0.08]'" />
         </div>
@@ -124,7 +125,7 @@ const complete = async () => {
         <!-- Intro -->
         <article v-if="screen.kind === 'intro'">
           <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} of {{ units.length }}</p>
-          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{{ unit.title }}</h1>
+          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ unit.title }}</h1>
           <div v-for="v in videos" :key="v.id" class="mt-6">
             <div class="aspect-video overflow-hidden rounded-2xl bg-black">
               <iframe class="h-full w-full" :src="`https://www.youtube-nocookie.com/embed/${v.youtube_id}`" :title="v.title"
@@ -132,16 +133,16 @@ const complete = async () => {
             </div>
             <p class="mt-2 px-1 text-[13px] text-muted-foreground">{{ v.title }}</p>
           </div>
-          <div v-if="unit.body" class="md-content mt-6 text-[15px]" v-html="renderMarkdown(unit.body)" />
+          <div v-if="unit.body" class="ff-prose mt-6" v-html="renderMarkdown(unit.body)" />
         </article>
 
         <!-- One concept -->
         <article v-else-if="screen.kind === 'concept'">
           <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} · Concept {{ screen.n }} of {{ conceptCount }}</p>
-          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{{ screen.c.title }}</h1>
-          <div v-if="screen.c.explanation" class="md-content mt-5 text-[15px]" v-html="renderMarkdown(screen.c.explanation)" />
+          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ screen.c.title }}</h1>
+          <div v-if="screen.c.explanation" class="ff-prose mt-6" v-html="renderMarkdown(screen.c.explanation)" />
 
-          <section v-if="screen.c.sources.length" class="mt-8">
+          <section v-if="screen.c.sources.length" class="mt-12 border-t border-border/70 pt-6">
             <h2 class="ff-label">Check the source</h2>
             <ConceptSources :sources="screen.c.sources" />
           </section>
@@ -161,7 +162,7 @@ const complete = async () => {
         <!-- End of unit -->
         <article v-else>
           <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} of {{ units.length }}</p>
-          <h1 class="mt-1 text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{{ courseDone ? 'You finished the course' : 'End of unit' }}</h1>
+          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ courseDone ? 'You finished the course' : 'End of unit' }}</h1>
           <p class="mt-1 text-[15px] text-muted-foreground">{{ unit.title }}</p>
 
           <section v-if="conceptCount" class="mt-7">
@@ -191,8 +192,8 @@ const complete = async () => {
         </article>
 
         <!-- Back · Next: same place on every screen; frosted bar on phones -->
-        <div class="fixed inset-x-0 bottom-0 z-10 border-t border-border/60 bg-background/75 backdrop-blur-xl sm:static sm:mt-10 sm:border-0 sm:bg-transparent sm:backdrop-blur-none">
-          <div class="mx-auto flex max-w-2xl items-center gap-2 px-4 py-3 sm:px-0 sm:py-0">
+        <div class="fixed inset-x-0 bottom-0 z-10 border-t border-border/60 bg-background/75 backdrop-blur-xl sm:static sm:mt-12 sm:border-0 sm:bg-transparent sm:backdrop-blur-none">
+          <div class="mx-auto flex max-w-3xl items-center gap-2 px-5 py-3 sm:px-0 sm:py-0">
             <Button v-if="step > 0" size="lg" variant="gray" @click="go(step - 1)">Back</Button>
             <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg" variant="gray">Course</Button></NuxtLink>
             <div class="ml-auto">
