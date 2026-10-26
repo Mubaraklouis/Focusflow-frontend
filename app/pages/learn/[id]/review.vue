@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Rocket, Globe, Lock, Eye } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Rocket, Globe, Lock, Eye, CheckCircle2, Circle } from 'lucide-vue-next'
 import type { Unit } from '~/composables/learn/useLearn'
 import { useCourseBuilder, moved } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
@@ -56,7 +56,7 @@ const publishing = ref(false)
 const canPublish = computed(() => agreed.value && (units.value.length > 0 || materials.value.length > 0))
 const publishHint = computed(() => {
   if (!units.value.length && !materials.value.length) return 'Add a material or a unit first.'
-  if (!agreed.value) return 'Tick "I agree" to publish.'
+  if (!agreed.value) return 'Turn on "I agree" to publish.'
   return ''
 })
 const publish = async () => {
@@ -81,26 +81,26 @@ const unpublish = () =>
       :next-hint="isPublished ? '' : publishHint">
       <div class="space-y-8">
         <!-- Units -->
-        <div>
-          <div v-if="!units.length && !writing" class="rounded-lg border border-dashed border-border p-8 text-center text-base text-muted-foreground">
+        <div class="space-y-3">
+          <div v-if="!units.length && !writing" class="ff-group p-8 text-center text-[15px] text-muted-foreground">
             No units yet.
           </div>
-          <ol v-else class="space-y-3">
-            <li v-for="(u, i) in units" :key="u.id" class="rounded-lg border border-border bg-card">
+          <ol v-else class="ff-group">
+            <li v-for="(u, i) in units" :key="u.id" class="ff-item">
               <!-- On phones the actions drop below the title, so the title stays readable -->
-              <div class="flex flex-wrap items-center gap-x-3 gap-y-1 p-4">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">{{ i + 1 }}</span>
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-[15px] font-semibold tabular-nums text-primary">{{ i + 1 }}</span>
                 <button type="button" class="min-w-0 flex-1 basis-56 text-left" :aria-expanded="editing === u.id" @click="toggleEdit(u)">
-                  <p class="line-clamp-2 break-words text-base font-medium" :title="u.title">{{ u.title }}</p>
-                  <p class="text-sm text-muted-foreground">
+                  <p class="line-clamp-2 break-words text-[15px] font-medium" :title="u.title">{{ u.title }}</p>
+                  <p class="text-[13px] text-muted-foreground">
                     {{ plural((u.concepts ?? []).length, 'concept') }} · {{ plural((u.materials ?? []).length, 'material') }}
                   </p>
                 </button>
                 <div class="ml-auto flex shrink-0 items-center">
-                  <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-foreground disabled:opacity-30" :disabled="i === 0" :aria-label="`Move ${u.title} up`" title="Move up" @click="move(i, -1)"><ChevronUp class="h-5 w-5" /></button>
-                  <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-foreground disabled:opacity-30" :disabled="i === units.length - 1" :aria-label="`Move ${u.title} down`" title="Move down" @click="move(i, 1)"><ChevronDown class="h-5 w-5" /></button>
-                  <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-foreground" :aria-label="`Edit ${u.title}`" title="Edit" @click="toggleEdit(u)"><Pencil class="h-5 w-5" /></button>
-                  <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-destructive" :aria-label="`Delete ${u.title}`" title="Delete" @click="removeUnit(u)"><Trash2 class="h-5 w-5" /></button>
+                  <button type="button" class="ff-icon-btn" :disabled="i === 0" :aria-label="`Move ${u.title} up`" title="Move up" @click="move(i, -1)"><ChevronUp class="h-[18px] w-[18px]" /></button>
+                  <button type="button" class="ff-icon-btn" :disabled="i === units.length - 1" :aria-label="`Move ${u.title} down`" title="Move down" @click="move(i, 1)"><ChevronDown class="h-[18px] w-[18px]" /></button>
+                  <button type="button" class="ff-icon-btn" :class="editing === u.id ? 'bg-primary/10 text-primary' : ''" :aria-label="`Edit ${u.title}`" title="Edit" @click="toggleEdit(u)"><Pencil class="h-[18px] w-[18px]" /></button>
+                  <button type="button" class="ff-icon-btn hover:text-destructive" :aria-label="`Delete ${u.title}`" title="Delete" @click="removeUnit(u)"><Trash2 class="h-[18px] w-[18px]" /></button>
                 </div>
               </div>
               <UnitEditor v-if="editing === u.id" :unit="u" :materials="materials"
@@ -108,62 +108,67 @@ const unpublish = () =>
                 @saved="editing = null; b.flash('ok', 'Unit saved.')" />
             </li>
             <!-- The AI is still writing -->
-            <li v-if="writing" class="flex items-center gap-3 rounded-lg border border-dashed border-primary/40 p-4 text-base" aria-live="polite">
-              <Loader2 class="h-5 w-5 shrink-0 animate-spin text-primary" />
+            <li v-if="writing" class="ff-item flex items-center gap-3 px-4 py-3 text-[15px]" aria-live="polite">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10"><Loader2 class="h-[18px] w-[18px] animate-spin text-primary" /></span>
               <span>Writing {{ units.length ? 'the next' : 'the first' }} unit…<span v-if="progress?.percent" class="text-muted-foreground"> {{ progress.percent }}%</span></span>
             </li>
           </ol>
 
-          <form class="mt-3 flex gap-2" @submit.prevent="addUnit">
-            <Input class="h-11 text-base" v-model="newUnit" placeholder="New unit title" maxlength="255" aria-label="New unit title" />
-            <Button size="lg" type="submit" variant="outline" :disabled="!newUnit.trim()"><Plus class="mr-1 h-5 w-5" />Add unit</Button>
+          <form class="flex gap-2" @submit.prevent="addUnit">
+            <Input v-model="newUnit" class="ff-field" placeholder="New unit title" maxlength="255" aria-label="New unit title" />
+            <Button size="lg" type="submit" variant="tinted" :disabled="!newUnit.trim()"><Plus class="mr-1 h-4 w-4" />Add unit</Button>
           </form>
 
           <!-- Further reading links: a quiet extra -->
-          <p v-if="units.length" class="mt-4 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-            <template v-if="refsStatus === 'processing'"><Loader2 class="h-4 w-4 animate-spin" />Finding further reading…</template>
+          <p v-if="units.length" class="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[13px] text-muted-foreground">
+            <template v-if="refsStatus === 'processing'"><Loader2 class="h-3.5 w-3.5 animate-spin" />Finding further reading…</template>
             <template v-else-if="refsStatus === 'ready'">Further reading added.</template>
             <template v-else-if="refsStatus === 'failed'">Some further reading is missing.</template>
-            <Button v-if="refsStatus !== 'processing'" type="button" variant="outline" class="h-8 px-3 text-sm" @click="b.run(() => b.api.findReferences(courseId))">
+            <button v-if="refsStatus !== 'processing'" type="button" class="ff-pill-sm" @click="b.run(() => b.api.findReferences(courseId))">
               {{ refsStatus === 'idle' ? 'Find further reading' : 'Search again' }}
-            </Button>
+            </button>
           </p>
         </div>
 
         <!-- Approve -->
-        <section v-if="!isPublished" class="space-y-4 border-t border-border pt-8">
-          <h2 class="text-lg font-semibold">Who can take this course?</h2>
+        <section v-if="!isPublished" class="space-y-3">
+          <h2 class="px-1 text-[17px] font-semibold">Who can take this course?</h2>
           <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Visibility">
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 text-base" :class="visibility === 'public' ? 'border-primary' : 'border-border'">
-              <input v-model="visibility" type="radio" value="public" class="mt-0.5 accent-[hsl(var(--primary))]">
-              <span><span class="flex items-center gap-1 font-medium"><Globe class="h-4 w-4" />Everyone</span>
-                <span class="text-muted-foreground">Listed in Browse</span></span>
-            </label>
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 text-base" :class="visibility === 'private' ? 'border-primary' : 'border-border'">
-              <input v-model="visibility" type="radio" value="private" class="mt-0.5 accent-[hsl(var(--primary))]">
-              <span><span class="flex items-center gap-1 font-medium"><Lock class="h-4 w-4" />Invite only</span>
-                <span class="text-muted-foreground">Not listed</span></span>
+            <label v-for="o in [{ v: 'public', icon: Globe, name: 'Everyone', note: 'Listed in Browse' }, { v: 'private', icon: Lock, name: 'Invite only', note: 'Not listed' }]" :key="o.v"
+              class="ff-group flex cursor-pointer items-center gap-3 p-4 transition-shadow"
+              :class="{ 'ff-selected': visibility === o.v }">
+              <input v-model="visibility" type="radio" :value="o.v" class="sr-only">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/[0.05]"><component :is="o.icon" class="h-[18px] w-[18px]" /></span>
+              <span class="min-w-0 flex-1"><span class="block text-[15px] font-medium">{{ o.name }}</span><span class="text-[13px] text-muted-foreground">{{ o.note }}</span></span>
+              <CheckCircle2 v-if="visibility === o.v" class="h-5 w-5 shrink-0 text-primary" /><Circle v-else class="h-5 w-5 shrink-0 text-foreground/20" />
             </label>
           </div>
-          <label class="flex cursor-pointer items-start gap-3 rounded-lg bg-muted/60 p-4 text-base">
-            <input v-model="agreed" type="checkbox" class="mt-0.5 h-5 w-5 accent-[hsl(var(--primary))]">
-            <span><span class="font-medium">I agree.</span> I approve these units<template v-if="visibility === 'public'"> and have the right to share these materials</template>.</span>
-          </label>
+          <div class="ff-group flex items-center gap-4 p-4">
+            <span class="min-w-0 flex-1 text-[15px]"><span class="font-medium">I agree.</span> <span class="text-muted-foreground">I approve these units<template v-if="visibility === 'public'"> and have the right to share these materials</template>.</span></span>
+            <!-- iOS-style switch -->
+            <button type="button" role="switch" :aria-checked="agreed" aria-label="I agree"
+              class="relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
+              :class="agreed ? 'bg-primary' : 'bg-foreground/15'" @click="agreed = !agreed">
+              <span class="absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-md transition-transform duration-200" :class="agreed ? 'translate-x-5' : ''" />
+            </button>
+          </div>
         </section>
-        <section v-else class="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-8 text-base">
-          <span class="flex items-center gap-2 text-muted-foreground">
-            <Globe v-if="course?.course_visibility === 'public'" class="h-5 w-5" /><Lock v-else class="h-5 w-5" />
-            Live · {{ course?.course_visibility === 'public' ? 'everyone can join' : 'invite only' }}
+        <section v-else class="ff-group flex flex-wrap items-center justify-between gap-3 p-4 text-[15px]">
+          <span class="flex items-center gap-3">
+            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/10 text-green-700 dark:text-green-400">
+              <Globe v-if="course?.course_visibility === 'public'" class="h-[18px] w-[18px]" /><Lock v-else class="h-[18px] w-[18px]" />
+            </span>
+            <span><span class="block font-medium">Live</span><span class="text-[13px] text-muted-foreground">{{ course?.course_visibility === 'public' ? 'Everyone can join' : 'Invite only' }}</span></span>
           </span>
-          <Button size="lg" type="button" variant="outline" @click="unpublish">Back to draft</Button>
+          <Button size="lg" type="button" variant="gray" @click="unpublish">Back to draft</Button>
         </section>
       </div>
 
       <template #next>
-        <Button size="lg" v-if="!isPublished" type="button" :disabled="!canPublish || publishing" @click="publish">
-          <Loader2 v-if="publishing" class="mr-2 h-5 w-5 animate-spin" /><Rocket v-else class="mr-2 h-5 w-5" />{{ publishing ? 'Publishing…' : 'Publish course' }}
+        <Button v-if="!isPublished" size="lg" type="button" :disabled="!canPublish || publishing" @click="publish">
+          <Loader2 v-if="publishing" class="mr-2 h-4 w-4 animate-spin" /><Rocket v-else class="mr-2 h-4 w-4" />{{ publishing ? 'Publishing…' : 'Publish course' }}
         </Button>
-        <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg" type="button"><Eye class="mr-2 h-5 w-5" />View as learner</Button></NuxtLink>
+        <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg" type="button"><Eye class="mr-2 h-4 w-4" />View as learner</Button></NuxtLink>
       </template>
     </StepShell>
   </NuxtLayout>

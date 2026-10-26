@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ChevronUp, ChevronDown, Pencil, Trash2, Loader2, CheckCircle2, Sparkles } from 'lucide-vue-next'
 import type { Material } from '~/composables/learn/useLearn'
-import { useCourseBuilder, kindIcon, moved } from '~/composables/learn/useCourseBuilder'
+import { useCourseBuilder, moved } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
+import KindTile from '~/components/learn/KindTile.vue'
 import MaterialState from '~/components/learn/MaterialState.vue'
 
 // Step 2 · one job: put the materials in teaching order with clear names
@@ -80,62 +81,67 @@ const organise = async () => {
       :back-to="`/learn/${courseId}/upload`"
       :skip-to="units.length ? undefined : `/learn/${courseId}/review`" skip-label="Skip"
       :next-to="`/learn/${courseId}/review`" next-label="Review units">
-      <div class="space-y-8">
+      <div class="space-y-6">
         <!-- Empty -->
-        <div v-if="!materials.length" class="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border p-8 text-center text-base text-muted-foreground">
-          <span v-if="waitingFiles" class="flex items-center gap-2"><Loader2 class="h-5 w-5 animate-spin text-primary" />Waiting for your files…</span>
+        <div v-if="!materials.length" class="ff-group flex flex-col items-center gap-4 p-8 text-center text-[15px] text-muted-foreground">
+          <span v-if="waitingFiles" class="flex items-center gap-2"><Loader2 class="h-[18px] w-[18px] animate-spin text-primary" />Waiting for your files…</span>
           <span v-else>No materials yet.</span>
-          <NuxtLink :to="`/learn/${courseId}/upload`"><Button size="lg" type="button" variant="outline">Upload files</Button></NuxtLink>
+          <NuxtLink :to="`/learn/${courseId}/upload`"><Button size="lg" type="button" variant="tinted">Upload files</Button></NuxtLink>
         </div>
 
         <!-- The one job: order and names -->
-        <ol v-else class="divide-y divide-border" aria-label="Materials in teaching order">
-          <li v-for="(m, i) in materials" :key="m.id" class="flex items-start gap-3 py-4">
-            <span class="mt-0.5 w-5 shrink-0 text-right text-base font-semibold text-muted-foreground">{{ i + 1 }}</span>
-            <component :is="kindIcon[m.kind]" class="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+        <ol v-else class="ff-group" style="--ff-inset: 6rem" aria-label="Materials in teaching order">
+          <li v-for="(m, i) in materials" :key="m.id" class="ff-item flex items-center gap-3 px-4 py-3">
+            <span class="w-5 shrink-0 text-right text-[13px] font-semibold tabular-nums text-muted-foreground">{{ i + 1 }}</span>
+            <KindTile :kind="m.kind" />
             <div class="min-w-0 flex-1">
               <form v-if="renaming === m.id" @submit.prevent="saveRename(m)">
-                <Input :id="`rename-${m.id}`" v-model="name" maxlength="255" aria-label="Material name" class="h-11 text-base"
+                <Input :id="`rename-${m.id}`" v-model="name" maxlength="255" aria-label="Material name" class="ff-field h-9"
                   @blur="saveRename(m)" @keydown.esc="renaming = null" />
               </form>
-              <button v-else type="button" class="group flex max-w-full items-start gap-2 text-left" :title="`Rename ${m.title}`" @click="startRename(m)">
-                <span class="line-clamp-2 break-words text-base font-medium">{{ m.title }}</span>
-                <Pencil class="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+              <button v-else type="button" class="flex max-w-full items-start gap-1.5 text-left" :title="`Rename ${m.title}`" @click="startRename(m)">
+                <span class="line-clamp-2 break-words text-[15px] font-medium">{{ m.title }}</span>
+                <Pencil class="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               </button>
-              <MaterialState :material="m" class="mt-0.5" @retry="b.retry(m)" />
+              <MaterialState :material="m" @retry="b.retry(m)" />
             </div>
             <div class="flex shrink-0 items-center">
-              <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-foreground disabled:opacity-30" :disabled="i === 0" :aria-label="`Move ${m.title} up`" title="Move up" @click="move(i, -1)"><ChevronUp class="h-5 w-5" /></button>
-              <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-foreground disabled:opacity-30" :disabled="i === materials.length - 1" :aria-label="`Move ${m.title} down`" title="Move down" @click="move(i, 1)"><ChevronDown class="h-5 w-5" /></button>
-              <button type="button" class="rounded-md p-2.5 text-foreground/70 hover:bg-accent hover:text-destructive" :aria-label="`Remove ${m.title}`" title="Remove" @click="b.removeMaterial(m)"><Trash2 class="h-5 w-5" /></button>
+              <button type="button" class="ff-icon-btn" :disabled="i === 0" :aria-label="`Move ${m.title} up`" title="Move up" @click="move(i, -1)"><ChevronUp class="h-[18px] w-[18px]" /></button>
+              <button type="button" class="ff-icon-btn" :disabled="i === materials.length - 1" :aria-label="`Move ${m.title} down`" title="Move down" @click="move(i, 1)"><ChevronDown class="h-[18px] w-[18px]" /></button>
+              <button type="button" class="ff-icon-btn hover:text-destructive" :aria-label="`Remove ${m.title}`" title="Remove" @click="b.removeMaterial(m)"><Trash2 class="h-[18px] w-[18px]" /></button>
             </div>
           </li>
         </ol>
 
         <!-- Where the AI is with the units -->
-        <section v-if="materials.length" aria-live="polite" class="space-y-3 rounded-lg bg-muted/60 p-5">
+        <section v-if="materials.length" aria-live="polite" class="ff-group space-y-3 p-4">
           <template v-if="organising && progress">
-            <div class="flex items-center justify-between gap-3 text-base">
-              <span class="flex items-center gap-2 font-medium"><Loader2 class="h-5 w-5 animate-spin text-primary" />{{ progress.label }}</span>
+            <div class="flex items-center justify-between gap-3 text-[15px]">
+              <span class="flex items-center gap-2 font-medium"><Loader2 class="h-[18px] w-[18px] animate-spin text-primary" />{{ progress.label }}</span>
               <span class="tabular-nums text-muted-foreground">{{ progress.percent }}%</span>
             </div>
-            <div class="h-1.5 overflow-hidden rounded-full bg-background" role="progressbar" :aria-valuenow="progress.percent" aria-valuemin="0" aria-valuemax="100">
-              <div class="h-full bg-primary transition-all duration-700" :style="{ width: progress.percent + '%' }" />
+            <div class="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]" role="progressbar" :aria-valuenow="progress.percent" aria-valuemin="0" aria-valuemax="100">
+              <div class="h-full rounded-full bg-primary transition-all duration-700" :style="{ width: progress.percent + '%' }" />
             </div>
           </template>
           <template v-else-if="units.length">
-            <p class="flex items-center gap-2 text-base font-medium">
-              <CheckCircle2 class="h-5 w-5 text-green-700 dark:text-green-400" />{{ units.length }} {{ units.length === 1 ? 'unit' : 'units' }} ready
-            </p>
-            <Button size="lg" v-if="changedAfterUnits" type="button" variant="outline" :disabled="!!organiseBlocked" @click="organise"><Sparkles class="mr-2 h-5 w-5" />Rebuild units in this order</Button>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="flex items-center gap-3 text-[15px] font-medium">
+                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/10"><CheckCircle2 class="h-[18px] w-[18px] text-green-700 dark:text-green-400" /></span>
+                {{ units.length }} {{ units.length === 1 ? 'unit' : 'units' }} ready
+              </p>
+              <Button v-if="changedAfterUnits" size="lg" type="button" variant="tinted" :disabled="!!organiseBlocked" @click="organise"><Sparkles class="mr-2 h-4 w-4" />Rebuild units</Button>
+            </div>
           </template>
           <template v-else>
-            <p class="text-base" :class="course?.organise_status === 'failed' ? 'text-destructive' : 'text-muted-foreground'">
-              {{ course?.organise_status === 'failed' && course?.organise_error ? course.organise_error : 'Units are made once files are read.' }}
-            </p>
-            <Button size="lg" type="button" variant="outline" :disabled="!!organiseBlocked" @click="organise"><Sparkles class="mr-2 h-5 w-5" />Make units now</Button>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="text-[15px]" :class="course?.organise_status === 'failed' ? 'text-destructive' : 'text-muted-foreground'">
+                {{ course?.organise_status === 'failed' && course?.organise_error ? course.organise_error : 'Units are made once files are read.' }}
+              </p>
+              <Button size="lg" type="button" variant="tinted" :disabled="!!organiseBlocked" @click="organise"><Sparkles class="mr-2 h-4 w-4" />Make units now</Button>
+            </div>
           </template>
-          <p v-if="organiseBlocked && !organising && (changedAfterUnits || !units.length)" class="text-sm text-muted-foreground">{{ organiseBlocked }}</p>
+          <p v-if="organiseBlocked && !organising && (changedAfterUnits || !units.length)" class="text-[13px] text-muted-foreground">{{ organiseBlocked }}</p>
         </section>
       </div>
     </StepShell>

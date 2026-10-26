@@ -18,37 +18,37 @@ const partText = computed(() => {
   return ''
 })
 const concepts = computed(() => m.value.digest?.concepts?.length ?? 0)
-// A small outlined button, so the action is visibly a button
-const small = 'rounded-md border border-input px-3 py-1 text-sm font-medium text-foreground hover:bg-accent'
+// A small grey pill button inside the status line
+const small = 'ff-pill-sm'
 </script>
 
 <template>
-  <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+  <p class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px]">
     <template v-if="m.status === 'processing'">
-      <Loader2 class="h-4 w-4 animate-spin text-primary" />
+      <Loader2 class="h-3.5 w-3.5 animate-spin text-primary" />
       <span class="text-muted-foreground">{{ isVideo ? 'Watching…' : 'Reading…' }}</span>
     </template>
     <template v-else-if="m.status === 'paused'">
-      <Clock class="h-4 w-4 text-muted-foreground" />
+      <Clock class="h-3.5 w-3.5 text-muted-foreground" />
       <span class="text-muted-foreground">Waiting for AI</span>
       <button type="button" :class="small" @click="emit('retry')">Read now</button>
     </template>
     <template v-else-if="m.status === 'failed'">
-      <AlertCircle class="h-4 w-4 text-destructive" />
+      <AlertCircle class="h-3.5 w-3.5 text-destructive" />
       <span class="text-destructive">{{ m.error || 'Could not be read.' }}</span>
       <button v-if="m.kind !== 'link'" type="button" :class="small" @click="emit('retry')">Retry</button>
     </template>
     <template v-else-if="m.reading">
-      <Loader2 class="h-4 w-4 animate-spin text-primary" />
+      <Loader2 class="h-3.5 w-3.5 animate-spin text-primary" />
       <span class="text-muted-foreground">{{ partText || 'Ready' }} · {{ isVideo ? 'watching more…' : 'reading more…' }}</span>
     </template>
     <template v-else-if="partlyRead(m)">
-      <Clock class="h-4 w-4 text-muted-foreground" />
+      <Clock class="h-3.5 w-3.5 text-muted-foreground" />
       <span class="text-muted-foreground">{{ partText }}</span>
       <button type="button" :class="small" @click="emit('retry')">Continue</button>
     </template>
     <template v-else>
-      <CheckCircle2 class="h-4 w-4 text-green-700 dark:text-green-400" />
+      <CheckCircle2 class="h-3.5 w-3.5 text-green-700 dark:text-green-400" />
       <span class="text-muted-foreground">Ready<template v-if="concepts && m.kind !== 'link'"> · {{ concepts }} concepts</template></span>
     </template>
   </p>

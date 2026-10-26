@@ -63,13 +63,10 @@ One scale, font Instrument Sans (already the default):
 | Body | `text-sm` (default `text-foreground`) |
 | Help, meta, captions | `text-sm text-muted-foreground` or `text-xs text-muted-foreground` |
 
-**Comfortable scale** (course building steps, `/learn/new`, and any page
-people work in for a while; the user asked for bigger, easier-to-see UI):
-title `text-3xl`, section `text-lg`, body and item names `text-base`, meta
-`text-sm`; icons `h-5 w-5`; icon buttons `p-2.5`; `Button size="lg"`;
-inputs `class="h-11 text-base"`; list rows `py-4`; width `max-w-3xl`. Item
-names wrap to two lines (`line-clamp-2 break-words`) instead of being cut;
-on phones, row actions drop below the title (`flex-wrap`, title `basis-56`).
+**Builder scale (Apple style)** for course building steps and `/learn/new`:
+large title `text-[26px] sm:text-[28px] font-bold tracking-tight`, section
+`text-[17px] font-semibold`, body and item names `text-[15px]`, meta
+`text-[13px]`; icons `h-[18px] w-[18px]`; width `max-w-2xl`. See §9.
 
 - No more than these four sizes on a page. No all-caps paragraphs, no bold
   sentences for emphasis — use the hierarchy instead.
@@ -174,3 +171,28 @@ Check the page against this list:
    button), and is there no text that could be cut?
 7. Reused existing components (`Button`, `Input`, `Label`, `Checkbox`,
    `Card`, `Dialog`, `StepShell`) and no new UI library?
+
+## 9. Apple style (course builder)
+
+Clean, soft depth, no hard boxes. Building blocks live in
+`app/assets/css/main.css` (`ff-*` classes) — use them, don't re-invent:
+
+- **Grouped lists** (`ff-group` + `ff-item` rows): a rounded-2xl card with a
+  hairline border and soft shadow; rows `flex items-center gap-3 px-4 py-3`,
+  separated by an inset hairline that starts at the text (set `--ff-inset`
+  on the list when rows have a number column, e.g. `6rem`).
+- **Icon tiles**: `KindTile` for materials (tinted rounded square); numbers
+  and status icons use the same 36 px tile in `bg-primary/10`.
+- **Buttons**: `Button size="lg"` (pill). Primary = `default` (one per page),
+  forward-moving secondary = `tinted`, Back/Skip/Cancel = `gray`. Inline
+  actions in status lines = `ff-pill-sm`. Row actions = `ff-icon-btn`
+  (round, always visible).
+- **Fields**: `Input`/`textarea`/`select` with `ff-field` (filled grey, no
+  border, orange focus halo); labels `ff-label` above.
+- **Choices**: two-way toggles use `ff-segment` (buttons with
+  `aria-pressed`); options are `ff-group` cards with `ff-selected` and a
+  check icon; yes/no consent is an iOS switch (`role="switch"`).
+- Steps are a segmented control; the phone action bar is frosted
+  (`bg-background/75 backdrop-blur-xl`).
+- On phones, row actions wrap below the text (`flex-wrap`, text `basis-48`
+  to `basis-56`, actions `ml-auto`), never squeeze it.

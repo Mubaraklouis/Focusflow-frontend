@@ -59,44 +59,43 @@ const submit = async () => {
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
     <!-- One job: name the course. Materials come next, in the 1 · 2 · 3 steps. -->
-    <div class="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-      <header class="mb-8">
-        <h1 class="text-3xl font-semibold tracking-tight text-foreground">Name your course</h1>
-        <p class="mt-2 text-base text-muted-foreground">Then upload your materials.</p>
+    <div class="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+      <header class="mb-7">
+        <h1 class="text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">Name your course</h1>
+        <p class="mt-1 text-[15px] text-muted-foreground">Then upload your materials.</p>
       </header>
 
-      <div v-if="limitReason" class="mb-8 rounded-lg bg-amber-500/10 p-4 text-base text-amber-800 dark:text-amber-300">
+      <div v-if="limitReason" class="mb-6 rounded-2xl bg-amber-500/10 p-4 text-[15px] text-amber-800 dark:text-amber-300">
         {{ limitReason }} <NuxtLink to="/learn" class="ml-1 font-medium underline">Back to my courses</NuxtLink>
       </div>
 
-      <form class="space-y-6" @submit.prevent="submit">
-        <div class="space-y-2">
-          <Label for="title">Course title</Label>
-          <Input id="title" v-model="form.title" placeholder="e.g. Introduction to Data Structures" maxlength="255" class="h-11 text-lg" autofocus />
+      <form class="space-y-5" @submit.prevent="submit">
+        <div>
+          <Label for="title" class="ff-label">Course title</Label>
+          <Input id="title" v-model="form.title" class="ff-field" placeholder="e.g. Introduction to Data Structures" maxlength="255" autofocus />
         </div>
-        <div class="space-y-2">
-          <Label for="desc">Description <span class="font-normal text-muted-foreground">(optional)</span></Label>
-          <textarea id="desc" v-model="form.description" rows="3" maxlength="2000"
-            class="w-full rounded-md border border-input bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-ring"
+        <div>
+          <Label for="desc" class="ff-label">Description · optional</Label>
+          <textarea id="desc" v-model="form.description" rows="3" maxlength="2000" class="ff-field"
             placeholder="What learners will get from it" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
-          <div class="space-y-2">
-            <Label for="cat">Category</Label>
-            <select id="cat" v-model.number="form.category" class="h-10 w-full rounded-md border border-input bg-background px-3 text-base">
+          <div>
+            <Label for="cat" class="ff-label">Category</Label>
+            <select id="cat" v-model.number="form.category" class="ff-field">
               <option v-for="c in categories" :key="c.category_id" :value="c.category_id">{{ c.category_name }}</option>
             </select>
           </div>
-          <div class="space-y-2">
-            <Label for="lang">Language</Label>
-            <select id="lang" v-model="form.language" class="h-10 w-full rounded-md border border-input bg-background px-3 text-base">
+          <div>
+            <Label for="lang" class="ff-label">Language</Label>
+            <select id="lang" v-model="form.language" class="ff-field">
               <option v-for="l in LANGUAGES" :key="l.code" :value="l.code">{{ l.name }}</option>
             </select>
           </div>
         </div>
-        <p v-if="error" role="alert" class="text-base text-destructive">{{ error }}</p>
-        <div class="flex items-center justify-between gap-2 pt-6">
-          <NuxtLink to="/learn"><Button size="lg" type="button" variant="outline">Cancel</Button></NuxtLink>
+        <p v-if="error" role="alert" class="text-[15px] text-destructive">{{ error }}</p>
+        <div class="flex items-center justify-between gap-2 pt-5">
+          <NuxtLink to="/learn"><Button size="lg" type="button" variant="gray">Cancel</Button></NuxtLink>
           <Button size="lg" type="submit" :disabled="saving || !!limitReason">{{ saving ? 'Creating…' : 'Continue to upload' }}</Button>
         </div>
       </form>

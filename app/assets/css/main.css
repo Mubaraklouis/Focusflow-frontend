@@ -132,3 +132,37 @@ html {
 .md-content table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
 .md-content th, .md-content td { border: 1px solid hsl(var(--border)); padding: 0.4em 0.6em; text-align: left; }
 .md-content hr { border-color: hsl(var(--border)); }
+
+/* ── Apple-style building blocks (course builder; see ui-design-principles §9) ──
+   Unlayered on purpose: these must win over the default classes of Input/Button. */
+.ff-group {
+    @apply overflow-hidden rounded-2xl border border-black/[0.06] bg-card dark:border-white/[0.08];
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
+}
+.dark .ff-group { box-shadow: none; }
+/* A chosen card (e.g. visibility option) */
+.ff-group.ff-selected { border-color: hsl(var(--primary)); box-shadow: 0 0 0 1px hsl(var(--primary)); }
+/* Rows inside a group, with an inset hairline between them (like iOS lists) */
+.ff-item { position: relative; }
+.ff-item + .ff-item::before {
+    content: '';
+    @apply absolute right-0 top-0 h-px bg-border;
+    left: var(--ff-inset, 4rem);
+}
+.ff-icon-btn {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:pointer-events-none disabled:opacity-30;
+}
+.ff-label { @apply mb-1.5 block px-1 text-[13px] font-medium text-muted-foreground; }
+.ff-field {
+    @apply h-10 w-full rounded-xl border border-transparent bg-foreground/[0.045] px-3.5 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground/70;
+}
+textarea.ff-field { @apply h-auto py-2.5; }
+.ff-field:focus, .ff-field:focus-visible {
+    @apply border-primary/40 bg-background outline-none;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12);
+}
+/* Segmented control: a row of buttons, the chosen one has aria-pressed="true" */
+.ff-segment { @apply inline-flex rounded-full bg-foreground/[0.05] p-1; }
+.ff-segment > button { @apply rounded-full px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors; }
+.ff-segment > button[aria-pressed='true'] { @apply bg-background text-foreground shadow-sm; }
+.ff-pill-sm { @apply rounded-full bg-foreground/[0.06] px-2.5 py-0.5 text-[12px] font-medium text-foreground transition-colors hover:bg-foreground/10; }
