@@ -154,7 +154,7 @@ const docIcon = { pdf: FileText, slides: Presentation, link: Link2, video: Link2
         </div>
 
         <div v-else class="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
-          <NuxtLink v-if="prev" :to="`/learn/${courseId}/unit/${prev.id}`"><Button variant="ghost"><ArrowLeft class="h-4 w-4 mr-1" />{{ prev.title }}</Button></NuxtLink>
+          <NuxtLink v-if="prev" :to="`/learn/${courseId}/unit/${prev.id}`"><Button variant="outline" class="max-w-[16rem]" :title="prev.title"><ArrowLeft class="h-4 w-4 mr-1 shrink-0" /><span class="truncate">{{ prev.title }}</span></Button></NuxtLink>
           <span v-else />
           <template v-if="!isCreator">
             <span v-if="unit.completed" class="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">

@@ -63,9 +63,32 @@ One scale, font Instrument Sans (already the default):
 | Body | `text-sm` (default `text-foreground`) |
 | Help, meta, captions | `text-sm text-muted-foreground` or `text-xs text-muted-foreground` |
 
+**Comfortable scale** (course building steps, `/learn/new`, and any page
+people work in for a while; the user asked for bigger, easier-to-see UI):
+title `text-3xl`, section `text-lg`, body and item names `text-base`, meta
+`text-sm`; icons `h-5 w-5`; icon buttons `p-2.5`; `Button size="lg"`;
+inputs `class="h-11 text-base"`; list rows `py-4`; width `max-w-3xl`. Item
+names wrap to two lines (`line-clamp-2 break-words`) instead of being cut;
+on phones, row actions drop below the title (`flex-wrap`, title `basis-56`).
+
 - No more than these four sizes on a page. No all-caps paragraphs, no bold
   sentences for emphasis — use the hierarchy instead.
 - Under the page title, at most one short sentence saying what to do here.
+
+## 4b. Words: as few as possible
+
+Too much text confuses. Every word must earn its place.
+
+- Page subtitle: one sentence, at most about 8 words ("Check the units, then
+  publish."). Often none is needed.
+- Status lines: 1–4 words ("Ready · 2 concepts", "Waiting for AI",
+  "Upload failed. Check your connection.").
+- No explanatory paragraphs, no "you can…" hints, no repeating what the
+  button already says. If something needs explaining, the design is wrong.
+- Labels and options: a name plus at most 3 words ("Everyone · Listed in
+  Browse", "Invite only · Not listed").
+- Hints under disabled buttons: one short line saying what to do
+  ('Tick "I agree" to publish.').
 
 ## 5. Buttons and actions
 
@@ -74,11 +97,19 @@ Use `Button` from `@/components/ui/button` (variants `default`, `outline`,
 
 - **Exactly one primary action per page** (`variant="default"`): the thing
   the page exists for (Next, Publish, Save).
-- Secondary actions: `variant="ghost"` or `variant="outline"`, or a text link
-  (`text-sm text-primary hover:underline`). Destructive actions are ghost or
-  icon buttons with `hover:text-destructive` and a confirmation.
-- Row actions (edit, delete, move) are small icon buttons with a `title`
-  and `aria-label`, muted until hover.
+- **Every other action must look like a button**: `variant="outline"`
+  (Back, Skip, Cancel, Add, Search again…). Never plain text for an action;
+  people miss it. `ghost` is not allowed for labelled buttons.
+- Small inline actions inside a status line (Retry, Continue, Read now):
+  a small outlined button, `rounded-md border border-input px-2 py-0.5
+  text-xs font-medium hover:bg-accent`.
+- Row actions (edit, delete, move) are icon buttons, clearly visible:
+  `rounded-md p-2 text-foreground/70 hover:bg-accent hover:text-foreground`
+  (`hover:text-destructive` for delete), each with `title` and `aria-label`.
+  Never hide an action until hover: phones have no hover.
+- Text links are only for going somewhere ("Back to my courses"), not for
+  doing something.
+- Destructive actions ask for confirmation.
 - Disabled buttons say why, in one muted line next to or under them.
 - Labels are verbs: "Upload files", "Publish course", not "OK" or "Submit".
 
@@ -117,6 +148,10 @@ Every list or async area has all three, designed on purpose:
 
 ## 8. Layout and responsiveness
 
+- Breadcrumbs and titles stay on one line: long names are cut with "…"
+  (`truncate`, `min-w-0`) and shown in full in a `title` tooltip. Containers
+  that hold them need `min-w-0` so they can shrink.
+
 - Mobile first: everything works at 360 px wide; no horizontal scroll; tap
   targets at least 40 px high.
 - Single column by default; two columns only for short paired fields on
@@ -135,5 +170,7 @@ Check the page against this list:
 3. Only theme tokens, the four type sizes, and the spacing steps above?
 4. Empty, loading and error states all designed?
 5. Works at 360 px and on desktop, in light and dark mode?
-6. Reused existing components (`Button`, `Input`, `Label`, `Checkbox`,
+6. Is every action visibly a button (primary, outline, or a visible icon
+   button), and is there no text that could be cut?
+7. Reused existing components (`Button`, `Input`, `Label`, `Checkbox`,
    `Card`, `Dialog`, `StepShell`) and no new UI library?
