@@ -1,384 +1,101 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useHead } from '#imports';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { GraduationCap, BookOpen, RefreshCw, Search, PlayCircle } from 'lucide-vue-next';
-import { useDiscoverCourses } from '~/composables/courses/useDiscoverCourses';
-import type { Course } from '~/composables/courses/useGetCourses';
-import { useEnrollment } from '~/composables/courses/useEnrollment';
+import { ref, computed, onMounted, watch } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useLearn, apiError, type LearnCourse, type MyLearning } from '~/composables/learn/useLearn'
+import CourseCard from '~/components/learn/CourseCard.vue'
 
-/**
- * Filter status type for course filtering
- */
-type FilterStatus = 'all' | 'in-progress' | 'completed' | 'not-started';
+// Discover (Browse merged in): one job, find a course. Cards open the course page.
+useHead({ title: 'Discover courses - FocusFlow' })
+definePageMeta({ layout: false, middleware: ['auth'] })
 
-// Set page metadata
-useHead({
-    title: 'Courses - FocusFlow'
-});
-
-// Define page layout and middleware
-definePageMeta({
-    layout: false,
-    middleware: ['auth']
-});
-
-// Breadcrumbs for navigation
 const breadcrumbs = [
-    { title: 'Home', href: '/' },
-    { title: 'Courses', href: '/courses', current: true },
-];
+  { title: 'Home', href: '/' },
+  { title: 'Discover', href: '/courses', current: true },
+]
 
-// Get courses from composable
-const { courses, loading, error, fetchCourses } = useDiscoverCourses();
-const { myEnrollments, fetchMyEnrollments, enrollInCourse, isEnrolled, isLoading: isEnrolling } = useEnrollment();
+type Row = LearnCourse & { units: number; learners: number; cover?: string }
+const api = useLearn()
+const courses = ref<Row[]>([])
+const me = ref<MyLearning | null>(null)
+const q = ref('')
+const loading = ref(true)
+const error = ref('')
 
+const PER_PAGE = 9
+const shownCount = ref(PER_PAGE)
+const shown = computed(() => courses.value.slice(0, shownCount.value))
+
+const load = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    courses.value = await api.browse(q.value.trim() || undefined)
+    shownCount.value = PER_PAGE
+  } catch (e) {
+    error.value = apiError(e)
+  } finally {
+    loading.value = false
+  }
+}
 onMounted(async () => {
-    await fetchMyEnrollments();
-});
+  load()
+  try { me.value = await api.me() } catch { /* cards still work without progress */ }
+})
+let timer: ReturnType<typeof setTimeout> | undefined
+watch(q, () => {
+  clearTimeout(timer)
+  timer = setTimeout(load, 300)
+})
 
-const handleEnroll = async (courseId: number) => {
-    try {
-        await enrollInCourse(courseId);
-        await fetchMyEnrollments();
-    } catch (e) {
-        console.error('Failed to enroll:', e);
-    }
-};
-
-// Local state for filtering and search
-const activeFilter = ref<FilterStatus>('all');
-const searchQuery = ref('');
-
-// Pagination state
-const itemsPerPage = 6;
-const displayedCount = ref(itemsPerPage);
-
-/**
- * Sets the active filter and resets pagination
- * @param filter - The filter to apply
- */
-const setFilter = (filter: FilterStatus) => {
-    activeFilter.value = filter;
-    resetPagination();
-};
-
-/**
- * Loads more courses for pagination
- */
-const loadMoreCourses = () => {
-    displayedCount.value += itemsPerPage;
-};
-
-/**
- * Resets the displayed count to initial value
- */
-const resetPagination = () => {
-    displayedCount.value = itemsPerPage;
-};
-
-/**
- * Filtered courses based on search and filter criteria
- */
-const filteredCourses = computed(() => {
-    let filtered = courses.value;
-
-    // Apply progress filter
-    switch (activeFilter.value) {
-        case 'completed':
-            filtered = filtered.filter((course: Course) => course.course_progress === 100);
-            break;
-        case 'in-progress':
-            filtered = filtered.filter((course: Course) => course.course_progress > 0 && course.course_progress < 100);
-            break;
-        case 'not-started':
-            filtered = filtered.filter((course: Course) => course.course_progress === 0);
-            break;
-    }
-
-    // Apply search filter if query exists
-    if (searchQuery.value.trim()) {
-        const query = searchQuery.value.toLowerCase().trim();
-        filtered = filtered.filter((course: Course) => {
-            return (
-                course.course_title.toLowerCase().includes(query) ||
-                (course.course_description && course.course_description.toLowerCase().includes(query))
-            );
-        });
-    }
-
-    return filtered;
-});
-
-/**
- * Courses to display (with pagination limit)
- */
-const displayedCourses = computed(() => {
-    return filteredCourses.value.slice(0, displayedCount.value);
-});
-
-/**
- * Whether more courses can be loaded
- */
-const hasMoreCourses = computed(() => {
-    return displayedCourses.value.length < filteredCourses.value.length;
-});
-
-// Reset pagination when filters change
-watch([activeFilter, searchQuery], () => {
-    resetPagination();
-});
+const joined = computed(() => new Map((me.value?.joined ?? []).map((j) => [j.course.course_id, j])))
+const mine = computed(() => new Set((me.value?.created ?? []).map((c) => c.course_id)))
+const progressOf = (c: Row) => {
+  const j = joined.value.get(c.course_id)
+  return j ? (j.total_units ? Math.round((j.completed_units / j.total_units) * 100) : 0) : null
+}
+const actionOf = (c: Row) => {
+  if (mine.value.has(c.course_id)) return 'Open'
+  const p = progressOf(c)
+  if (p == null) return 'View course'
+  return p >= 100 ? 'Review' : p > 0 ? 'Continue' : 'Start'
+}
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 </script>
 
 <template>
-    <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
-        <div class="container mx-auto px-4 py-8">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-foreground flex items-center gap-2">
-                    <GraduationCap class="h-6 w-6" />
-                    Courses
-                </h1>
-                <NuxtLink to="/courses/create">
-                    <Button variant="outline">New Course</Button>
-                </NuxtLink>
-            </div>
-            
-            <!-- Search input -->
-            <div class="relative mb-6">
-                <div class="relative">
-                    <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Search courses by title"
-                        class="pl-10 w-full bg-background"
-                        v-model="searchQuery"
-                    />
-                </div>
-            </div>
+  <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
+    <div class="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <header class="mb-6">
+        <h1 class="text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">Discover courses</h1>
+        <p class="mt-1 text-[15px] text-muted-foreground">Free courses from the community.</p>
+      </header>
 
-            <!-- Course filter -->
-            <div class="flex flex-wrap gap-2 mb-8">
-                <Button 
-                    :variant="activeFilter === 'all' ? 'default' : 'outline'" 
-                    size="sm"
-                    @click="setFilter('all')"
-                >
-                    All status
-                </Button>
-                <Button 
-                    :variant="activeFilter === 'in-progress' ? 'default' : 'outline'" 
-                    size="sm"
-                    @click="setFilter('in-progress')"
-                >
-                    In progress
-                </Button>
-                <Button 
-                    :variant="activeFilter === 'completed' ? 'default' : 'outline'" 
-                    size="sm"
-                    @click="setFilter('completed')"
-                >
-                    Completed
-                </Button>
-                <Button 
-                    :variant="activeFilter === 'not-started' ? 'default' : 'outline'" 
-                    size="sm"
-                    @click="setFilter('not-started')"
-                >
-                    Not started
-                </Button>
-            </div>
+      <Input v-model="q" type="search" class="ff-field mb-8 max-w-xl" placeholder="Search by title or topic" aria-label="Search courses" />
 
-            <!-- Loading state with skeleton cards -->
-            <div v-if="loading" class="col-span-full">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                    <div v-for="i in 6" :key="i" class="bg-card/95 dark:bg-card rounded-lg border border-border overflow-hidden shadow-sm">
-                        <!-- Skeleton image -->
-                        <div class="p-3 pt-3">
-                            <div class="aspect-video bg-muted/80 dark:bg-muted/40 rounded-lg"></div>
-                        </div>
-                        <!-- Skeleton content -->
-                        <div class="px-5 pb-5">
-                            <!-- Title placeholder -->
-                            <div class="h-6 bg-muted/80 dark:bg-muted/40 rounded mb-2 w-3/4"></div>
-                            <!-- Description placeholder -->
-                            <div class="h-4 bg-muted/60 dark:bg-muted/30 rounded mb-4 w-full"></div>
-                            
-                            <!-- Footer placeholder -->
-                            <div class="border-t border-border pt-4 mt-6 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-10 h-10 rounded-full bg-muted/60 dark:bg-muted/30"></div>
-                                    <div class="h-4 w-16 bg-muted/60 dark:bg-muted/30 rounded"></div>
-                                </div>
-                                <div class="h-8 w-20 bg-primary/20 dark:bg-primary/10 rounded"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Error state -->
-            <div v-else-if="error" class="col-span-full bg-destructive/10 text-destructive p-6 rounded-lg">
-                <p>{{ error }}</p>
-                <Button class="mt-4" variant="outline" @click="fetchCourses">Try Again</Button>
-            </div>
-            
-            <!-- Empty state -->
-            <div v-else-if="filteredCourses.length === 0" class="py-12 flex flex-col items-center justify-center bg-muted/20 dark:bg-muted/10 rounded-lg border border-border/40 dark:border-border/50 text-center px-4">
-                <BookOpen class="h-12 w-12 text-muted-foreground mb-3" />
-                <h3 class="text-lg font-medium text-foreground mb-1">No courses found</h3>
-                <p class="text-muted-foreground mb-4">
-                    {{ searchQuery ? 'No courses match your search' : 'You haven\'t created any courses yet' }}
-                </p>
-                <div class="flex gap-2">
-                    <Button v-if="searchQuery" variant="outline" @click="searchQuery = ''" class="flex items-center gap-2">
-                        <RefreshCw class="h-4 w-4" />
-                        Clear Search
-                    </Button>
-                    <NuxtLink to="/courses/create">
-                        <Button class="flex items-center gap-2">
-                            Create Course
-                        </Button>
-                    </NuxtLink>
-                </div>
-            </div>
-            
-            <!-- Courses section -->
-            <div v-else>
-                <!-- Course count info -->
-                <div class="mb-4 text-sm text-muted-foreground">
-                    <p>Showing {{ displayedCourses.length }} of {{ filteredCourses.length }} courses</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div 
-                        v-for="course in displayedCourses" 
-                        :key="course.course_id" 
-                        class="bg-card/95 dark:bg-card rounded-lg border border-border overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 dark:hover:border-primary/40 dark:shadow-lg dark:shadow-black/20 dark:hover:shadow-primary/5"
-                    >
-                        <div class="p-3 pt-3">
-                            <div class="aspect-video bg-muted relative rounded-lg overflow-hidden">
-                                <!-- Book icon shown behind the image (and as the
-                                     final fallback when the course has neither an
-                                     uploaded cover nor any lessons). -->
-                                <div class="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                                    <BookOpen class="h-12 w-12 opacity-20" />
-                                </div>
-                                <!-- Cover image: uploaded thumbnail, else the
-                                     first lesson's YouTube thumbnail. Omitted
-                                     entirely when neither exists. -->
-                                <img
-                                    v-if="course.course_thumb || course.derived_thumb"
-                                    class="w-full h-full object-cover absolute inset-0 z-10"
-                                    :src="course.course_thumb || course.derived_thumb"
-                                    :alt="`${course.course_title} thumbnail`"
-                                    loading="lazy"
-                                >
-                            </div>
-                        </div>
-                        <div class="px-5 pb-5">
-                            <h3 class="text-xl font-semibold text-foreground mb-1 line-clamp-2">{{ course.course_title }}</h3>
-                            <p class="text-sm text-muted-foreground/90 mb-4 line-clamp-1 font-medium">{{ course.course_description }}</p>
-                            
-                            <!-- Category and Visibility badges -->
-                            <div class="flex flex-wrap gap-2 mb-5">
-                                <!-- Category badge -->
-                                <span 
-                                    v-if="course.category?.category_name"
-                                    class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
-                                >
-                                    {{ course.category.category_name }}
-                                </span>
-                                <!-- Visibility badge -->
-                                <span 
-                                    class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border"
-                                    :class="course.course_visibility === 'public' 
-                                        ? 'border-green-500/20 bg-green-500/5 text-green-600 dark:text-green-400' 
-                                        : 'border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400'"
-                                >
-                                    {{ course.course_visibility === 'public' ? 'Public' : 'Private' }}
-                                </span>
-                            </div>
-
-                            <div class="flex items-center justify-between mt-6 pt-4 border-t border-border">
-                                <div class="flex items-center gap-2">
-                                    <!-- Circular progress indicator -->
-                                    <div class="relative w-10 h-10">
-                                        <svg class="w-10 h-10 transform -rotate-90" viewBox="0 0 100 100">
-                                            <circle
-                                                class="text-muted stroke-current"
-                                                stroke-width="10"
-                                                fill="transparent"
-                                                r="40"
-                                                cx="50"
-                                                cy="50"
-                                            />
-                                            <circle
-                                                class="text-primary stroke-current"
-                                                stroke-width="10"
-                                                stroke-linecap="round"
-                                                fill="transparent"
-                                                r="40"
-                                                cx="50"
-                                                cy="50"
-                                                :stroke-dasharray="251.2"
-                                                :stroke-dashoffset="251.2 - (251.2 * course.course_progress / 100)"
-                                            />
-                                        </svg>
-                                        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center text-xs font-medium">
-                                            {{ course.course_progress }}%
-                                        </div>
-                                    </div>
-                                    <span class="text-sm text-muted-foreground">Progress</span>
-                                </div>
-                                
-                                <template v-if="isEnrolled(course.course_id)">
-                                    <!-- Start/Continue button for enrolled courses -->
-                                    <Button 
-                                        :variant="course.course_progress > 0 ? 'outline' : 'default'" 
-                                        size="sm"
-                                        @click="navigateTo(`/courses/detail?id=${course.course_id}`)"
-                                        class="flex items-center gap-1.5"
-                                    >
-                                        <template v-if="course.course_progress > 0">
-                                            <RefreshCw class="h-3.5 w-3.5" />
-                                            Continue
-                                        </template>
-                                        <template v-else>
-                                            <PlayCircle class="h-3.5 w-3.5" />
-                                            Start Learning
-                                        </template>
-                                    </Button>
-                                </template>
-                                <template v-else>
-                                    <!-- Enroll button for unenrolled courses -->
-                                    <Button 
-                                        variant="default" 
-                                        size="sm"
-                                        @click="handleEnroll(course.course_id)"
-                                        :disabled="isEnrolling"
-                                        class="flex items-center gap-1.5"
-                                    >
-                                        Enroll Now
-                                    </Button>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Load More Button -->
-                <div v-if="hasMoreCourses" class="mt-8 flex justify-center">
-                    <Button @click="loadMoreCourses" variant="outline" class="px-8 py-2 flex items-center gap-2">
-                        <span>Load More Courses</span>
-                        <RefreshCw class="h-4 w-4" />
-                    </Button>
-                </div>
-                
-                <!-- No more courses message -->
-                <div v-else-if="filteredCourses.length > itemsPerPage" class="mt-6 text-center text-muted-foreground">
-                    <p>All courses loaded</p>
-                </div>
-            </div>
+      <div v-if="loading" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+        <div v-for="i in 6" :key="i" class="ff-group p-2.5">
+          <div class="aspect-video animate-pulse rounded-xl bg-muted" />
+          <div class="space-y-2 p-2 pt-4"><div class="h-4 w-3/4 animate-pulse rounded bg-muted" /><div class="h-3 w-full animate-pulse rounded bg-muted" /></div>
         </div>
-    </NuxtLayout>
+      </div>
+      <div v-else-if="error" class="flex items-center gap-3 rounded-2xl bg-destructive/10 p-4 text-[15px] text-destructive">
+        {{ error }} <Button size="lg" variant="gray" @click="load">Try again</Button>
+      </div>
+      <div v-else-if="!courses.length" class="ff-group flex flex-col items-center gap-4 p-10 text-center text-[15px] text-muted-foreground">
+        {{ q ? 'No courses match your search.' : 'No courses yet.' }}
+        <Button v-if="q" size="lg" variant="gray" @click="q = ''">Clear search</Button>
+      </div>
+
+      <template v-else>
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <CourseCard v-for="c in shown" :key="c.course_id" :course="c" :cover="c.cover" :to="`/learn/${c.course_id}`"
+            :progress="progressOf(c)" :meta="`${plural(c.units, 'unit')} · ${plural(c.learners, 'learner')}`" :action="actionOf(c)" />
+        </div>
+        <div v-if="shown.length < courses.length" class="mt-8 flex justify-center">
+          <Button size="lg" variant="gray" @click="shownCount += PER_PAGE">Show more</Button>
+        </div>
+      </template>
+    </div>
+  </NuxtLayout>
 </template>

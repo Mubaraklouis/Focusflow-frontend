@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Library, Plus, Compass, PencilRuler, CheckCircle2, Globe, Lock } from 'lucide-vue-next'
 import { useLearn, apiError, type MyLearning } from '~/composables/learn/useLearn'
 import AIAllowance from '~/components/learn/AIAllowance.vue'
 import BuildProgressCard from '~/components/learn/BuildProgress.vue'
+import CourseCard from '~/components/learn/CourseCard.vue'
 
 useHead({ title: 'My learning - FocusFlow' })
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -43,82 +43,63 @@ onBeforeUnmount(() => clearInterval(poll))
 
 const pct = (done: number, total: number) => (total ? Math.round((done / total) * 100) : 0)
 const createdCount = computed(() => data.value?.created.length ?? 0)
+const coverOf = (id: number) => data.value?.covers?.[String(id)]
+const statusOf = (c: { course_status: string; course_visibility: string }) =>
+  c.course_status === 'published' ? `Live · ${c.course_visibility === 'public' ? 'Public' : 'Invite only'}` : 'Draft'
 </script>
 
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-      <div class="flex flex-wrap justify-between items-center gap-3 mb-8">
-        <h1 class="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Library class="h-6 w-6" /> My learning
-        </h1>
-        <div class="flex gap-2">
-          <NuxtLink to="/learn/browse"><Button variant="outline"><Compass class="h-4 w-4 mr-2" />Browse courses</Button></NuxtLink>
-          <NuxtLink v-if="data?.can_create_course" to="/learn/new"><Button><Plus class="h-4 w-4 mr-2" />Create a course</Button></NuxtLink>
+    <!-- One job: get back to my courses -->
+    <div class="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">My learning</h1>
+          <p class="mt-1 text-[15px] text-muted-foreground">Your courses, in one place.</p>
         </div>
-      </div>
+        <NuxtLink v-if="data?.can_create_course" to="/learn/new"><Button size="lg">Create a course</Button></NuxtLink>
+      </header>
 
-      <div v-if="loading" class="space-y-3 animate-pulse">
-        <div v-for="i in 3" :key="i" class="h-20 rounded-lg bg-muted/60" />
+      <div v-if="loading" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+        <div v-for="i in 3" :key="i" class="ff-group p-2.5"><div class="aspect-video animate-pulse rounded-xl bg-muted" /><div class="h-16" /></div>
       </div>
-      <div v-else-if="error" class="bg-destructive/10 text-destructive p-4 rounded-lg">
-        {{ error }} <Button variant="outline" class="ml-3" @click="load()">Try again</Button>
+      <div v-else-if="error" class="flex items-center gap-3 rounded-2xl bg-destructive/10 p-4 text-[15px] text-destructive">
+        {{ error }} <Button size="lg" variant="gray" @click="load()">Try again</Button>
       </div>
 
       <template v-else-if="data">
-        <!-- Courses I'm taking -->
-        <section class="mb-10">
-          <h2 class="text-lg font-semibold mb-3">Courses I'm taking</h2>
-          <div v-if="!data.joined.length" class="rounded-lg border border-dashed border-border p-6 text-center text-muted-foreground">
-            You haven't joined a course yet.
-            <NuxtLink to="/learn/browse" class="text-primary font-medium ml-1 hover:underline">Browse free courses</NuxtLink>
+        <!-- Taking -->
+        <section class="mb-12">
+          <h2 class="mb-3 px-1 text-[17px] font-semibold">Learning</h2>
+          <div v-if="!data.joined.length" class="ff-group flex flex-wrap items-center justify-between gap-3 p-5">
+            <span class="text-[15px] text-muted-foreground">You haven't joined a course yet.</span>
+            <NuxtLink to="/courses"><Button size="lg" variant="tinted">Discover courses</Button></NuxtLink>
           </div>
-          <div v-else class="grid gap-3 sm:grid-cols-2">
-            <NuxtLink v-for="j in data.joined" :key="j.course.course_id" :to="`/learn/${j.course.course_id}`"
-              class="block rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
-              <div class="flex items-start justify-between gap-2">
-                <h3 class="font-medium text-foreground">{{ j.course.course_title }}</h3>
-                <CheckCircle2 v-if="j.total_units && j.completed_units >= j.total_units" class="h-5 w-5 text-green-600 shrink-0" />
-              </div>
-              <div class="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-                <div class="h-full bg-primary transition-all" :style="{ width: pct(j.completed_units, j.total_units) + '%' }" />
-              </div>
-              <p class="mt-2 text-xs text-muted-foreground">{{ j.completed_units }} of {{ j.total_units }} units finished</p>
-            </NuxtLink>
+          <div v-else class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <CourseCard v-for="j in data.joined" :key="j.course.course_id" :course="j.course" :cover="coverOf(j.course.course_id)"
+              :to="`/learn/${j.course.course_id}`" :progress="pct(j.completed_units, j.total_units)"
+              :action="j.total_units && j.completed_units >= j.total_units ? 'Review' : j.completed_units ? 'Continue' : 'Start'" />
           </div>
         </section>
 
-        <!-- Courses I created -->
+        <!-- Created -->
         <section>
-          <AIAllowance :allowance="data.ai_allowance" class="mb-4" />
-          <div class="flex items-baseline justify-between mb-3">
-            <h2 class="text-lg font-semibold">Courses I created</h2>
-            <span class="text-xs text-muted-foreground">Free plan: {{ createdCount }} of {{ data.limits.courses_per_user }} courses</span>
+          <div class="mb-3 flex items-baseline justify-between gap-3 px-1">
+            <h2 class="text-[17px] font-semibold">Teaching</h2>
+            <span class="text-[13px] text-muted-foreground">Free plan · {{ createdCount }} of {{ data.limits.courses_per_user }} courses</span>
           </div>
-          <div v-if="!data.created.length" class="rounded-lg border border-dashed border-border p-6 text-center text-muted-foreground">
-            Turn your notes, slides and videos into a course.
-            <NuxtLink to="/learn/new" class="text-primary font-medium ml-1 hover:underline">Create your first course</NuxtLink>
+          <div v-if="!data.created.length" class="ff-group flex flex-wrap items-center justify-between gap-3 p-5">
+            <span class="text-[15px] text-muted-foreground">Turn your notes, slides and videos into a course.</span>
+            <NuxtLink v-if="data.can_create_course" to="/learn/new"><Button size="lg" variant="tinted">Create a course</Button></NuxtLink>
           </div>
-          <div v-else class="grid gap-3 sm:grid-cols-2">
-            <NuxtLink v-for="c in data.created" :key="c.course_id" :to="`/learn/${c.course_id}/build`"
-              class="block rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
-              <div class="flex items-start justify-between gap-2">
-                <h3 class="font-medium text-foreground">{{ c.course_title }}</h3>
-                <PencilRuler class="h-4 w-4 text-muted-foreground shrink-0" />
-              </div>
-              <div class="mt-2 flex items-center gap-2 text-xs">
-                <span class="rounded-full px-2 py-0.5" :class="c.course_status === 'published' ? 'bg-green-500/15 text-green-700 dark:text-green-400' : 'bg-muted text-muted-foreground'">
-                  {{ c.course_status === 'published' ? 'Published' : 'Draft' }}
-                </span>
-                <span v-if="c.course_status === 'published'" class="flex items-center gap-1 text-muted-foreground">
-                  <Globe v-if="c.course_visibility === 'public'" class="h-3 w-3" /><Lock v-else class="h-3 w-3" />
-                  {{ c.course_visibility === 'public' ? 'Public' : 'Private' }}
-                </span>
-              </div>
+          <div v-else class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <CourseCard v-for="c in data.created" :key="c.course_id" :course="c" :cover="coverOf(c.course_id)"
+              :to="`/learn/${c.course_id}`" :meta="statusOf(c)" action="Open">
               <BuildProgressCard :progress="data.progress?.[String(c.course_id)]" compact />
-            </NuxtLink>
+            </CourseCard>
           </div>
-          <p v-if="!data.can_create_course && data.create_limit_reason" class="mt-3 text-sm text-muted-foreground">{{ data.create_limit_reason }}</p>
+          <p v-if="!data.can_create_course && data.create_limit_reason" class="mt-3 px-1 text-[13px] text-muted-foreground">{{ data.create_limit_reason }}</p>
+          <AIAllowance :allowance="data.ai_allowance" compact class="mt-6" />
         </section>
       </template>
     </div>

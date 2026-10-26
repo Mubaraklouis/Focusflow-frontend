@@ -78,7 +78,7 @@ const join = async () => {
         <div class="ff-group h-64 animate-pulse" />
       </div>
       <div v-else-if="error" class="rounded-2xl bg-destructive/10 p-4 text-[15px] text-destructive">
-        {{ error }} <NuxtLink to="/learn/browse" class="ml-2 underline">Browse courses</NuxtLink>
+        {{ error }} <NuxtLink to="/courses" class="ml-2 underline">Discover courses</NuxtLink>
       </div>
 
       <template v-else-if="view && course">
