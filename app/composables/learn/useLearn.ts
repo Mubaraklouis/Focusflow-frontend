@@ -79,6 +79,12 @@ export const QUIZ_LEVELS: { v: Exclude<QuizLevel, 'custom'>; label: string; note
   { v: 'supervised', label: 'Supervised exam', note: 'Strict, plus an access code you give out in the room and follow-up questions on answers.' },
 ]
 
+/** PDF pages as page records (no text: they are drawn from the file). */
+export const pdfPseudoPages = (materialId: number, from: number, to: number): SlidePage[] =>
+  Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => ({
+    id: -(from + i), material_id: materialId, number: from + i, title: '', blocks: [], hidden: false, has_diagram: false,
+  }))
+
 /** Seconds as m:ss or h:mm:ss. */
 export const clock = (sec = 0) => {
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
@@ -219,9 +225,9 @@ export interface AttemptRow {
 export interface ImportResult { questions: Question[]; errors: { line: number; message: string }[]; saved: number }
 export interface Certificate { code: string; course_id: number; learner_name: string; course_title: string; creator_name: string; final_score?: number; issued_at: string }
 
-export interface SlideRange { material_id: number; first_page: number; last_page: number; /** slides learners see */ count?: number }
+export interface SlideRange { material_id: number; first_page: number; last_page: number; /** slides learners see */ count?: number; kind?: 'slides' | 'pdf' }
 /** One deck of a unit with the slides the unit reads (hidden slides left out). */
-export interface UnitDeck { material_id: number; title: string; url: string; first_page: number; last_page: number; pages: SlidePage[] }
+export interface UnitDeck { material_id: number; title: string; kind?: 'slides' | 'pdf'; url: string; first_page: number; last_page: number; pages: SlidePage[] }
 export type BuildMode = 'ai' | 'slides'
 
 export interface LearnCourse {
@@ -366,6 +372,7 @@ export function useLearn() {
     slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),
     updateSlidePage: (pid: number, body: { title?: string; hidden?: boolean; diagram?: boolean; blocks?: SlideBlock[] }) =>
       send<SlidePage>('PUT', `slide-pages/${pid}`, body),
+    pdfPageCount: (mid: number) => get<{ material_id: number; pages: number }>(`materials/${mid}/page-count`),
     suggestUnits: (mid: number) => send<{ first_slide: number; title: string }[]>('POST', `materials/${mid}/suggest-units`),
     unitPages: (uid: number) => get<UnitDeck[]>(`units/${uid}/pages`),
     setBuildMode: (id: number, mode: BuildMode) => send<LearnCourse>('PUT', `courses/${id}/build-mode`, { build_mode: mode }),

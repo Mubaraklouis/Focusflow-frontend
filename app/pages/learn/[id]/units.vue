@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Scissors, Merge, EyeOff, Shapes, Eye, Sparkles, Loader2 } from 'lucide-vue-next'
-import { apiError, type Material, type SlidePage } from '~/composables/learn/useLearn'
+import { apiError, pdfPseudoPages, type Material, type SlidePage } from '~/composables/learn/useLearn'
 import { useCourseBuilder } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
 
@@ -67,8 +67,11 @@ watch(() => !loading.value && !!course.value, async (ready) => {
   if (!slidesMode.value) return navigateTo(`/learn/${courseId}/organise`, { replace: true })
   decksLoading.value = true
   try {
-    const slides = materials.value.filter((m) => m.kind === 'slides')
-    const pages = await Promise.all(slides.map((m) => b.api.slidePages(m.id).then((r) => r.pages)))
+    // PowerPoint decks and PDFs (F3.2) are cut the same way
+    const slides = materials.value.filter((m) => m.kind === 'slides' || m.kind === 'pdf')
+    const pages = await Promise.all(slides.map((m) => m.kind === 'pdf'
+      ? b.api.pdfPageCount(m.id).then((r) => pdfPseudoPages(m.id, 1, r.pages))
+      : b.api.slidePages(m.id).then((r) => r.pages)))
     decks.value = slides.map((m, i) => initDeck(m, pages[i]))
   } catch (e) {
     decksError.value = apiError(e, 'Could not read your slides.')
@@ -96,7 +99,10 @@ const suggestedTitle = (u: DraftUnit) => {
 }
 const titleOf = (u: DraftUnit) => u.deck.titles[u.first] ?? suggestedTitle(u)
 const setTitle = (u: DraftUnit, v: string) => (u.deck.titles[u.first] = v)
-const rangeLabel = (u: DraftUnit) => (u.first === u.last ? `Slide ${u.first}` : `Slides ${u.first}–${u.last}`)
+const rangeLabel = (u: DraftUnit) => {
+  const w = u.deck.material.kind === 'pdf' ? 'Page' : 'Slide'
+  return u.first === u.last ? `${w} ${u.first}` : `${w}s ${u.first}–${u.last}`
+}
 
 const split = (d: Deck, at: number) => (d.starts = [...d.starts, at].sort((a, b) => a - b))
 const join = (d: Deck, start: number) => {
@@ -168,11 +174,11 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-1">
             <div class="min-w-0 flex-1 basis-48">
               <h2 class="truncate text-[17px] font-semibold" :title="d.material.title">{{ d.material.title }}</h2>
-              <p class="text-[13px] text-muted-foreground">{{ plural(d.pages.length, 'slide') }} · {{ plural(d.starts.length, 'unit') }}</p>
+              <p class="text-[13px] text-muted-foreground">{{ plural(d.pages.length, d.material.kind === 'pdf' ? 'page' : 'slide') }} · {{ plural(d.starts.length, 'unit') }}</p>
             </div>
             <div class="ml-auto flex items-center gap-2">
               <button v-if="hasSections(d)" type="button" class="ff-pill-sm" @click="useSections(d)">Use sections</button>
-              <button type="button" class="ff-pill-sm inline-flex items-center gap-1" :disabled="suggesting !== null" @click="suggest(d)">
+              <button v-if="d.material.kind === 'slides'" type="button" class="ff-pill-sm inline-flex items-center gap-1" :disabled="suggesting !== null" @click="suggest(d)">
                 <Loader2 v-if="suggesting === d.material.id" class="h-3.5 w-3.5 animate-spin" /><Sparkles v-else class="h-3.5 w-3.5" />Suggest with AI
               </button>
               <NuxtLink :to="`/learn/${courseId}/slides/${d.material.id}`" class="ff-icon-btn" :aria-label="`Preview ${d.material.title}`" title="Preview slides"><Eye class="h-[18px] w-[18px]" /></NuxtLink>
@@ -194,7 +200,7 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
             <ol class="border-t border-border/60" style="--ff-inset: 3.25rem">
               <li v-for="(p, i) in u.slides" :key="p.number" class="ff-item flex items-center gap-3 py-2.5 pl-4 pr-2" :class="{ 'opacity-55': p.hidden }">
                 <span class="w-6 shrink-0 text-right text-[13px] font-semibold tabular-nums text-muted-foreground">{{ p.number }}</span>
-                <span class="min-w-0 flex-1 truncate text-[15px]" :class="{ 'italic text-muted-foreground': !p.title }" :title="p.title">{{ p.title || 'No title' }}</span>
+                <span class="min-w-0 flex-1 truncate text-[15px]" :class="{ 'italic text-muted-foreground': !p.title }" :title="p.title">{{ p.title || (d.material.kind === 'pdf' ? `Page ${p.number}` : 'No title') }}</span>
                 <EyeOff v-if="p.hidden" class="h-4 w-4 shrink-0 text-muted-foreground" aria-label="Hidden slide" />
                 <Shapes v-if="p.has_diagram" class="h-4 w-4 shrink-0 text-muted-foreground" aria-label="Has a diagram" />
                 <button v-if="i > 0" type="button" class="ff-icon-btn" :aria-label="`Start a new unit at slide ${p.number}`" title="Start a new unit here" @click="split(d, p.number)"><Scissors class="h-[18px] w-[18px]" /></button>

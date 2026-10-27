@@ -16,7 +16,7 @@ const courseId = Number(useRoute().params.id)
 const b = useCourseBuilder(courseId)
 const { course, materials, limits, loading, loadError, notice, slidesMode } = b
 // Slides as written takes PowerPoint only for now (PDF pages come later, F3.2)
-const fileRule = computed(() => (slidesMode.value ? /\.pptx$/i : /\.(pdf|pptx)$/i))
+const fileRule = computed(() => /\.(pdf|pptx)$/i)
 
 useHead(() => ({ title: `Upload materials · ${course.value?.course_title || 'Course'} - FocusFlow` }))
 const breadcrumbs = computed(() => [
@@ -43,7 +43,7 @@ const uploadFiles = async (files: FileList | File[]) => {
   for (const file of Array.from(files)) {
     failed.value = failed.value.filter((f) => f.name !== file.name)
     if (!fileRule.value.test(file.name)) {
-      failed.value.push({ name: file.name, reason: slidesMode.value ? 'Only PowerPoint (.pptx) files for now.' : 'Only PDF or PowerPoint files.' })
+      failed.value.push({ name: file.name, reason: 'Only PDF or PowerPoint files.' })
       continue
     }
     uploading.value.push(file.name)
@@ -101,8 +101,8 @@ const addLink = async () => {
           @click="fileInput?.click()" @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()">
           <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary"><Upload class="h-6 w-6" /></span>
           <p class="text-[17px] font-semibold text-foreground">Drop files or click to choose</p>
-          <p class="mt-1 text-[13px] text-muted-foreground">{{ slidesMode ? 'PowerPoint (.pptx)' : 'PDF or PowerPoint' }} · up to {{ maxMB }} MB</p>
-          <input ref="fileInput" type="file" class="hidden" multiple :accept="slidesMode ? '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation' : '.pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation'" @change="onPick">
+          <p class="mt-1 text-[13px] text-muted-foreground">PDF or PowerPoint · up to {{ maxMB }} MB</p>
+          <input ref="fileInput" type="file" class="hidden" multiple accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation" @change="onPick">
         </div>
 
         <!-- What was uploaded, and how it is going -->
@@ -128,7 +128,7 @@ const addLink = async () => {
               <p class="truncate text-[15px] font-medium" :title="m.title">{{ m.title }}</p>
               <MaterialState :material="m" @retry="b.retry(m)" />
             </div>
-            <NuxtLink v-if="m.kind === 'slides'" :to="`/learn/${courseId}/slides/${m.id}`" class="ff-icon-btn" :aria-label="`Preview ${m.title}`" title="Preview slides"><Eye class="h-[18px] w-[18px]" /></NuxtLink>
+            <NuxtLink v-if="m.kind === 'slides' || (slidesMode && m.kind === 'pdf')" :to="`/learn/${courseId}/slides/${m.id}`" class="ff-icon-btn" :aria-label="`Preview ${m.title}`" title="Preview slides"><Eye class="h-[18px] w-[18px]" /></NuxtLink>
             <button type="button" class="ff-icon-btn hover:text-destructive" :aria-label="`Remove ${m.title}`" title="Remove" @click="b.removeMaterial(m)"><Trash2 class="h-[18px] w-[18px]" /></button>
           </li>
         </ul>

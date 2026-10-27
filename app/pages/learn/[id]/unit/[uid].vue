@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { useLearn, apiError, kindLabel, type Unit, type Concept, type CreatorView, type LearnerView, type UnitDeck, type SlidePage } from '~/composables/learn/useLearn'
+import { useLearn, apiError, kindLabel, pdfPseudoPages, type Unit, type Concept, type CreatorView, type LearnerView, type UnitDeck, type SlidePage } from '~/composables/learn/useLearn'
 import { renderMarkdown } from '~/utils/markdown'
 import ConceptSources from '~/components/learn/ConceptSources.vue'
 import SlideView from '~/components/learn/SlideView.vue'
+import PdfPage from '~/components/learn/PdfPage.vue'
 
 // A unit is read one screen at a time: intro (if any) → one concept per
 // screen → end of unit (recap, materials, Mark as done). A slides unit
@@ -41,7 +42,10 @@ const screens = computed<Screen[]>(() => {
   if (unit.value.body?.trim() || videos.value.length) out.push({ kind: 'intro' })
   ;(unit.value.concepts ?? []).forEach((c, i) => out.push({ kind: 'concept', c, n: i + 1 }))
   let n = 0
-  for (const deck of decks.value) for (const page of deck.pages) out.push({ kind: 'slide', page, deck, n: ++n })
+  for (const deck of decks.value) {
+    const pages = deck.kind === 'pdf' ? pdfPseudoPages(deck.material_id, deck.first_page, deck.last_page) : deck.pages
+    for (const page of pages) out.push({ kind: 'slide', page, deck, n: ++n })
+  }
   if (!slidesUnit.value || courseDone.value || !n) out.push({ kind: 'end' })
   return out
 })
@@ -178,8 +182,9 @@ const complete = async () => {
 
         <!-- One slide (slides as written) -->
         <article v-else-if="screen.kind === 'slide'">
-          <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} · Slide {{ screen.n }} of {{ slideCount }}</p>
-          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ screen.page.title || unit.title }}</h1>
+          <p class="text-[13px] font-medium text-muted-foreground">Unit {{ index + 1 }} · {{ screen.deck.kind === 'pdf' ? 'Page' : 'Slide' }} {{ screen.n }} of {{ slideCount }}</p>
+          <PdfPage v-if="screen.deck.kind === 'pdf'" class="mt-3" :material-id="screen.deck.material_id" :page="screen.page.number" />
+          <h1 v-else class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ screen.page.title || unit.title }}</h1>
           <SlideView v-if="screen.page.blocks.length" class="mt-6" :page="screen.page" :material-url="screen.deck.url" :material-title="screen.deck.title" />
         </article>
 

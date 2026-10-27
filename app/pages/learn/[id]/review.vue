@@ -16,7 +16,8 @@ const b = useCourseBuilder(courseId)
 const { course, materials, units, progress, isPublished, slidesMode, loading, loadError, notice } = b
 const rangeLabel = (u: Unit) => (u.slides ?? []).map((r) => {
   const m = materials.value.find((x) => x.id === r.material_id)
-  return `${r.first_page === r.last_page ? `Slide ${r.first_page}` : `Slides ${r.first_page}–${r.last_page}`}${m ? ` · ${m.title}` : ''}`
+  const w = r.kind === 'pdf' ? 'Page' : 'Slide'
+  return `${r.first_page === r.last_page ? `${w} ${r.first_page}` : `${w}s ${r.first_page}–${r.last_page}`}${m ? ` · ${m.title}` : ''}`
 }).join(', ')
 
 useHead(() => ({ title: `Review units · ${course.value?.course_title || 'Course'} - FocusFlow` }))

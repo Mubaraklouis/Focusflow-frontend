@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { useLearn, apiError, type SlidePage, type CreatorView } from '~/composables/learn/useLearn'
+import { useLearn, apiError, pdfPseudoPages, type SlidePage, type CreatorView } from '~/composables/learn/useLearn'
+import PdfPage from '~/components/learn/PdfPage.vue'
 import SlideView from '~/components/learn/SlideView.vue'
 import FfSwitch from '~/components/learn/quiz/FfSwitch.vue'
 import { blocksToText, textToBlocks } from '~/utils/slideMarkdown'
@@ -91,7 +92,10 @@ onMounted(async () => {
     const v = await api.course(courseId)
     if (v.role !== 'creator') throw new Error('Only the course creator can preview materials.')
     view.value = v
-    pages.value = (await api.slidePages(materialId)).pages
+    const m = v.materials.find((x) => x.id === materialId)
+    pages.value = m?.kind === 'pdf'
+      ? pdfPseudoPages(materialId, 1, (await api.pdfPageCount(materialId)).pages)
+      : (await api.slidePages(materialId)).pages
   } catch (e) {
     error.value = apiError(e, 'These slides could not be opened.')
   } finally {
@@ -121,7 +125,7 @@ onMounted(async () => {
 
       <template v-else>
         <p class="mb-4 text-[13px] text-muted-foreground">
-          <button type="button" class="ff-pill-sm mr-2" @click="editMode = !editMode">{{ editMode ? 'Done editing' : 'Edit slides' }}</button>
+          <button v-if="material?.kind === 'slides'" type="button" class="ff-pill-sm mr-2" @click="editMode = !editMode">{{ editMode ? 'Done editing' : 'Edit slides' }}</button>
           <template v-if="page.hidden"><span class="ff-pill-sm mr-2">Hidden</span></template>
           Preview: this is how learners read these slides.<template v-if="hiddenCount">{{ ' ' }}{{ hiddenCount }} hidden {{ hiddenCount === 1 ? 'slide is' : 'slides are' }} skipped.</template>
         </p>
@@ -137,9 +141,10 @@ onMounted(async () => {
 
         <article>
           <p class="text-[13px] font-medium text-muted-foreground">
-            Slide {{ step + 1 }} of {{ shown.length }}<template v-if="page.section"> · {{ page.section }}</template>
+            {{ material?.kind === 'pdf' ? 'Page' : 'Slide' }} {{ step + 1 }} of {{ shown.length }}<template v-if="page.section"> · {{ page.section }}</template>
           </p>
-          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ previewPage?.title || `Slide ${step + 1}` }}</h1>
+          <PdfPage v-if="material?.kind === 'pdf'" class="mt-2" :material-id="materialId" :page="page.number" />
+          <h1 v-else class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ previewPage?.title || `Slide ${step + 1}` }}</h1>
           <SlideView v-if="previewPage?.blocks.length" class="mt-6" :page="previewPage" :material-url="material?.url || ''" :material-title="material?.title || 'the file'" />
 
           <!-- Page editor: the teacher fixes what was read from the file -->
