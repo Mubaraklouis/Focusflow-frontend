@@ -62,6 +62,8 @@ export interface SlidePage {
   hidden: boolean
   /** drawn diagram, SmartArt or chart: learners are pointed to the original slide */
   has_diagram: boolean
+  /** the teacher changed it in the page editor (F3.6) */
+  edited?: boolean
 }
 
 export interface AnswerIn { index: number; choice?: number | null; choices?: number[]; answer?: string }
@@ -362,6 +364,8 @@ export function useLearn() {
     certificate: (code: string) => $fetch<{ data: Certificate }>(`/api/certificates/${encodeURIComponent(code)}`).then((r) => r.data),
 
     slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),
+    updateSlidePage: (pid: number, body: { title?: string; hidden?: boolean; diagram?: boolean; blocks?: SlideBlock[] }) =>
+      send<SlidePage>('PUT', `slide-pages/${pid}`, body),
     unitPages: (uid: number) => get<UnitDeck[]>(`units/${uid}/pages`),
     setBuildMode: (id: number, mode: BuildMode) => send<LearnCourse>('PUT', `courses/${id}/build-mode`, { build_mode: mode }),
     saveSlideUnits: (id: number, units: { id?: number; title: string; material_id: number; first_page: number; last_page: number }[]) =>

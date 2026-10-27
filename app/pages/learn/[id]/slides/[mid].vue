@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useLearn, apiError, type SlidePage, type CreatorView } from '~/composables/learn/useLearn'
 import SlideView from '~/components/learn/SlideView.vue'
+import FfSwitch from '~/components/learn/quiz/FfSwitch.vue'
+import { blocksToText, textToBlocks } from '~/utils/slideMarkdown'
+import { Input } from '@/components/ui/input'
 
 // Slides as written (F3.7): read a PowerPoint one slide at a time, inside
 // FocusFlow. For now the creator previews a material here; learners will
@@ -21,12 +24,48 @@ const error = ref('')
 
 const material = computed(() => view.value?.materials.find((m) => m.id === materialId) ?? null)
 // Hidden slides are skipped, as learners will see it.
-const shown = computed(() => pages.value.filter((p) => !p.hidden))
+const editMode = ref(false)
+// While editing, hidden slides stay in the list so they can be shown again
+const shown = computed(() => (editMode.value ? pages.value : pages.value.filter((p) => !p.hidden)))
 const hiddenCount = computed(() => pages.value.length - shown.value.length)
 const step = computed(() => Math.min(Math.max(1, Number(route.query.slide) || 1), Math.max(1, shown.value.length)) - 1)
 const page = computed(() => shown.value[step.value] ?? null)
 const last = computed(() => step.value >= shown.value.length - 1)
 const backTo = `/learn/${courseId}/upload`
+
+// ── page editor (F3.6) ────────────────────────────────────────────────────
+const draftTitle = ref('')
+const draftText = ref('')
+const savingPage = ref(false)
+const pageMsg = ref('')
+watch([page, editMode], () => {
+  if (page.value) {
+    draftTitle.value = page.value.title
+    draftText.value = blocksToText(page.value.blocks)
+  }
+  pageMsg.value = ''
+}, { immediate: true })
+const draftBlocks = computed(() => (page.value ? textToBlocks(draftText.value, page.value.blocks) : []))
+const previewPage = computed(() => (page.value && editMode.value ? { ...page.value, title: draftTitle.value, blocks: draftBlocks.value } : page.value))
+const savePage = async (extra: { hidden?: boolean } = {}) => {
+  if (!page.value) return
+  savingPage.value = true
+  pageMsg.value = ''
+  try {
+    const res = await api.updateSlidePage(page.value.id, { title: draftTitle.value, blocks: draftBlocks.value, ...extra })
+    const i = pages.value.findIndex((p) => p.id === res.data.id)
+    if (i >= 0) pages.value[i] = res.data
+    pageMsg.value = 'Saved.'
+  } catch (e) {
+    pageMsg.value = apiError(e, 'Could not save.')
+  } finally {
+    savingPage.value = false
+  }
+}
+const toggleDiagram = (on: boolean) => {
+  const t = draftText.value.replace(/\n?\[diagram\]\n?/g, '\n').trim()
+  draftText.value = on ? `${t}\n\n[diagram]` : t
+}
 
 const go = async (i: number) => {
   await navigateTo({ query: { ...route.query, slide: i > 0 ? i + 1 : undefined } }, { replace: true })
@@ -82,6 +121,8 @@ onMounted(async () => {
 
       <template v-else>
         <p class="mb-4 text-[13px] text-muted-foreground">
+          <button type="button" class="ff-pill-sm mr-2" @click="editMode = !editMode">{{ editMode ? 'Done editing' : 'Edit slides' }}</button>
+          <template v-if="page.hidden"><span class="ff-pill-sm mr-2">Hidden</span></template>
           Preview: this is how learners read these slides.<template v-if="hiddenCount">{{ ' ' }}{{ hiddenCount }} hidden {{ hiddenCount === 1 ? 'slide is' : 'slides are' }} skipped.</template>
         </p>
 
@@ -98,8 +139,33 @@ onMounted(async () => {
           <p class="text-[13px] font-medium text-muted-foreground">
             Slide {{ step + 1 }} of {{ shown.length }}<template v-if="page.section"> · {{ page.section }}</template>
           </p>
-          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ page.title || `Slide ${step + 1}` }}</h1>
-          <SlideView v-if="page.blocks.length" class="mt-6" :page="page" :material-url="material?.url || ''" :material-title="material?.title || 'the file'" />
+          <h1 class="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">{{ previewPage?.title || `Slide ${step + 1}` }}</h1>
+          <SlideView v-if="previewPage?.blocks.length" class="mt-6" :page="previewPage" :material-url="material?.url || ''" :material-title="material?.title || 'the file'" />
+
+          <!-- Page editor: the teacher fixes what was read from the file -->
+          <section v-if="editMode" class="ff-group mt-8 space-y-4 p-4" aria-label="Edit this slide">
+            <div class="flex items-center gap-3">
+              <span class="min-w-0 flex-1 text-[15px] font-medium">Hide from learners</span>
+              <FfSwitch :model-value="page.hidden" label="Hide from learners" @update:model-value="(v) => savePage({ hidden: v })" />
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="min-w-0 flex-1 text-[15px] font-medium">"See the original" card</span>
+              <FfSwitch :model-value="draftText.includes('[diagram]')" label="See the original card" @update:model-value="toggleDiagram" />
+            </div>
+            <div>
+              <label for="pg-title" class="ff-label">Title</label>
+              <Input id="pg-title" v-model="draftTitle" class="ff-field" maxlength="500" />
+            </div>
+            <div>
+              <label for="pg-text" class="ff-label">Text</label>
+              <textarea id="pg-text" v-model="draftText" rows="10" class="ff-field font-mono text-[13px]" spellcheck="true" />
+              <p class="mt-1 px-1 text-[13px] text-muted-foreground">"- " starts a bullet, two spaces per level, **bold**, *italic*, `code`, [text](https://link). Move or delete [picture 1] lines to move or remove pictures.</p>
+            </div>
+            <div class="flex items-center justify-end gap-3">
+              <span v-if="pageMsg" class="text-[13px] text-muted-foreground" role="status">{{ pageMsg }}</span>
+              <Button size="lg" variant="tinted" :disabled="savingPage" @click="savePage()">{{ savingPage ? 'Saving…' : 'Save slide' }}</Button>
+            </div>
+          </section>
 
           <section v-if="page.notes" class="mt-12 border-t border-border/70 pt-6">
             <h2 class="ff-label">Speaker notes</h2>
