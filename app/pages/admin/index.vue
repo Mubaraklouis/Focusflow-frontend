@@ -20,6 +20,10 @@
             <Users class="w-4 h-4" />
             Manage Users
           </Button>
+          <Button @click="navigateTo('/admin/institutions')" variant="outline" class="gap-2">
+            <Building2 class="w-4 h-4" />
+            Institutions
+          </Button>
           <Button @click="navigateTo('/admin/ai')" variant="outline" class="gap-2">
             <Cpu class="w-4 h-4" />
             AI usage
@@ -194,8 +198,7 @@ import { Button } from '@/components/ui/button'
 import { 
   Users, Activity, UserPlus, TrendingUp, 
   ShieldAlert, RefreshCw, AlertCircle, 
-  GraduationCap, BookOpen, ShieldCheck, Cpu 
-} from 'lucide-vue-next'
+  GraduationCap, BookOpen, ShieldCheck, Cpu, Building2 } from 'lucide-vue-next'
 
 definePageMeta({ 
   layout: false, 

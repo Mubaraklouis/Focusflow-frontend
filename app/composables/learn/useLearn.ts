@@ -226,10 +226,18 @@ export interface AttemptRow {
 export interface Invite { code: string; enabled: boolean }
 export interface InviteInfo { course_id: number; course_title: string; course_description: string; creator_name: string; units: number; published: boolean; enrolled: boolean; is_creator: boolean }
 export interface LearnerRow { user_id: number; name: string; email: string; enrolled_at: string; completed_units: number; total_units: number }
-export interface Institution { id: number; name: string; consent_text: string; plan: string; created_by: number; created_at: string; role?: 'admin' | 'lecturer' }
-export interface InstitutionMember { id: number; institution_id: number; email: string; user_id: number | null; role: 'admin' | 'lecturer'; name: string }
+/** Roles in an institution, like a GitHub organisation */
+export type OrgRole = 'owner' | 'lecturer' | 'student'
+/** free, or the paid Institution plan (owners and lecturers get Pro limits) */
+export type InstitutionPlan = 'free' | 'institution'
+export interface Institution { id: number; name: string; consent_text: string; plan: InstitutionPlan; created_by: number; created_at: string; role?: OrgRole }
+export interface InstitutionMember { id: number; institution_id: number; email: string; user_id: number | null; role: OrgRole; name: string }
 export interface InstitutionCourse { course_id: number; title: string; lecturer: string; learners: number; results_approved_at: string | null }
-export interface InstitutionView { institution: Institution; role: 'admin' | 'lecturer'; members: InstitutionMember[]; courses: InstitutionCourse[]; consent_text: string }
+export interface InstitutionView {
+  institution: Institution; role: OrgRole; my_member_id: number; members: InstitutionMember[]
+  counts: Record<OrgRole, number>; courses: InstitutionCourse[]; consent_text: string
+}
+export interface AdminInstitution { id: number; name: string; plan: InstitutionPlan; owner: string; members: number; courses: number; created_at: string }
 export interface RosterEntry { id: number; course_id: number; email: string; name: string; student_id: string; invited_at: string | null; joined: boolean; consented: boolean }
 export interface ClassView {
   class: { course_id: number; institution_id: number; roster_only: boolean; results_approved_at: string | null } | null
@@ -401,8 +409,10 @@ export function useLearn() {
     createInstitution: (name: string) => send<Institution>('POST', 'institutions', { name }),
     institution: (iid: number) => get<InstitutionView>(`institutions/${iid}`),
     updateInstitution: (iid: number, body: { name?: string; consent_text?: string }) => send<Institution>('PUT', `institutions/${iid}`, body),
-    addMember: (iid: number, email: string, role: 'admin' | 'lecturer') => send<InstitutionMember>('POST', `institutions/${iid}/members`, { email, role }),
+    addMember: (iid: number, email: string, role: OrgRole) => send<InstitutionMember>('POST', `institutions/${iid}/members`, { email, role }),
+    setMemberRole: (iid: number, mid: number, role: OrgRole) => send<InstitutionMember>('PUT', `institutions/${iid}/members/${mid}`, { role }),
     removeMember: (iid: number, mid: number) => send('DELETE', `institutions/${iid}/members/${mid}`),
+    leaveInstitution: (iid: number) => send('DELETE', `institutions/${iid}/membership`),
     approveResults: (iid: number, cid: number, approved: boolean) => send('POST', `institutions/${iid}/courses/${cid}/results-access`, { approved }),
     classView: (id: number) => get<ClassView>(`courses/${id}/class`),
     updateClass: (id: number, body: { institution_id?: number; roster_only?: boolean }) => send('PUT', `courses/${id}/class`, body),

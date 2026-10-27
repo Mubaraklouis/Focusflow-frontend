@@ -42,7 +42,7 @@ useHead(() => ({ title: `${unit.value?.title || 'Quiz'} - FocusFlow` }))
 const breadcrumbs = computed(() => [
   { title: 'My learning', href: '/learn' },
   { title: course.value?.course.course_title || 'Course', href: backTo },
-  { title: isQuiz.value ? unit.value?.title || 'Quiz' : 'Unit test', href: route.path, current: true },
+  { title: isQuiz.value ? unit.value?.title || 'Quiz' : 'Quiz', href: route.path, current: true },
 ])
 
 let poll: ReturnType<typeof setInterval> | undefined
@@ -184,7 +184,7 @@ const enable = (on: boolean) => save({ enabled: on }, on ? 'Learners can now tak
 
       <template v-else-if="data && st && unit">
         <header class="mb-6">
-          <p class="text-[13px] font-medium text-muted-foreground">{{ unit.final ? 'Final exam' : isQuiz ? 'Quiz' : 'Unit test' }}</p>
+          <p class="text-[13px] font-medium text-muted-foreground">{{ unit.final ? 'Final exam · tests every unit' : isQuiz ? 'Quiz' : 'Quiz at the end of this unit' }}</p>
           <input v-if="isQuiz" :value="unit.title" maxlength="255" aria-label="Quiz title"
             class="-mx-1.5 mt-0.5 w-full rounded-lg bg-transparent px-1.5 text-[26px] font-bold leading-tight tracking-tight outline-none hover:bg-foreground/[0.04] focus:bg-foreground/[0.05] focus:ring-4 focus:ring-primary/15 sm:text-[28px]"
             @input="title = ($event.target as HTMLInputElement).value" @blur="saveTitle" @keydown.enter.prevent="saveTitle">
@@ -198,7 +198,7 @@ const enable = (on: boolean) => save({ enabled: on }, on ? 'Learners can now tak
         <div class="ff-group mb-8 flex items-center gap-4 p-4">
           <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-primary"><ClipboardCheck class="h-[18px] w-[18px]" /></span>
           <span class="min-w-0 flex-1">
-            <span class="block text-[15px] font-medium">Learners take this {{ isQuiz ? 'quiz' : 'test' }}</span>
+            <span class="block text-[15px] font-medium">Learners take this {{ unit.final ? 'exam' : 'quiz' }}</span>
             <span class="text-[13px] text-muted-foreground">{{ questions.length }} question{{ questions.length === 1 ? '' : 's' }}<template v-if="!questions.length"> · add some to turn it on</template></span>
           </span>
           <FfSwitch :model-value="st.enabled" label="Learners take this quiz" :disabled="!questions.length && !st.enabled" @update:model-value="enable" />

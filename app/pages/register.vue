@@ -17,6 +17,10 @@ useHead({
 
 const { data, Form, submit } = await useAuthApi()
 const { initiateGoogleAuth } = useGoogleAuth()
+const accountTypes = [
+    { value: 'personal' as const, title: 'Just me', text: 'Free or Pro' },
+    { value: 'institution' as const, title: 'An institution', text: 'School, university or company' },
+]
 
 </script>
 
@@ -64,8 +68,30 @@ const { initiateGoogleAuth } = useGoogleAuth()
             </div>
 
             <div class="grid gap-6">
+                <!-- Account type: just me (Free or Pro) or an institution -->
+                <fieldset class="grid gap-2">
+                    <legend class="mb-2 text-sm font-medium text-foreground">Account for</legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button v-for="t in accountTypes" :key="t.value" type="button" :aria-pressed="Form.account_type === t.value"
+                            class="rounded-xl border p-3 text-left transition-colors"
+                            :class="Form.account_type === t.value ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-input hover:bg-muted/50'"
+                            @click="Form.account_type = t.value">
+                            <span class="block text-sm font-semibold text-foreground">{{ t.title }}</span>
+                            <span class="mt-0.5 block text-xs text-muted-foreground">{{ t.text }}</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-muted-foreground">{{ Form.account_type === 'personal'
+                        ? 'You start on Free: create and publish courses, learn anything. Pro adds more courses and more AI.'
+                        : 'You become the owner: add lecturers and students by email, like an organisation. Everyone keeps their own account.' }}</p>
+                </fieldset>
+                <div v-if="Form.account_type === 'institution'" class="grid gap-2">
+                    <Label class="text-sm font-medium text-foreground" for="institution_name">Institution name</Label>
+                    <Input id="institution_name" type="text" maxlength="255" v-model="Form.institution_name" placeholder="e.g. University of Rwanda, School of ICT"
+                        class="w-full border border-input bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                    <InputError :message="Form.errors.institution_name" />
+                </div>
                 <div class="grid gap-2">
-                    <Label class="text-sm font-medium text-foreground" for="name">Name</Label>
+                    <Label class="text-sm font-medium text-foreground" for="name">{{ Form.account_type === 'institution' ? 'Your name' : 'Name' }}</Label>
                     <Input
                         id="name"
                         type="text"

@@ -229,7 +229,7 @@ const complete = async () => {
               <Button v-if="!finalScreen" size="lg" @click="go(step + 1)">Next</Button>
               <NuxtLink v-else-if="courseDone" :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>
               <NuxtLink v-else-if="!isCreator && !unit.completed && unit.test?.enabled && !unit.test?.passed" :to="`/learn/${courseId}/test/${unit.id}`">
-                <Button size="lg">Take the unit test</Button>
+                <Button size="lg">Take the quiz</Button>
               </NuxtLink>
               <Button v-else-if="!isCreator && !unit.completed" size="lg" :disabled="completing" @click="complete">
                 {{ completing ? 'Saving…' : slidesUnit ? 'Finish unit' : 'Mark as done' }}

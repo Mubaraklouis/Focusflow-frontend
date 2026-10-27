@@ -2,6 +2,9 @@
 import { useAuth } from '~/composables/Auth/useAuth'
 
 const Form = ref({
+  // personal (free; Pro later) or institution (the new account owns it)
+  account_type: 'personal' as 'personal' | 'institution',
+  institution_name: '',
   name: '',
   email: '',
   password: '',
@@ -12,13 +15,20 @@ const Form = ref({
     email: '',
     password: '',
     password_confirmation: '',
+    institution_name: '',
     general: '',
   } as Record<string, string>,
 });
 
 const submit = async () => {
   Form.value.processing = true;
-  Form.value.errors = { name: '', email: '', password: '', password_confirmation: '', general: '' };
+  Form.value.errors = { name: '', email: '', password: '', password_confirmation: '', institution_name: '', general: '' };
+  const institution = Form.value.account_type === 'institution' ? Form.value.institution_name.trim() : ''
+  if (Form.value.account_type === 'institution' && !institution) {
+    Form.value.errors.institution_name = 'Give your institution a name.'
+    Form.value.processing = false
+    return
+  }
 
   try {
     console.log('Submitting registration...')
@@ -35,6 +45,18 @@ const submit = async () => {
     // Set authenticated state before redirecting
     const { setAuthenticated } = useAuth()
     setAuthenticated(true)
+
+    // An institution account: the new user creates it and becomes its owner
+    if (institution) {
+      try {
+        const res = await $fetch<{ data: { id: number } }>('/api/learn/institutions', { method: 'POST', body: { name: institution } })
+        await navigateTo(`/institutions/${res.data.id}`, { external: true })
+        return
+      } catch {
+        await navigateTo('/institutions', { external: true }) // create it there
+        return
+      }
+    }
 
     // Redirect to dashboard after successful registration
     await navigateTo(nextPath(), { external: true });
