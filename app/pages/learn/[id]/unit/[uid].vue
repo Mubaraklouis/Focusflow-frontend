@@ -79,6 +79,10 @@ const load = async () => {
   try {
     outline.value = await api.course(courseId)
     unit.value = await api.unit(unitId.value)
+    if (unit.value.kind === 'quiz') {
+      await navigateTo(`/learn/${courseId}/${isCreator.value ? 'quiz' : 'test'}/${unitId.value}`, { replace: true })
+      return
+    }
     decks.value = unit.value.slides?.length ? await api.unitPages(unitId.value) : []
   } catch (e: any) {
     if (e?.statusCode === 403 || e?.status === 403) locked.value = true
@@ -99,7 +103,7 @@ const complete = async () => {
       courseDone.value = true
       if (slidesUnit.value) await go(screens.value.length - 1) // the end screen appears
     }
-    else if (next.value) await navigateTo(`/learn/${courseId}/unit/${next.value.id}`)
+    else if (next.value) await navigateTo(`/learn/${courseId}/${next.value.kind === 'quiz' ? 'test' : 'unit'}/${next.value.id}`)
   } catch (e) {
     error.value = apiError(e)
   } finally {
@@ -219,10 +223,13 @@ const complete = async () => {
             <div class="ml-auto">
               <Button v-if="!finalScreen" size="lg" @click="go(step + 1)">Next</Button>
               <NuxtLink v-else-if="courseDone" :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>
+              <NuxtLink v-else-if="!isCreator && !unit.completed && unit.test?.enabled && !unit.test?.passed" :to="`/learn/${courseId}/test/${unit.id}`">
+                <Button size="lg">Take the unit test</Button>
+              </NuxtLink>
               <Button v-else-if="!isCreator && !unit.completed" size="lg" :disabled="completing" @click="complete">
                 {{ completing ? 'Saving…' : slidesUnit ? 'Finish unit' : 'Mark as done' }}
               </Button>
-              <NuxtLink v-else-if="next" :to="`/learn/${courseId}/unit/${next.id}`"><Button size="lg">Next unit</Button></NuxtLink>
+              <NuxtLink v-else-if="next" :to="next.kind === 'quiz' ? `/learn/${courseId}/${isCreator ? 'quiz' : 'test'}/${next.id}` : `/learn/${courseId}/unit/${next.id}`"><Button size="lg">Next unit</Button></NuxtLink>
               <NuxtLink v-else :to="`/learn/${courseId}`"><Button size="lg">Back to course</Button></NuxtLink>
             </div>
           </div>

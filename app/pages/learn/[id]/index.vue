@@ -32,6 +32,10 @@ watch(view, () => {
 })
 const NuxtLink = resolveComponent('NuxtLink')
 const conceptsIn = (u: Unit) => u.concept_names?.length ?? u.concepts?.length ?? 0
+// Quizzes open their test page (the creator edits them)
+const unitHref = (u: Unit) => u.kind === 'quiz'
+  ? `/learn/${courseId}/${view.value?.role === 'creator' ? 'quiz' : 'test'}/${u.id}`
+  : `/learn/${courseId}/unit/${u.id}`
 const slidesIn = (u: Unit) => (u.slides ?? []).reduce((n, r) => n + (r.count ?? r.last_page - r.first_page + 1), 0)
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 
@@ -111,13 +115,16 @@ const join = async () => {
                 <p class="text-[15px] font-medium">{{ finished ? 'Course finished' : `${learner.completed_units} of ${learner.total_units} units done` }}</p>
                 <p v-if="nextUnit" class="line-clamp-1 text-[13px] text-muted-foreground">Next: {{ nextUnit.title }}</p>
               </div>
-              <NuxtLink v-if="nextUnit" :to="`/learn/${courseId}/unit/${nextUnit.id}`">
+              <NuxtLink v-if="nextUnit" :to="unitHref(nextUnit)">
                 <Button size="lg">{{ learner.completed_units ? 'Continue' : 'Start' }}</Button>
               </NuxtLink>
             </div>
             <div class="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]" role="progressbar" :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100">
               <div class="h-full rounded-full bg-primary transition-all" :style="{ width: pct + '%' }" />
             </div>
+            <NuxtLink v-if="learner.certificate" :to="`/certificate/${learner.certificate.code}`" class="flex items-center justify-between gap-3 rounded-2xl bg-primary/10 px-4 py-3 text-[15px] font-medium text-primary">
+              <span>Your certificate is ready</span><span aria-hidden="true">›</span>
+            </NuxtLink>
           </div>
         </section>
 
@@ -131,7 +138,7 @@ const join = async () => {
           <ol v-else class="ff-group">
             <li v-for="u in shown" :key="u.id" class="ff-item">
               <component :is="view.role === 'creator' || !u.locked ? NuxtLink : 'div'"
-                :to="view.role === 'creator' || !u.locked ? `/learn/${courseId}/unit/${u.id}` : undefined"
+                :to="view.role === 'creator' || !u.locked ? unitHref(u) : undefined"
                 class="flex items-center gap-3 px-4 py-3"
                 :class="view.role === 'creator' || !u.locked ? 'transition-colors hover:bg-foreground/[0.03]' : 'opacity-50'">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[15px] font-semibold tabular-nums"

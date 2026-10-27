@@ -290,6 +290,8 @@ export interface LearnerView {
   completed_units: number
   total_units: number
   more_coming?: boolean
+  /** issued when every required unit is done (F2.6) */
+  certificate?: Certificate | null
 }
 
 export interface MyLearning {

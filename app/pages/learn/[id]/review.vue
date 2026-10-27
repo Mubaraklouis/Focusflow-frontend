@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Globe, Lock, Eye, CheckCircle2, Circle } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Pencil, Trash2, Plus, Loader2, Globe, Lock, Eye, CheckCircle2, Circle, ClipboardCheck, GraduationCap } from 'lucide-vue-next'
 import type { Unit } from '~/composables/learn/useLearn'
 import { useCourseBuilder, moved, middleStep } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
@@ -34,6 +34,25 @@ const toggleEdit = (u: Unit) => (editing.value = editing.value === u.id ? null :
 const move = (index: number, delta: number) => {
   const ids = moved(units.value.map((u) => u.id), index, delta)
   if (ids) b.run(() => b.api.reorderUnits(courseId, ids))
+}
+// ── quizzes (F2.2) ────────────────────────────────────────────────────────
+const quizTo = (u: Unit) => `/learn/${courseId}/quiz/${u.id}`
+const hasFinal = computed(() => units.value.some((u) => u.final))
+const quizLabel = (u: Unit) => {
+  const n = u.test?.questions ?? 0
+  const state = !n ? 'No questions yet' : u.test?.enabled ? 'On' : 'Off'
+  return `${u.final ? 'Final exam' : 'Quiz'} · ${plural(n, 'question')} · ${state}`
+}
+const testLabel = (u: Unit) => (u.test?.enabled ? `Test on · ${plural(u.test.questions ?? 0, 'question')}` : '')
+const pendingReviews = computed(() => units.value.reduce((n, u) => n + (u.test?.pending_reviews ?? 0), 0))
+const addQuiz = async (final = false) => {
+  const lessons = units.value.filter((u) => u.kind !== 'quiz')
+  try {
+    const res = await b.api.createQuiz(courseId, final ? { final: true } : { after_unit_id: lessons[lessons.length - 1]?.id })
+    await navigateTo(quizTo(res.data))
+  } catch (e: any) {
+    b.flash('error', e?.data?.message || 'Could not add the quiz.')
+  }
 }
 const removeUnit = (u: Unit) => confirm(`Delete the unit "${u.title}"?`) && b.run(() => b.api.deleteUnit(u.id))
 const newUnit = ref('')
@@ -96,10 +115,14 @@ const unpublish = () =>
             <li v-for="(u, i) in units" :key="u.id" class="ff-item">
               <!-- On phones the actions drop below the title, so the title stays readable -->
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-[15px] font-semibold tabular-nums text-primary">{{ i + 1 }}</span>
-                <button type="button" class="min-w-0 flex-1 basis-56 text-left" :aria-expanded="editing === u.id" @click="slidesMode ? navigateTo(`/learn/${courseId}/units`) : toggleEdit(u)">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 text-[15px] font-semibold tabular-nums text-primary">
+                  <GraduationCap v-if="u.final" class="h-[18px] w-[18px]" /><ClipboardCheck v-else-if="u.kind === 'quiz'" class="h-[18px] w-[18px]" /><template v-else>{{ i + 1 }}</template>
+                </span>
+                <button type="button" class="min-w-0 flex-1 basis-56 text-left" :aria-expanded="editing === u.id"
+                  @click="u.kind === 'quiz' ? navigateTo(quizTo(u)) : slidesMode ? navigateTo(`/learn/${courseId}/units`) : toggleEdit(u)">
                   <p class="line-clamp-2 break-words text-[15px] font-medium" :title="u.title">{{ u.title }}</p>
-                  <p v-if="slidesMode" class="truncate text-[13px] text-muted-foreground">{{ rangeLabel(u) }}</p>
+                  <p v-if="u.kind === 'quiz'" class="truncate text-[13px] text-muted-foreground">{{ quizLabel(u) }}<template v-if="u.test?.pending_reviews"> · {{ u.test.pending_reviews }} to review</template></p>
+                  <p v-else-if="slidesMode" class="truncate text-[13px] text-muted-foreground">{{ rangeLabel(u) }}<template v-if="testLabel(u)"> · {{ testLabel(u) }}</template></p>
                   <p v-else class="text-[13px] text-muted-foreground">
                     {{ plural((u.concepts ?? []).length, 'concept') }} · {{ plural((u.materials ?? []).length, 'material') }}
                   </p>
@@ -107,12 +130,14 @@ const unpublish = () =>
                 <div class="ml-auto flex shrink-0 items-center">
                   <button type="button" class="ff-icon-btn" :disabled="i === 0" :aria-label="`Move ${u.title} up`" title="Move up" @click="move(i, -1)"><ChevronUp class="h-[18px] w-[18px]" /></button>
                   <button type="button" class="ff-icon-btn" :disabled="i === units.length - 1" :aria-label="`Move ${u.title} down`" title="Move down" @click="move(i, 1)"><ChevronDown class="h-[18px] w-[18px]" /></button>
-                  <NuxtLink v-if="slidesMode" :to="`/learn/${courseId}/units`" class="ff-icon-btn" :aria-label="`Change ${u.title}`" title="Change in Units"><Pencil class="h-[18px] w-[18px]" /></NuxtLink>
+                  <NuxtLink v-if="u.kind !== 'quiz'" :to="quizTo(u)" class="ff-icon-btn" :class="u.test?.enabled ? 'text-primary' : ''" :aria-label="`Unit test for ${u.title}`" title="Unit test"><ClipboardCheck class="h-[18px] w-[18px]" /></NuxtLink>
+                  <NuxtLink v-if="u.kind === 'quiz'" :to="quizTo(u)" class="ff-icon-btn" :aria-label="`Edit ${u.title}`" title="Edit quiz"><Pencil class="h-[18px] w-[18px]" /></NuxtLink>
+                  <NuxtLink v-else-if="slidesMode" :to="`/learn/${courseId}/units`" class="ff-icon-btn" :aria-label="`Change ${u.title}`" title="Change in Units"><Pencil class="h-[18px] w-[18px]" /></NuxtLink>
                   <button v-else type="button" class="ff-icon-btn" :class="editing === u.id ? 'bg-primary/10 text-primary' : ''" :aria-label="`Edit ${u.title}`" title="Edit" @click="toggleEdit(u)"><Pencil class="h-[18px] w-[18px]" /></button>
                   <button type="button" class="ff-icon-btn hover:text-destructive" :aria-label="`Delete ${u.title}`" title="Delete" @click="removeUnit(u)"><Trash2 class="h-[18px] w-[18px]" /></button>
                 </div>
               </div>
-              <UnitEditor v-if="editing === u.id && !slidesMode" :unit="u" :materials="materials"
+              <UnitEditor v-if="editing === u.id && !slidesMode && u.kind !== 'quiz'" :unit="u" :materials="materials"
                 @changed="b.load(true)" @close="editing = null" @error="(msg) => b.flash('error', msg)"
                 @saved="editing = null; b.flash('ok', 'Unit saved.')" />
             </li>
@@ -123,6 +148,11 @@ const unpublish = () =>
             </li>
           </ol>
 
+          <div v-if="units.length" class="flex flex-wrap gap-2">
+            <Button size="lg" type="button" variant="tinted" @click="addQuiz()"><ClipboardCheck class="mr-1.5 h-4 w-4" />Add a quiz</Button>
+            <Button v-if="!hasFinal" size="lg" type="button" variant="gray" @click="addQuiz(true)"><GraduationCap class="mr-1.5 h-4 w-4" />Add final exam</Button>
+            <NuxtLink :to="`/learn/${courseId}/reviews`"><Button size="lg" type="button" variant="gray">Marks to review<template v-if="pendingReviews"> ({{ pendingReviews }})</template></Button></NuxtLink>
+          </div>
           <form v-if="!slidesMode" class="flex gap-2" @submit.prevent="addUnit">
             <Input v-model="newUnit" class="ff-field" placeholder="New unit title" maxlength="255" aria-label="New unit title" />
             <Button size="lg" type="submit" variant="tinted" :disabled="!newUnit.trim()"><Plus class="mr-1 h-4 w-4" />Add unit</Button>

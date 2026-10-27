@@ -238,19 +238,19 @@ const enable = (on: boolean) => save({ enabled: on }, on ? 'Learners can now tak
           <ul class="ff-group">
             <li class="ff-item flex items-center gap-3 px-4 py-2.5">
               <label for="s-q" class="min-w-0 flex-1 text-[15px]">Questions per attempt</label>
-              <Input id="s-q" type="number" min="1" max="50" class="ff-field w-24 text-right" :model-value="st.questions_per_test" @change="num('questions_per_test', ($event.target as HTMLInputElement).value, 1, 50)" />
+              <div class="w-24 shrink-0"><Input id="s-q" type="number" min="1" max="50" class="ff-field text-right" :model-value="st.questions_per_test" @change="num('questions_per_test', ($event.target as HTMLInputElement).value, 1, 50)" /></div>
             </li>
             <li class="ff-item flex items-center gap-3 px-4 py-2.5">
               <label for="s-p" class="min-w-0 flex-1 text-[15px]">Pass mark (%)</label>
-              <Input id="s-p" type="number" min="1" max="100" class="ff-field w-24 text-right" :model-value="st.pass_mark" @change="num('pass_mark', ($event.target as HTMLInputElement).value, 1, 100)" />
+              <div class="w-24 shrink-0"><Input id="s-p" type="number" min="1" max="100" class="ff-field text-right" :model-value="st.pass_mark" @change="num('pass_mark', ($event.target as HTMLInputElement).value, 1, 100)" /></div>
             </li>
             <li class="ff-item flex items-center gap-3 px-4 py-2.5">
               <label for="s-t" class="min-w-0 flex-1 text-[15px]">Time limit (minutes, 0 = none)</label>
-              <Input id="s-t" type="number" min="0" max="180" class="ff-field w-24 text-right" :model-value="st.time_limit_minutes" @change="num('time_limit_minutes', ($event.target as HTMLInputElement).value, 0, 180)" />
+              <div class="w-24 shrink-0"><Input id="s-t" type="number" min="0" max="180" class="ff-field text-right" :model-value="st.time_limit_minutes" @change="num('time_limit_minutes', ($event.target as HTMLInputElement).value, 0, 180)" /></div>
             </li>
             <li class="ff-item flex items-center gap-3 px-4 py-2.5">
               <label for="s-a" class="min-w-0 flex-1 text-[15px]">Attempts (0 = unlimited)</label>
-              <Input id="s-a" type="number" min="0" max="20" class="ff-field w-24 text-right" :model-value="st.max_attempts" @change="num('max_attempts', ($event.target as HTMLInputElement).value, 0, 20)" />
+              <div class="w-24 shrink-0"><Input id="s-a" type="number" min="0" max="20" class="ff-field text-right" :model-value="st.max_attempts" @change="num('max_attempts', ($event.target as HTMLInputElement).value, 0, 20)" /></div>
             </li>
             <li class="ff-item flex flex-wrap items-center gap-3 px-4 py-2.5">
               <label for="s-sa" class="min-w-0 flex-1 basis-40 text-[15px]">Show the right answers</label>
