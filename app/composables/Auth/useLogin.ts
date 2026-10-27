@@ -39,7 +39,7 @@ const submit = async () => {
 
         // Use external: true to force a full browser redirect
         // This ensures the newly set cookies are included in the HTTP request
-        await navigateTo('/dashboard', { external: true });
+        await navigateTo(nextPath(), { external: true });
     } catch (error: any) {
         console.error('Login failed:', error);
         

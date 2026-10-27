@@ -37,7 +37,7 @@ const submit = async () => {
     setAuthenticated(true)
 
     // Redirect to dashboard after successful registration
-    await navigateTo('/dashboard', { external: true });
+    await navigateTo(nextPath(), { external: true });
   } catch (error: any) {
     console.error('Registration failed in useAuthApi:', error)
     console.error('Error status:', error.statusCode)

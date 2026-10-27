@@ -134,7 +134,7 @@ useHead({
             <p class="text-center text-sm text-muted-foreground">
                 Don't have an account?
                 <TextLink
-                    href="/register"
+                    :href="$route.query.next ? `/register?next=${encodeURIComponent(String($route.query.next))}` : '/register'"
                     class="font-medium text-primary hover:text-primary/80"
                 >
                     Create account

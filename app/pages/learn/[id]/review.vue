@@ -153,6 +153,8 @@ const unpublish = () =>
             <Button size="lg" type="button" variant="tinted" @click="addQuiz()"><ClipboardCheck class="mr-1.5 h-4 w-4" />Add a quiz</Button>
             <Button v-if="!hasFinal" size="lg" type="button" variant="gray" @click="addQuiz(true)"><GraduationCap class="mr-1.5 h-4 w-4" />Add final exam</Button>
             <NuxtLink :to="`/learn/${courseId}/reviews`"><Button size="lg" type="button" variant="gray">Marks to review<template v-if="pendingReviews"> ({{ pendingReviews }})</template></Button></NuxtLink>
+            <NuxtLink :to="`/learn/${courseId}/class`"><Button size="lg" type="button" variant="gray">Class</Button></NuxtLink>
+            <NuxtLink :to="`/learn/${courseId}/results`"><Button size="lg" type="button" variant="gray">Results</Button></NuxtLink>
           </div>
           <form v-if="!slidesMode" class="flex gap-2" @submit.prevent="addUnit">
             <Input v-model="newUnit" class="ff-field" placeholder="New unit title" maxlength="255" aria-label="New unit title" />

@@ -15,7 +15,8 @@ import {
     GraduationCap,
     Users,
     BarChart3,
-    Compass
+    Compass,
+    Building2,
 } from 'lucide-vue-next';
 import { useLogout } from '~/composables/Auth/useLogout';
 import { useProfile } from '~/composables/Profile';
@@ -61,6 +62,7 @@ const navigationItems = computed<NavItem[]>(() => {
         { title: 'My Learning', icon: BookOpen, href: '/learn' },
         { title: 'Discover Courses', icon: Compass, href: '/courses' },
         { title: 'Quiz History', icon: ListTodo, href: '/quizzes' },
+        { title: 'Institutions', icon: Building2, href: '/institutions' },
     ];
 
     // Teacher-specific items

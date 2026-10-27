@@ -222,6 +222,25 @@ export interface AttemptRow {
   status: string; score_percent: number; passed: boolean; submitted_at: string | null; auto_submitted: boolean
   evidence: Record<string, number>; mark_error?: string; consistency?: string; snapshots?: number
 }
+// ── Classes and institutions (FEATURES.md M4) ──────────────────────────────
+export interface Invite { code: string; enabled: boolean }
+export interface InviteInfo { course_id: number; course_title: string; course_description: string; creator_name: string; units: number; published: boolean; enrolled: boolean; is_creator: boolean }
+export interface LearnerRow { user_id: number; name: string; email: string; enrolled_at: string; completed_units: number; total_units: number }
+export interface Institution { id: number; name: string; consent_text: string; plan: string; created_by: number; created_at: string; role?: 'admin' | 'lecturer' }
+export interface InstitutionMember { id: number; institution_id: number; email: string; user_id: number | null; role: 'admin' | 'lecturer'; name: string }
+export interface InstitutionCourse { course_id: number; title: string; lecturer: string; learners: number; results_approved_at: string | null }
+export interface InstitutionView { institution: Institution; role: 'admin' | 'lecturer'; members: InstitutionMember[]; courses: InstitutionCourse[]; consent_text: string }
+export interface RosterEntry { id: number; course_id: number; email: string; name: string; student_id: string; invited_at: string | null; joined: boolean; consented: boolean }
+export interface ClassView {
+  class: { course_id: number; institution_id: number; roster_only: boolean; results_approved_at: string | null } | null
+  institution: Institution | null; my_institutions: { id: number; name: string }[]
+  roster: RosterEntry[]; invite: Invite; consented: number
+}
+export interface ConsentState { institution: string; text: string; given: boolean }
+export interface LearnerResult { user_id: number; name: string; email: string; scores: Record<string, number | null>; weakest: string[]; overall: number | null; helped_at: string | null }
+export interface ClassResults { concepts: string[]; class_average: Record<string, number>; learners: LearnerResult[]; enrolled: number; consented: number }
+export interface HelpDraft { to: string; email: string; concepts: string[]; subject: string; body: string }
+
 export interface ImportResult { questions: Question[]; errors: { line: number; message: string }[]; saved: number }
 export interface Certificate { code: string; course_id: number; learner_name: string; course_title: string; creator_name: string; final_score?: number; issued_at: string }
 
@@ -300,6 +319,8 @@ export interface LearnerView {
   more_coming?: boolean
   /** issued when every required unit is done (F2.6) */
   certificate?: Certificate | null
+  /** institution courses ask learners for consent first (F4.4) */
+  consent?: ConsentState | null
 }
 
 export interface MyLearning {
@@ -367,6 +388,30 @@ export function useLearn() {
     explain: (aid: number, answers: string[]) => send<LearnerAttempt>('POST', `attempts/${aid}/explain`, { answers }),
     courseAttempts: (id: number, status: 'review' | 'done' | 'marking' | 'all' = 'review') => get<AttemptRow[]>(`courses/${id}/attempts`, { status }),
     reviewAttempt: (aid: number, marks: { index: number; mark: number; note?: string }[]) => send('POST', `attempts/${aid}/review`, { marks }),
+    // invite links, classes, institutions
+    invite: (id: number) => get<Invite>(`courses/${id}/invite`),
+    updateInvite: (id: number, body: { enabled?: boolean; new_code?: boolean }) => send<Invite>('PUT', `courses/${id}/invite`, body),
+    inviteInfo: (code: string) => get<InviteInfo>(`invites/${encodeURIComponent(code)}`),
+    joinByInvite: (code: string) => send<{ course_id: number }>('POST', `invites/${encodeURIComponent(code)}/join`),
+    learners: (id: number) => get<LearnerRow[]>(`courses/${id}/learners`),
+    removeLearner: (id: number, uid: number) => send('DELETE', `courses/${id}/learners/${uid}`),
+    institutions: () => get<Institution[]>('institutions'),
+    createInstitution: (name: string) => send<Institution>('POST', 'institutions', { name }),
+    institution: (iid: number) => get<InstitutionView>(`institutions/${iid}`),
+    updateInstitution: (iid: number, body: { name?: string; consent_text?: string }) => send<Institution>('PUT', `institutions/${iid}`, body),
+    addMember: (iid: number, email: string, role: 'admin' | 'lecturer') => send<InstitutionMember>('POST', `institutions/${iid}/members`, { email, role }),
+    removeMember: (iid: number, mid: number) => send('DELETE', `institutions/${iid}/members/${mid}`),
+    approveResults: (iid: number, cid: number, approved: boolean) => send('POST', `institutions/${iid}/courses/${cid}/results-access`, { approved }),
+    classView: (id: number) => get<ClassView>(`courses/${id}/class`),
+    updateClass: (id: number, body: { institution_id?: number; roster_only?: boolean }) => send('PUT', `courses/${id}/class`, body),
+    importRoster: (id: number, text: string, save: boolean) =>
+      send<{ students: { email: string; name: string; student_id: string }[]; errors: { line: number; message: string }[]; saved: number }>('POST', `courses/${id}/roster`, { text, save }),
+    removeRoster: (id: number, rid: number) => send('DELETE', `courses/${id}/roster/${rid}`),
+    inviteRoster: (id: number, all = false) => send<{ sent: number }>('POST', `courses/${id}/roster/invite`, { all }),
+    consent: (id: number, agree: boolean) => send(agree ? 'POST' : 'DELETE', `courses/${id}/consent`),
+    results: (id: number) => get<ClassResults>(`courses/${id}/results`),
+    helpDraft: (id: number, uid: number) => get<HelpDraft>(`courses/${id}/results/${uid}/help`),
+    sendHelp: (id: number, uid: number, body: { subject: string; body: string; concepts: string[] }) => send('POST', `courses/${id}/results/${uid}/help`, body),
     certificate: (code: string) => $fetch<{ data: Certificate }>(`/api/certificates/${encodeURIComponent(code)}`).then((r) => r.data),
 
     slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),

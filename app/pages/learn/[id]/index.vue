@@ -36,6 +36,17 @@ const conceptsIn = (u: Unit) => u.concept_names?.length ?? u.concepts?.length ??
 const unitHref = (u: Unit) => u.kind === 'quiz'
   ? `/learn/${courseId}/${view.value?.role === 'creator' ? 'quiz' : 'test'}/${u.id}`
   : `/learn/${courseId}/unit/${u.id}`
+const consenting = ref(false)
+const setConsent = async (agree: boolean) => {
+  if (!agree && !confirm('Stop sharing your results? Your teacher will no longer see them.')) return
+  consenting.value = true
+  try {
+    await api.consent(courseId, agree)
+    view.value = await api.course(courseId)
+  } finally {
+    consenting.value = false
+  }
+}
 const slidesIn = (u: Unit) => (u.slides ?? []).reduce((n, r) => n + (r.count ?? r.last_page - r.first_page + 1), 0)
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 
@@ -122,6 +133,18 @@ const join = async () => {
             <div class="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]" role="progressbar" :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100">
               <div class="h-full rounded-full bg-primary transition-all" :style="{ width: pct + '%' }" />
             </div>
+            <!-- Institution courses ask before results are shared (F4.4) -->
+            <div v-if="learner.consent && !learner.consent.given" class="ff-group space-y-3 p-4">
+              <p class="text-[15px] font-semibold">Share your results with {{ learner.consent.institution }}?</p>
+              <p class="whitespace-pre-line text-[13px] text-muted-foreground">{{ learner.consent.text }}</p>
+              <div class="flex flex-wrap justify-end gap-2">
+                <Button size="lg" :disabled="consenting" @click="setConsent(true)">I agree</Button>
+              </div>
+            </div>
+            <p v-else-if="learner.consent?.given" class="px-1 text-[13px] text-muted-foreground">
+              You share your results with {{ learner.consent.institution }}.
+              <button type="button" class="ml-1 text-primary underline-offset-2 hover:underline" @click="setConsent(false)">Stop sharing</button>
+            </p>
             <NuxtLink v-if="learner.certificate" :to="`/certificate/${learner.certificate.code}`" class="flex items-center justify-between gap-3 rounded-2xl bg-primary/10 px-4 py-3 text-[15px] font-medium text-primary">
               <span>Your certificate is ready</span><span aria-hidden="true">›</span>
             </NuxtLink>

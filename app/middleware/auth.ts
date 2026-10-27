@@ -72,7 +72,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
         if (isAuthenticated.value) {
             return
         }
-        return navigateTo('/login')
+        return navigateTo({ path: '/login', query: { next: to.fullPath } })
     }
 
     // On server-side, check cookies (useCookie can read httpOnly cookies on server)
@@ -85,5 +85,5 @@ export default defineNuxtRouteMiddleware((to, from) => {
     }
 
     console.log(`[auth middleware] [SERVER] User not authenticated, redirecting to /login`)
-    return navigateTo('/login')
+    return navigateTo({ path: '/login', query: { next: to.fullPath } })
 })
