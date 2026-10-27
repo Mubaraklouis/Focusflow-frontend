@@ -329,6 +329,8 @@ export interface MyLearning {
   limits: Limits
   can_create_course: boolean
   create_limit_reason: string
+  /** free, pro, or institution (Pro limits through an institution, F4.2) */
+  plan?: 'free' | 'pro' | 'institution'
   ai_allowance?: AIAllowance
   progress?: Record<string, BuildProgress | null>
   /** card image per course id (first YouTube thumbnail) */

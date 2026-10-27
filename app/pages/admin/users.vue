@@ -129,6 +129,15 @@
                       <option value="teacher">Teacher</option>
                       <option value="admin">Admin</option>
                     </select>
+                    <select
+                      :value="(user as any).plan || 'free'"
+                      aria-label="Plan"
+                      class="bg-background border border-border text-foreground text-xs rounded-md focus:ring-primary focus:border-primary px-2 py-1.5 outline-none cursor-pointer"
+                      @change="(e) => handlePlanChange(user.id, (e.target as HTMLSelectElement).value as 'free' | 'pro')"
+                    >
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                    </select>
                     <Loader2 v-if="isUpdatingRole === user.id" class="w-4 h-4 animate-spin text-primary" />
                   </div>
                 </td>
@@ -189,7 +198,18 @@ const breadcrumbs = [
 ]
 
 const { profile } = useProfile()
-const { users, isLoading, error, fetchUsers, updateUserRole } = useAdminApi()
+const { users, isLoading, error, fetchUsers, updateUserRole, updateUserPlan } = useAdminApi()
+const handlePlanChange = async (userId: number, plan: 'free' | 'pro') => {
+  try {
+    await updateUserPlan(userId, plan)
+    const user = users.value.find(u => u.id === userId)
+    if (user) (user as any).plan = plan
+    showToast(`Plan set to ${plan === 'pro' ? 'Pro' : 'Free'}`, 'success')
+  } catch {
+    showToast('Could not change the plan.', 'error')
+    loadUsers()
+  }
+}
 
 // Filters and Pagination State
 const searchQuery = ref('')

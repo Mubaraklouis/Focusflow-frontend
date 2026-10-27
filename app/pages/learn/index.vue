@@ -55,7 +55,10 @@ const statusOf = (c: { course_status: string; course_visibility: string }) =>
       <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">My learning</h1>
-          <p class="mt-1 text-[15px] text-muted-foreground">Your courses, in one place.</p>
+          <p class="mt-1 text-[15px] text-muted-foreground">
+            Your courses, in one place.
+            <span v-if="data?.plan && data.plan !== 'free'" class="ff-pill-sm ml-1 align-middle">{{ data.plan === 'pro' ? 'Pro' : 'Institution plan' }}</span>
+          </p>
         </div>
         <NuxtLink v-if="data?.can_create_course" to="/learn/new"><Button size="lg">Create a course</Button></NuxtLink>
       </header>

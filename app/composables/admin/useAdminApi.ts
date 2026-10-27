@@ -45,6 +45,10 @@ export function useAdminApi() {
     }
   }
 
+  /** Plan (F4.2): free or pro, set by admins until payments exist. */
+  const updateUserPlan = (userId: number, plan: 'free' | 'pro') =>
+    $fetch<any>(`/api/admin/users/${userId}/plan`, { method: 'PUT', body: { plan } })
+
   const updateUserRole = async (userId: number, role: string) => {
     isLoading.value = true
     error.value = null
@@ -114,6 +118,7 @@ export function useAdminApi() {
     fetchUsers,
     fetchStats,
     updateUserRole,
+    updateUserPlan,
     fetchAnalyticsOverview,
     fetchUserGrowth,
     fetchRoleDistribution
