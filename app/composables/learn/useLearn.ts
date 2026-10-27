@@ -366,6 +366,7 @@ export function useLearn() {
     slidePages: (mid: number) => get<{ material_id: number; pages: SlidePage[] }>(`materials/${mid}/pages`),
     updateSlidePage: (pid: number, body: { title?: string; hidden?: boolean; diagram?: boolean; blocks?: SlideBlock[] }) =>
       send<SlidePage>('PUT', `slide-pages/${pid}`, body),
+    suggestUnits: (mid: number) => send<{ first_slide: number; title: string }[]>('POST', `materials/${mid}/suggest-units`),
     unitPages: (uid: number) => get<UnitDeck[]>(`units/${uid}/pages`),
     setBuildMode: (id: number, mode: BuildMode) => send<LearnCourse>('PUT', `courses/${id}/build-mode`, { build_mode: mode }),
     saveSlideUnits: (id: number, units: { id?: number; title: string; material_id: number; first_page: number; last_page: number }[]) =>

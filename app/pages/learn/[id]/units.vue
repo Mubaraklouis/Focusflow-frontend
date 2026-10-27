@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Scissors, Merge, EyeOff, Shapes, Eye } from 'lucide-vue-next'
+import { Scissors, Merge, EyeOff, Shapes, Eye, Sparkles, Loader2 } from 'lucide-vue-next'
 import { apiError, type Material, type SlidePage } from '~/composables/learn/useLearn'
 import { useCourseBuilder } from '~/composables/learn/useCourseBuilder'
 import StepShell from '~/components/learn/StepShell.vue'
@@ -109,6 +109,22 @@ const useSections = (d: Deck) => {
   d.titles = fresh.titles
 }
 
+// AI suggestion (F3.5): only cuts and titles; the teacher adjusts them
+const suggesting = ref<number | null>(null)
+const suggest = async (d: Deck) => {
+  suggesting.value = d.material.id
+  try {
+    const res = await b.api.suggestUnits(d.material.id)
+    d.starts = res.data.map((c) => c.first_slide)
+    d.titles = Object.fromEntries(res.data.map((c) => [c.first_slide, c.title]))
+    b.flash('ok', 'Suggested. Move the cuts or rename units, then save.')
+  } catch (e) {
+    b.flash('error', apiError(e, 'Could not suggest units.'))
+  } finally {
+    suggesting.value = null
+  }
+}
+
 // ── save ──────────────────────────────────────────────────────────────────
 const save = async () => {
   saving.value = true
@@ -156,6 +172,9 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
             </div>
             <div class="ml-auto flex items-center gap-2">
               <button v-if="hasSections(d)" type="button" class="ff-pill-sm" @click="useSections(d)">Use sections</button>
+              <button type="button" class="ff-pill-sm inline-flex items-center gap-1" :disabled="suggesting !== null" @click="suggest(d)">
+                <Loader2 v-if="suggesting === d.material.id" class="h-3.5 w-3.5 animate-spin" /><Sparkles v-else class="h-3.5 w-3.5" />Suggest with AI
+              </button>
               <NuxtLink :to="`/learn/${courseId}/slides/${d.material.id}`" class="ff-icon-btn" :aria-label="`Preview ${d.material.title}`" title="Preview slides"><Eye class="h-[18px] w-[18px]" /></NuxtLink>
             </div>
           </div>
