@@ -1,262 +1,89 @@
-# FocusFlow - Structured Learning Platform
+# FocusFlow Web
 
-## Project Status: Beta  [FocusFlow](https://focusfllow.vercel.app/)  
-**Current Version:** 0.8.0 | **Last Updated:** February 2025  
-*This platform is currently in active development and not yet released to public users.*
+The web app for [FocusFlow](https://www.focus-flow.studio), a learning and assessment platform. Anyone can turn their own material (PDF, PowerPoint, YouTube videos, links) into a course of short units that learners finish one at a time. Lecturers and schools can add unit quizzes and final exams, invite a class, and see how each student is doing.
 
-## 📋 Table of Contents
-- [Overview](#overview)
-- [Problem Statement](#problem-statement)
-- [Solution](#solution)
-- [Core Features](#core-features)
-- [System Architecture](#system-architecture)
-- [Microservices Breakdown](#microservices-breakdown)
-- [Frontend Application](#frontend-application)
-- [DevOps & Infrastructure](#devops--infrastructure)
-- [Diagrams & Documentation](#diagrams--documentation)
-- [Development Setup](#development-setup)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+This repository is the Nuxt frontend. The backend is the Go service in [focusflow-api](https://github.com/FoucFlow/focusflow-api).
 
-## Overview
+## What you can do in the app
 
-**FocusFlow** is a structured learning platform designed to help learners, students, and professionals create and follow distraction-free learning paths. The platform provides a centralized environment where users can organize courses, track progress, and maintain focus without the distractions of traditional learning platforms.
+**As a creator**
 
-### Problem Statement
-Modern learners face constant distractions across multiple platforms, lack structured progress tracking, and struggle to maintain consistent learning routines. Existing platforms often mix social features, recommendations, and unrelated content that disrupts the "flow state" essential for deep learning.
+- Start a course and choose how to build it: **slides as written** (learners read your slides as you wrote them; the AI only suggests where units start and end) or **AI-written lessons** (the AI drafts lessons from your materials and you edit them).
+- Upload PDFs and PowerPoint files, add YouTube videos and links, and watch each material being read.
+- Cut the course into units, rename and reorder them, and fix slide pages in the page editor.
+- Write quizzes or import them from CSV, GIFT or Aiken, set the test rules, and review marks the AI suggests.
+- Publish, then share an invite link or code.
 
-### Solution
-FocusFlow provides:
-- **Structured Course Management**: Create custom learning paths with clear progression
-- **Minimalist Interface**: Distraction-free environment optimized for learning
-- **Progress Tracking**: Visual indicators and completion metrics
-- **Integrated Resources**: Attach various course materials (videos, articles, documents) to courses
-- **Cross-Platform Access**: Web and mobile applications with synchronized progress
+**As a learner**
 
-## Core Features
+- Join a course for free and study one unit at a time: slides and PDF pages with Previous and Next, or written lessons with their sources.
+- Take the quiz at the end of each unit and the final exam, then get a certificate that anyone can verify by its code.
 
-### 1. Course Management Service
-**Goal:** Create a comprehensive course feature with centralized, structured course management and progress tracking.
+**In an institution**
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| Course Creation | Create structured courses with modules and lessons | Implemented |
-| Progress Tracking | Track completion status and learning milestones | Implemented |
-| Course Organization | Categorize and filter courses by topic, difficulty, etc. | Implemented |
-| Flow State Timer | Integrated Pomodoro-style focus timer | In Progress |
+- Owners add lecturers, lecturers invite their class, students consent to sharing their results, and lecturers see results per student.
 
-**Success Metrics:**
-- **Performance:** Course creation within 30 seconds
-- **Security:** Full ownership and access control for course creators
-- **UX:** Intuitive interface with <1 minute course setup
+**As an admin**
 
-### 2. Course Material Service
-**Goal:** Enable users to attach various learning materials to their courses.
+- Manage users, plans and institutions, and see AI usage and cost per model and per user.
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| YouTube Integration | Attach videos via YouTube API | Implemented |
-| PDF/Document Upload | Upload and view learning materials | In Progress |
-| Link Management | Save external resources with preview | Implemented |
-| Material Organization | Categorize materials by type and relevance | Implemented |
+## Stack
 
-**Why This Matters:**  
-This feature directly supports our objective of creating structured learning spaces by allowing users to curate and organize all relevant materials in one place, reducing context-switching and maintaining focus.
+- [Nuxt 4](https://nuxt.com) and Vue 3 with TypeScript
+- Tailwind CSS, Radix Vue and Lucide icons
+- `pdfjs-dist` to render PDF pages, `markdown-it` for lesson text
+- Deployed on Vercel
 
-### 3. Authentication Service
-**Goal:** Secure, performant authentication for web and mobile applications.
+## How it talks to the API
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| Email/Password Auth | Traditional login with secure password handling | Implemented |
-| OAuth Integration | Social login options | Planned |
-| Password Reset | Secure password recovery flow | Implemented |
-| Session Management | JWT-based session handling with Laravel Sanctum | Implemented |
-| CSRF Protection | Full CSRF protection coverage |  Implemented |
-
-**Performance Target:** Login authentication within 100ms
-
-## System Architecture
-
-### Microservices Architecture
-
-
-## Microservices Breakdown
-
-### 1. Auth Service
-**URL:** [focusflow-auth](https://github.com/yourusername/focusflow-auth)  
-**Version:** 1.2.0  
-**Tech Stack:** Laravel 10, Laravel Sanctum, PostgreSQL, Inertia.js
-
-**Key Responsibilities:**
-- User registration and authentication
-- Session management and token handling
-- Password reset functionality
-- User profile management
-- Inertia.js integration for server-side rendering
-
-**API Endpoints:**
-
-POST /api/auth/register # Register new user
-POST /api/auth/login # User login
-POST /api/auth/logout # User logout
-POST /api/auth/forgot-password # Password reset request
-POST /api/auth/reset-password # Complete password reset
-GET /api/auth/user # Get current user data
-
-
-### 3. Course Material Service
-**Repository:** [focusflow-material](https://github.com/yourusername/focusflow-material)  
-**Version:** 1.0.8  
-**Tech Stack:** Go 1.21, Gin Web Framework, PostgreSQL, YouTube Data API v3
-
-**Key Responsibilities:**
-- YouTube video integration and metadata fetching
-- Learning material attachment and organization
-- External resource management
-- Content categorization and tagging
-- S3 file storage integration
-
-**API Endpoints:**
-
-POST /api/materials/youtube # Attach YouTube video
-POST /api/materials/upload # Upload document
-GET /api/courses/{id}/materials # Get course materials
-DELETE /api/materials/{id} # Remove material
-GET /api/materials/search # Search materials
-
-
-## Frontend Application
-
-### Nuxt.js Frontend
-**Live url:** [focusflow-frontend](https://focusfllow.vercel.app/)  
-**Version:** 1.0.3  
-**Tech Stack:** Nuxt.js 3, Vue.js 3, TypeScript, Tailwind CSS, Axios
-
-**Key Features:**
-- Server-side rendering (SSR) for optimal SEO and performance
-- Progressive Web App (PWA) capabilities
-- Responsive design for desktop and mobile
-- Real-time progress updates
-- Interactive course management interface
-- YouTube video player integration
-
-  
-## DevOps & Infrastructure
-
-### Infrastructure as Code (Terraform)
-**Repository:** [focusflow-infra](https://github.com/yourusername/focusflow-infra)  
-**Version:** 1.0.0
-
-**AWS Infrastructure Components:**
-```hcl
-# Main Infrastructure
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  # VPC configuration for microservices
-}
-
-module "ec2" {
-  source = "./modules/ec2"
-  # EC2 instances for microservices deployment
-  instance_count = 4
-  instance_type  = "t3.medium"
-}
-
-module "rds" {
-  source = "./modules/rds"
-  # PostgreSQL RDS instances
-  database_name = "focusflow_db"
-  engine_version = "14.7"
-}
-
-module "s3" {
-  source = "./modules/s3"
-  # S3 buckets for static assets and file storage
-  buckets = ["focusflow-assets", "focusflow-materials"]
-}
-
-module "elasticache" {
-  source = "./modules/elasticache"
-  # Redis cache for session and data caching
-  node_type = "cache.t3.micro"
-}
+The browser never calls the API directly. Every request goes to a Nuxt server route in `server/api/*`, and those routes call the API through one helper, `server/util/api.ts` (`apiFetch`):
 
 ```
-**CI/CD Pipeline Architecture**
+browser  ->  Nuxt server route (server/api/*)  ->  apiFetch  ->  FocusFlow API
+```
 
-**Containerization Strategy**
+- `apiFetch` forwards only the `ff_session` cookie and copies the API's `Set-Cookie` back, so the httpOnly session cookie lives on the app's own domain.
+- API errors come back with the same status and message, so forms can show field errors.
+- Large uploads go straight from the browser to the API with a short-lived signed token, because a serverless function has a small request body limit.
 
-Each service is containerized with optimized Docker configurations:
+## Layout
 
+```
+app/pages            routes: /learn (course builder and learning), /institutions,
+                     /admin, /certificate/[code], /join/[code], auth pages
+app/components       UI building blocks (components/ui) and feature components
+                     (components/learn: builder steps, slide and PDF viewers,
+                     quiz editor and import)
+app/composables      data fetching and state per feature
+server/api           proxy routes to the API
+server/util/api.ts   apiFetch
+```
 
-**Monitoring & Observability Stack**
+## Run it locally
 
-AWS CloudWatch: Centralized logging and metrics collection
+You need Node 22 and pnpm, and a running [FocusFlow API](https://github.com/FoucFlow/focusflow-api) (it can run with `AI_PROVIDER=fake`, so no AI keys are needed).
 
-Prometheus & Grafana: Custom dashboards for service metrics
-
-Health Endpoints: /health endpoints on all services
-
-Application Performance Monitoring: Structured logging with request IDs
-
-Error Tracking: Sentry integration for real-time error monitoring
-
-
-## 🔍 Monitoring & Observability Stack
-
-We utilize a robust suite of tools to ensure system health and performance:
-
-* **AWS CloudWatch:** Centralized logging and metrics collection.
-* **Prometheus & Grafana:** Custom dashboards for service metrics.
-* **Health Endpoints:** `/health` endpoints implemented on all services.
-* **Application Performance Monitoring (APM):** Structured logging with unique Request IDs for distributed tracing.
-* **Error Tracking:** Sentry integration for real-time error monitoring and alerting.
-
----
-
-## Diagrams & Documentation
-
-| # | Type | Description | Link |
-| :--- | :--- | :--- | :--- |
-| 1 | **System Architecture** | High-level overview of FocusFlow microservices, databases, and infra. | [View Diagram](https://docs/diagrams/system-architecture.png) |
-| 2 | **Component Diagram** | Detailed view of system components and internal interactions. | [View Diagram](https://docs/diagrams/component-diagram.png) |
-| 3 | **Use Case Diagram** | User interactions, actors, and functional requirements. | [View Diagram](https://docs/diagrams/use-case-diagram.png) |
-| 4 | **Sequence Diagrams** | Step-by-step logic for Course Creation, Auth Flow, and Material Attachment. | [Folder](https://docs/diagrams/) |
-| 5 | **Entity Relationship (ERD)** | Complete database schema, tables, and constraints. | [View Diagram](https://docs/diagrams/erd-diagram.png) |
-| 6 | **Deployment Architecture** | AWS layout (EC2, RDS, S3, and VPC Networking). | [View Diagram](https://docs/diagrams/deployment-architecture.png) |
-| 7 | **Infrastructure as Code** | Visual representation of Terraform-managed resources. | [View Diagram](https://docs/diagrams/terraform-infrastructure.png) |
-| 8 | **CI/CD Pipeline** | End-to-end workflow from commit to production. | [View Diagram](https://docs/diagrams/cicd-pipeline.png) |
-| 9 | **Microservices Comm.** | Communication via API Gateway and Service Discovery. | [View Diagram](https://docs/diagrams/microservices-communication.png) |
-| 10 | **Monitoring Architecture** | Setup for CloudWatch, Prometheus, and Grafana. | [View Diagram](https://docs/diagrams/monitoring-architecture.png) |
-
----
-
-##  Development Setup
-
-### Prerequisites
-Ensure you have the following versions (or higher) installed:
-* **Go 1.21+** (Backend services)
-* **PHP 8.2+** with **Composer** (Auth service)
-* **Node.js 18+** and **npm** (Nuxt.js frontend)
-* **Docker & Docker Compose** (Containerization)
-* **PostgreSQL 14+** (Primary database)
-* **Redis 7+** (Caching)
-* **AWS CLI** & **Terraform 1.5+** (Infrastructure management)
-
-### Local Development Environment
 ```bash
-# Clone all repositories
-git clone [https://github.com/yourusername/focusflow-auth.git](https://github.com/yourusername/focusflow-auth.git)
-git clone [https://github.com/yourusername/focusflow-course.git](https://github.com/yourusername/focusflow-course.git)
-git clone [https://github.com/yourusername/focusflow-material.git](https://github.com/yourusername/focusflow-material.git)
-git clone [https://github.com/yourusername/focusflow-frontend.git](https://github.com/yourusername/focusflow-frontend.git)
-git clone [https://github.com/yourusername/focusflow-infra.git](https://github.com/yourusername/focusflow-infra.git)
+pnpm install
+cp .env.example .env      # NUXT_API_URL=http://localhost:8091
+pnpm dev                  # http://localhost:3000
+```
 
-# Start development environment
-cd focusflow-infra/docker
-docker-compose -f docker-compose.dev.yml up -d 
+Build for production:
 
+```bash
+pnpm build
+pnpm preview
+```
 
+## Status
+
+FocusFlow is in early use. The course builder, quizzes, slides, institutions and plans work in production. Not built yet: reporting a course and payments.
+
+## License
+
+[GNU Affero General Public License v3.0](LICENSE). You can use, study, change and share this code. If you run a changed version for other people over a network, you must publish your changes under the same license.
+
+## Author
+
+Built by [Mobarak Kuol Louis](https://www.linkedin.com/in/mobarak-kuol-louis), Software Engineer, Kigali.

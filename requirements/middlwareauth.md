@@ -1,2 +1,0 @@
-I have created a middleware to protect the routes that are meant for authenticated users 
-i want to check if the user is authenicated allow them access the dashboard but uf not they should access the dashboard
