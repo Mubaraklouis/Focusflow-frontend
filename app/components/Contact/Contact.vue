@@ -10,7 +10,11 @@
         country: '',
         company: '',
         phone: '',
+        website: '', // hidden from people; bots fill it
     });
+
+    const sending = ref(false);
+    const status = ref<{ ok: boolean; text: string } | null>(null);
     
     // Define a reactive list of countries
     const countries = ref([
@@ -255,13 +259,20 @@
         { code: 'ZW', name: 'Zimbabwe' },
     ]);
     
-    // Simple submit handler without API calls or Inertia
-    const submit = () => {
-        // Perform local validation or logic here
-        console.log('Form Submitted locally:', form.value);
-        
-        // Optional: Reset form after "submission"
-        // form.value = { message: '', email: '', name: '', country: '', company: '', phone: '' };
+    // Sends the message through /api/contact; the API emails it to the team.
+    const submit = async () => {
+        if (sending.value) return;
+        sending.value = true;
+        status.value = null;
+        try {
+            const res = await $fetch<{ message: string }>('/api/contact', { method: 'POST', body: form.value });
+            status.value = { ok: true, text: res.message };
+            form.value = { message: '', email: '', name: '', country: '', company: '', phone: '', website: '' };
+        } catch (e: any) {
+            status.value = { ok: false, text: e?.data?.message || 'Could not send your message. Please try again.' };
+        } finally {
+            sending.value = false;
+        }
     };
     </script>
     
@@ -279,7 +290,7 @@
             <div class="ml-10 mt-2 w-40 h-1 bg-[#000000]"></div>
     
             <div class="mt-4 flex justify-between relative w-full">
-              <img class="w-20 h-32 object-cover mt-10 z-10" src="/assets/images/lightning.png" alt="">
+              <img class="w-16 h-24 object-contain mt-2 z-10" src="/assets/images/lightning.png" alt="">
               <img class="w-1/3 h-20 object-cover rounded-lg" src="/assets/images/contact-py.png" alt="">
               <img class="w-1/3 h-20 object-cover rounded-lg" src="/assets/images/contact-im.png" alt="">
             </div>
@@ -288,11 +299,11 @@
           <div class="contact-form w-[80%] mx-auto">
             <form @submit.prevent="submit">
               <div class="w-[100%] flex gap-2">
-                <input v-model="form.name" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Full Name.....">
-                <input v-model="form.email" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Email....">
+                <input v-model="form.name" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Full Name....." required>
+                <input v-model="form.email" required class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="email" placeholder="Enter Email....">
               </div>
               <div class="w-[100%] flex gap-2 mt-4">
-                <input v-model="form.company" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Company..">
+                <input v-model="form.company" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="School or organisation..">
                 <input v-model="form.phone" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Phone....">
               </div>
               <div class="w-[100%] mt-4">
@@ -301,16 +312,18 @@
                   <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
                 </select>
     
-                <input v-model="form.message" class="h-20 w-full text-bold text-xs placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white mt-4 rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Start typing..">
+                <input v-model="form.message" class="h-20 w-full text-bold text-xs placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white mt-4 rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Start typing.." required>
+                <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hidden">
               </div>
     
               <div class="mt-4 flex justify-between">
                 <div class="flex items-center">
-                  <input id="link-checkbox" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                  <label for="link-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I agree with the <a href="#" class="text-blue-600 dark:text-blue-500 hover:underline">terms and conditions</a>.</label>
+                  <input id="link-checkbox" type="checkbox" value="" required class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                  <label for="link-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I agree to be contacted by email about my message.</label>
                 </div>
-                <Button>send</Button>
+                <Button :disabled="sending">{{ sending ? 'sending...' : 'send' }}</Button>
               </div>
+              <p v-if="status" class="mt-3 text-sm" :class="status.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" role="status">{{ status.text }}</p>
             </form>
           </div>
         </section>
