@@ -58,21 +58,25 @@ const toggleMobileMenu = () => {
                 :class="{ hidden: !isMobileMenuOpen }" id="mobile-menu-2">
                 <ul class="mt-4 flex flex-col font-medium lg:mt-0 lg:flex-row lg:space-x-8">
                     <li>
-                        <a href="/#features"
+                        <a href="#features"
                             class="nav-link bg-primary text-primary-foreground block rounded py-2 pl-3 pr-4 lg:bg-transparent lg:p-0 lg:text-primary"
                             aria-current="page">Features</a>
                     </li>
                     <li>
-                        <a href="/#how"
-                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">How it works</a>
+                        <a href="#blog"
+                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Blog</a>
                     </li>
                     <li>
-                        <a href="/#classes"
-                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">For classes</a>
+                        <a href="#pricing"
+                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Pricing</a>
                     </li>
                     <li>
-                        <a href="https://github.com/FoucFlow/focusflow-api" target="_blank" rel="noopener"
-                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Open source</a>
+                        <a href="#contact"
+                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Contact</a>
+                    </li>
+                    <li>
+                        <a href="#team"
+                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Team</a>
                     </li>
                     <!-- Mobile Buttons -->
                     <li class="lg:hidden">

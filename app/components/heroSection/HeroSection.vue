@@ -7,13 +7,13 @@
           <NewFeatureBadge class="mb-8" />
           
           <h1 class="text-3xl lg:text-5xl xl:text-4xl leading-none">
-            Track Your <br>
-            <span class="font-bold">Learning Progress</span>
+            Turn Your Material Into <br>
+            <span class="font-bold">a Course People Finish</span>
           </h1>
           
           <p class="text-md lg:text-md mt-6 font-light">
-            Stay on top of your courses assignments <br>
-            quizzes and project with real world insights and productivity tools
+            Turn your slides, PDFs and videos into short units <br>
+            with quizzes, final exams and class results built in
           </p>
           
           <p class="mt-8 md:mt-12 flex gap-4">
