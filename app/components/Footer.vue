@@ -39,12 +39,9 @@
                 <div class="footer__brand">
                     <NuxtLink to="/" class="footer__mark">FocusFlow</NuxtLink>
                     <p class="footer__statement">Your own material, turned into <em>short courses</em>.</p>
-                    <p class="footer__blurb">
-                        Create a course from your slides, PDFs and videos, or join one and learn a unit at a time.
-                    </p>
                     <div class="footer__actions">
                         <NuxtLink to="/register" class="footer__cta footer__cta--primary">Create a free account</NuxtLink>
-                        <NuxtLink to="/#contact" class="footer__cta footer__cta--outline">Contact us</NuxtLink>
+                        <NuxtLink to="/login" class="footer__cta footer__cta--quiet">Sign in</NuxtLink>
                     </div>
                 </div>
 
@@ -94,7 +91,7 @@
         padding: clamp(3.5rem, 7vw, 5.5rem) 0 1.75rem;
     }
 
-    :global(.dark) .footer {
+    :global(.dark .footer) {
         --footer-bg: #0f1729;
         --footer-rule: hsl(var(--foreground) / 0.16);
         --footer-muted: hsl(var(--muted-foreground) / 0.85);
@@ -146,14 +143,6 @@
         color: var(--footer-accent);
     }
 
-    .footer__blurb {
-        margin: 0.9rem 0 0;
-        max-width: 38ch;
-        color: var(--footer-muted);
-        font-size: 0.875rem;
-        line-height: 1.75;
-    }
-
     .footer__actions {
         display: flex;
         flex-wrap: wrap;
@@ -183,13 +172,14 @@
         background: hsl(var(--primary) / 0.9);
     }
 
-    .footer__cta--outline {
-        border: 1px solid var(--footer-rule);
-        color: var(--footer-ink);
+    .footer__cta--quiet {
+        height: auto;
+        padding: 0;
+        color: var(--footer-muted);
+        font-weight: 500;
     }
 
-    .footer__cta--outline:hover {
-        border-color: var(--footer-accent);
+    .footer__cta--quiet:hover {
         color: var(--footer-accent);
     }
 

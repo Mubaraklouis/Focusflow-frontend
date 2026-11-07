@@ -25,13 +25,13 @@ const toggleMobileMenu = () => {
                 <!-- Desktop Buttons -->
                 <div class="hidden lg:flex items-center gap-5">
                     <ThemeToggle />
-                    <NuxtLink to="/register">
+                    <NuxtLink to="/login">
                         <Button variant="outline" class="button-hover">
-                            Sign Up
+                            Sign in
                         </Button>
                     </NuxtLink>
-                    <NuxtLink to="/login">
-                        <Button>Get Started</Button>
+                    <NuxtLink to="/register">
+                        <Button>Create account</Button>
                     </NuxtLink>
                 </div>
 
@@ -78,14 +78,14 @@ const toggleMobileMenu = () => {
                     <li class="lg:hidden">
                         <div class="flex flex-col gap-3 px-3 py-2">
                             <ThemeToggle />
-                            <NuxtLink to="/register">
+                            <NuxtLink to="/login">
                                 <Button variant="outline" class="w-full button-hover">
-                                    Sign Up
+                                    Sign in
                                 </Button>
                             </NuxtLink>
-                            <NuxtLink to="/login">
+                            <NuxtLink to="/register">
                                 <Button class="w-full button-hover">
-                                    Get started
+                                    Create account
                                 </Button>
                             </NuxtLink>
                         </div>

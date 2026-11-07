@@ -154,6 +154,7 @@
                                 type="text"
                                 maxlength="120"
                                 autocomplete="name"
+                                placeholder="Your name"
                                 required
                                 :aria-invalid="!!errors.name"
                             >
@@ -167,6 +168,7 @@
                                 v-model="form.email"
                                 type="email"
                                 autocomplete="email"
+                                placeholder="you@example.com"
                                 required
                                 :aria-invalid="!!errors.email"
                             >
@@ -184,6 +186,7 @@
                             type="text"
                             maxlength="120"
                             autocomplete="organization"
+                            placeholder="School or organisation"
                         >
                     </div>
 
@@ -252,7 +255,7 @@
         scroll-margin-top: 5rem;
     }
 
-    :global(.dark) .contact {
+    :global(.dark .contact) {
         --contact-card: hsl(var(--card));
         --contact-rule: hsl(var(--foreground) / 0.16);
         --contact-muted: hsl(var(--muted-foreground) / 0.85);
@@ -475,9 +478,9 @@
         transition: border-color 150ms ease, box-shadow 150ms ease;
     }
 
-    :global(.dark) .contact__field input,
-    :global(.dark) .contact__field select,
-    :global(.dark) .contact__field textarea {
+    :global(.dark .contact__field input),
+    :global(.dark .contact__field select),
+    :global(.dark .contact__field textarea) {
         background: hsl(var(--background) / 0.45);
     }
 
@@ -566,7 +569,7 @@
         color: hsl(var(--destructive));
     }
 
-    :global(.dark) .contact__status--ok {
+    :global(.dark .contact__status--ok) {
         background: hsl(150 40% 18%);
         color: hsl(150 60% 78%);
     }

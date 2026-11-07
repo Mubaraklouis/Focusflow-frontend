@@ -87,7 +87,7 @@
         scroll-margin-top: 5rem;
     }
 
-    :global(.dark) .who {
+    :global(.dark .who) {
         --who-bg: #0f1729;
         --who-rule: hsl(var(--foreground) / 0.16);
         --who-muted: hsl(var(--muted-foreground) / 0.85);
