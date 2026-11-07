@@ -1,372 +1,579 @@
 <script setup lang="ts">
     import { ref } from 'vue';
     import Button from '@/components/ui/button/Button.vue';
-    
-    // Use standard Vue ref instead of Inertia's useForm
-    const form = ref({
-        message: '',
-        email: '',
+
+    type Form = {
+        topic: string;
+        name: string;
+        email: string;
+        organisation: string;
+        message: string;
+        website: string;
+    };
+
+    const topics = [
+        { value: 'account', label: 'Help with my account' },
+        { value: 'course', label: 'A course I am taking' },
+        { value: 'institution', label: 'Institutions and classes' },
+        { value: 'bug', label: 'Report a problem' },
+        { value: 'partnership', label: 'Partnership or press' },
+        { value: 'other', label: 'Something else' },
+    ];
+
+    const faqs = [
+        {
+            q: 'How do I join a course?',
+            a: 'Open the invite link your lecturer shared. Sign in, confirm the course, and start with the first unit. Each unit opens after you finish the one before it.',
+        },
+        {
+            q: 'Can I keep my slides as they are?',
+            a: 'Yes. Choose slides as written when you create a course. FocusFlow keeps your pages in order, and the AI only suggests where each unit starts and ends.',
+        },
+        {
+            q: 'How do institutions work?',
+            a: 'An institution account adds lecturers and their classes. Lecturers invite their own students and see results for their class, while every student keeps their own account.',
+        },
+    ];
+
+    const blank = (): Form => ({
+        topic: 'account',
         name: '',
-        country: '',
-        company: '',
-        phone: '',
-        website: '', // hidden from people; bots fill it
+        email: '',
+        organisation: '',
+        message: '',
+        website: '',
     });
 
+    const form = ref<Form>(blank());
     const sending = ref(false);
     const status = ref<{ ok: boolean; text: string } | null>(null);
-    
-    // Define a reactive list of countries
-    const countries = ref([
-        { code: 'US', name: 'United States' },
-        { code: 'CA', name: 'Canada' },
-        { code: 'GB', name: 'United Kingdom' },
-        { code: 'DE', name: 'Germany' },
-        { code: 'FR', name: 'France' },
-        { code: 'AU', name: 'Australia' },
-        { code: 'IN', name: 'India' },
-        { code: 'JP', name: 'Japan' },
-        { code: 'BR', name: 'Brazil' },
-        { code: 'CN', name: 'China' },
-        { code: 'MX', name: 'Mexico' },
-        { code: 'ZA', name: 'South Africa' },
-        { code: 'KE', name: 'Kenya' },
-        { code: 'RW', name: 'Rwanda' },
-        { code: 'NG', name: 'Nigeria' },
-        { code: 'EG', name: 'Egypt' },
-        { code: 'AF', name: 'Afghanistan' },
-        { code: 'AL', name: 'Albania' },
-        { code: 'DZ', name: 'Algeria' },
-        { code: 'AS', name: 'American Samoa' },
-        { code: 'AD', name: 'Andorra' },
-        { code: 'AO', name: 'Angola' },
-        { code: 'AI', name: 'Anguilla' },
-        { code: 'AQ', name: 'Antarctica' },
-        { code: 'AR', name: 'Argentina' },
-        { code: 'AM', name: 'Armenia' },
-        { code: 'AW', name: 'Aruba' },
-        { code: 'AT', name: 'Austria' },
-        { code: 'AZ', name: 'Azerbaijan' },
-        { code: 'BS', name: 'Bahamas' },
-        { code: 'BH', name: 'Bahrain' },
-        { code: 'BD', name: 'Bangladesh' },
-        { code: 'BB', name: 'Barbados' },
-        { code: 'BY', name: 'Belarus' },
-        { code: 'BE', name: 'Belgium' },
-        { code: 'BZ', name: 'Belize' },
-        { code: 'BJ', name: 'Benin' },
-        { code: 'BM', name: 'Bermuda' },
-        { code: 'BT', name: 'Bhutan' },
-        { code: 'BO', name: 'Bolivia' },
-        { code: 'BA', name: 'Bosnia and Herzegovina' },
-        { code: 'BW', name: 'Botswana' },
-        { code: 'BN', name: 'Brunei Darussalam' },
-        { code: 'BG', name: 'Bulgaria' },
-        { code: 'BF', name: 'Burkina Faso' },
-        { code: 'BI', name: 'Burundi' },
-        { code: 'CV', name: 'Cabo Verde' },
-        { code: 'KH', name: 'Cambodia' },
-        { code: 'CM', name: 'Cameroon' },
-        { code: 'KY', name: 'Cayman Islands' },
-        { code: 'CF', name: 'Central African Republic' },
-        { code: 'TD', name: 'Chad' },
-        { code: 'CL', name: 'Chile' },
-        { code: 'CX', name: 'Christmas Island' },
-        { code: 'CC', name: 'Cocos (Keeling) Islands' },
-        { code: 'CO', name: 'Colombia' },
-        { code: 'KM', name: 'Comoros' },
-        { code: 'CD', name: 'Congo (Democratic Republic of the)' },
-        { code: 'CG', name: 'Congo (Republic of the)' },
-        { code: 'CK', name: 'Cook Islands' },
-        { code: 'CR', name: 'Costa Rica' },
-        { code: 'HR', name: 'Croatia' },
-        { code: 'CU', name: 'Cuba' },
-        { code: 'CY', name: 'Cyprus' },
-        { code: 'CZ', name: 'Czechia' },
-        { code: 'DK', name: 'Denmark' },
-        { code: 'DJ', name: 'Djibouti' },
-        { code: 'DM', name: 'Dominica' },
-        { code: 'DO', name: 'Dominican Republic' },
-        { code: 'EC', name: 'Ecuador' },
-        { code: 'SV', name: 'El Salvador' },
-        { code: 'GQ', name: 'Equatorial Guinea' },
-        { code: 'ER', name: 'Eritrea' },
-        { code: 'EE', name: 'Estonia' },
-        { code: 'ET', name: 'Ethiopia' },
-        { code: 'FK', name: 'Falkland Islands (Malvinas)' },
-        { code: 'FO', name: 'Faroe Islands' },
-        { code: 'FJ', name: 'Fiji' },
-        { code: 'FI', name: 'Finland' },
-        { code: 'GF', name: 'French Guiana' },
-        { code: 'PF', name: 'French Polynesia' },
-        { code: 'TF', name: 'French Southern Territories' },
-        { code: 'GA', name: 'Gabon' },
-        { code: 'GM', name: 'Gambia' },
-        { code: 'GE', name: 'Georgia' },
-        { code: 'GH', name: 'Ghana' },
-        { code: 'GI', name: 'Gibraltar' },
-        { code: 'GR', name: 'Greece' },
-        { code: 'GL', name: 'Greenland' },
-        { code: 'GD', name: 'Grenada' },
-        { code: 'GP', name: 'Guadeloupe' },
-        { code: 'GU', name: 'Guam' },
-        { code: 'GT', name: 'Guatemala' },
-        { code: 'GG', name: 'Guernsey' },
-        { code: 'GN', name: 'Guinea' },
-        { code: 'GW', name: 'Guinea-Bissau' },
-        { code: 'GY', name: 'Guyana' },
-        { code: 'HT', name: 'Haiti' },
-        { code: 'VA', name: 'Holy See' },
-        { code: 'HN', name: 'Honduras' },
-        { code: 'HK', name: 'Hong Kong' },
-        { code: 'HU', name: 'Hungary' },
-        { code: 'IS', name: 'Iceland' },
-        { code: 'ID', name: 'Indonesia' },
-        { code: 'IR', name: 'Iran (Islamic Republic of)' },
-        { code: 'IQ', name: 'Iraq' },
-        { code: 'IE', name: 'Ireland' },
-        { code: 'IM', name: 'Isle of Man' },
-        { code: 'IL', name: 'Israel' },
-        { code: 'IT', name: 'Italy' },
-        { code: 'JM', name: 'Jamaica' },
-        { code: 'JE', name: 'Jersey' },
-        { code: 'JO', name: 'Jordan' },
-        { code: 'KZ', name: 'Kazakhstan' },
-        { code: 'KI', name: 'Kiribati' },
-        { code: 'KP', name: 'Korea (Democratic People\'s Republic of)' },
-        { code: 'KR', name: 'Korea (Republic of)' },
-        { code: 'KW', name: 'Kuwait' },
-        { code: 'KG', name: 'Kyrgyzstan' },
-        { code: 'LA', name: 'Lao People\'s Democratic Republic' },
-        { code: 'LV', name: 'Latvia' },
-        { code: 'LB', name: 'Lebanon' },
-        { code: 'LS', name: 'Lesotho' },
-        { code: 'LR', name: 'Liberia' },
-        { code: 'LY', name: 'Libya' },
-        { code: 'LI', name: 'Liechtenstein' },
-        { code: 'LT', name: 'Lithuania' },
-        { code: 'LU', name: 'Luxembourg' },
-        { code: 'MO', name: 'Macao' },
-        { code: 'MG', name: 'Madagascar' },
-        { code: 'MW', name: 'Malawi' },
-        { code: 'MV', name: 'Maldives' },
-        { code: 'ML', name: 'Mali' },
-        { code: 'MT', name: 'Malta' },
-        { code: 'MH', name: 'Marshall Islands' },
-        { code: 'MQ', name: 'Martinique' },
-        { code: 'MR', name: 'Mauritania' },
-        { code: 'MU', name: 'Mauritius' },
-        { code: 'YT', name: 'Mayotte' },
-        { code: 'FM', name: 'Micronesia (Federated States of)' },
-        { code: 'MD', name: 'Moldova (Republic of)' },
-        { code: 'MC', name: 'Monaco' },
-        { code: 'MN', name: 'Mongolia' },
-        { code: 'ME', name: 'Montenegro' },
-        { code: 'MS', name: 'Montserrat' },
-        { code: 'MA', name: 'Morocco' },
-        { code: 'MZ', name: 'Mozambique' },
-        { code: 'MM', name: 'Myanmar' },
-        { code: 'NA', name: 'Namibia' },
-        { code: 'NR', name: 'Nauru' },
-        { code: 'NP', name: 'Nepal' },
-        { code: 'NL', name: 'Netherlands' },
-        { code: 'NC', name: 'New Caledonia' },
-        { code: 'NZ', name: 'New Zealand' },
-        { code: 'NI', name: 'Nicaragua' },
-        { code: 'NE', name: 'Niger' },
-        { code: 'NU', name: 'Niue' },
-        { code: 'NF', name: 'Norfolk Island' },
-        { code: 'MP', name: 'Northern Mariana Islands' },
-        { code: 'NO', name: 'Norway' },
-        { code: 'OM', name: 'Oman' },
-        { code: 'PK', name: 'Pakistan' },
-        { code: 'PW', name: 'Palau' },
-        { code: 'PS', name: 'Palestine, State of' },
-        { code: 'PA', name: 'Panama' },
-        { code: 'PG', name: 'Papua New Guinea' },
-        { code: 'PY', name: 'Paraguay' },
-        { code: 'PE', name: 'Peru' },
-        { code: 'PH', name: 'Philippines' },
-        { code: 'PN', name: 'Pitcairn' },
-        { code: 'PL', name: 'Poland' },
-        { code: 'PT', name: 'Portugal' },
-        { code: 'PR', name: 'Puerto Rico' },
-        { code: 'QA', name: 'Qatar' },
-        { code: 'MK', name: 'Republic of North Macedonia' },
-        { code: 'RO', name: 'Romania' },
-        { code: 'RU', name: 'Russian Federation' },
-        { code: 'RE', name: 'Réunion' },
-        { code: 'BL', name: 'Saint Barthélemy' },
-        { code: 'SH', name: 'Saint Helena, Ascension and Tristan da Cunha' },
-        { code: 'KN', name: 'Saint Kitts and Nevis' },
-        { code: 'LC', name: 'Saint Lucia' },
-        { code: 'MF', name: 'Saint Martin (French part)' },
-        { code: 'PM', name: 'Saint Pierre and Miquelon' },
-        { code: 'VC', name: 'Saint Vincent and the Grenadines' },
-        { code: 'WS', name: 'Samoa' },
-        { code: 'SM', name: 'San Marino' },
-        { code: 'ST', name: 'Sao Tome and Principe' },
-        { code: 'SA', name: 'Saudi Arabia' },
-        { code: 'SN', name: 'Senegal' },
-        { code: 'RS', name: 'Serbia' },
-        { code: 'SC', name: 'Seychelles' },
-        { code: 'SL', name: 'Sierra Leone' },
-        { code: 'SG', name: 'Singapore' },
-        { code: 'SX', name: 'Sint Maarten (Dutch part)' },
-        { code: 'SK', name: 'Slovakia' },
-        { code: 'SI', name: 'Slovenia' },
-        { code: 'SB', name: 'Solomon Islands' },
-        { code: 'SO', name: 'Somalia' },
-        { code: 'GS', name: 'South Georgia and the South Sandwich Islands' },
-        { code: 'SS', name: 'South Sudan' },
-        { code: 'ES', name: 'Spain' },
-        { code: 'LK', name: 'Sri Lanka' },
-        { code: 'SD', name: 'Sudan' },
-        { code: 'SR', name: 'Suriname' },
-        { code: 'SJ', name: 'Svalbard and Jan Mayen' },
-        { code: 'SE', name: 'Sweden' },
-        { code: 'CH', name: 'Switzerland' },
-        { code: 'SY', name: 'Syrian Arab Republic' },
-        { code: 'TW', name: 'Taiwan, Province of China' },
-        { code: 'TJ', name: 'Tajikistan' },
-        { code: 'TZ', name: 'Tanzania, United Republic of' },
-        { code: 'TH', name: 'Thailand' },
-        { code: 'TL', name: 'Timor-Leste' },
-        { code: 'TG', name: 'Togo' },
-        { code: 'TK', name: 'Tokelau' },
-        { code: 'TO', name: 'Tonga' },
-        { code: 'TT', name: 'Trinidad and Tobago' },
-        { code: 'TN', name: 'Tunisia' },
-        { code: 'TR', name: 'Turkey' },
-        { code: 'TM', name: 'Turkmenistan' },
-        { code: 'TC', name: 'Turks and Caicos Islands' },
-        { code: 'TV', name: 'Tuvalu' },
-        { code: 'UG', name: 'Uganda' },
-        { code: 'UA', name: 'Ukraine' },
-        { code: 'AE', name: 'United Arab Emirates' },
-        { code: 'UM', name: 'United States Minor Outlying Islands' },
-        { code: 'UY', name: 'Uruguay' },
-        { code: 'UZ', name: 'Uzbekistan' },
-        { code: 'VU', name: 'Vanuatu' },
-        { code: 'VE', name: 'Venezuela (Bolivarian Republic of)' },
-        { code: 'VN', name: 'Viet Nam' },
-        { code: 'VG', name: 'Virgin Islands (British)' },
-        { code: 'VI', name: 'Virgin Islands (U.S.)' },
-        { code: 'WF', name: 'Wallis and Futuna' },
-        { code: 'EH', name: 'Western Sahara' },
-        { code: 'YE', name: 'Yemen' },
-        { code: 'ZM', name: 'Zambia' },
-        { code: 'ZW', name: 'Zimbabwe' },
-    ]);
-    
-    // Sends the message through /api/contact; the API emails it to the team.
+    const errors = ref<Partial<Record<'name' | 'email' | 'message', string>>>({});
+
+    const first = (value: unknown): string => {
+        if (Array.isArray(value)) return value.length ? String(value[0]) : '';
+        return value ? String(value) : '';
+    };
+
+    const composedMessage = (): string => {
+        const label = topics.find((t) => t.value === form.value.topic)?.label ?? 'Message';
+        const lines = [`Topic: ${label}`];
+        if (form.value.topic === 'bug' && typeof window !== 'undefined') {
+            lines.push(`Page: ${window.location.href}`);
+        }
+        lines.push('', form.value.message.trim());
+        return lines.join('\n');
+    };
+
     const submit = async () => {
         if (sending.value) return;
         sending.value = true;
         status.value = null;
+        errors.value = {};
+
         try {
-            const res = await $fetch<{ message: string }>('/api/contact', { method: 'POST', body: form.value });
+            const res = await $fetch<{ message: string }>('/api/contact', {
+                method: 'POST',
+                body: {
+                    name: form.value.name.trim(),
+                    email: form.value.email.trim(),
+                    company: form.value.organisation.trim(),
+                    phone: '',
+                    country: '',
+                    message: composedMessage(),
+                    website: form.value.website,
+                },
+            });
             status.value = { ok: true, text: res.message };
-            form.value = { message: '', email: '', name: '', country: '', company: '', phone: '', website: '' };
+            form.value = blank();
         } catch (e: any) {
-            status.value = { ok: false, text: e?.data?.message || 'Could not send your message. Please try again.' };
+            const outer = e?.data;
+            const body = outer?.data ?? outer;
+            const fields = body?.errors;
+
+            if (fields && typeof fields === 'object') {
+                errors.value = {
+                    name: first(fields.name),
+                    email: first(fields.email),
+                    message: first(fields.message),
+                };
+            }
+
+            status.value = {
+                ok: false,
+                text: outer?.message || body?.message || 'Could not send your message. Please try again.',
+            };
         } finally {
             sending.value = false;
         }
     };
-    </script>
-    
-    <template>
-      <section id="contact" class="contact-section-wrapper my-10 bg-[#FFFAFA] dark:bg-gray-900">
-        <h1 class="mt-10 ml-10 mb-10 text-4xl font-extrabold text-gray-900 dark:text-white">
-          Contact
-        </h1>
-        <section class="contact-wrapper-border contact-info-wrapper relative w-[100%] mx-auto">
-          <div class="contact-connect-section connect-border p-4 bg-[#FBF2E5] dark:bg-gray-800 h-60 relative overflow-visible w-[80%] mx-auto rounded-lg shadow-md">
-            <h1 class="font-extrabold text-xl text-gray-900 dark:text-white">
-              Connect with <span class="block w-full">the founders</span>
-            </h1>
-    
-            <div class="ml-10 mt-2 w-40 h-1 bg-[#000000]"></div>
-    
-            <div class="mt-4 flex justify-between relative w-full">
-              <img class="w-16 h-24 object-contain mt-2 z-10" src="/assets/images/lightning.png" alt="">
-              <img class="w-1/3 h-20 object-cover rounded-lg" src="/assets/images/contact-py.png" alt="">
-              <img class="w-1/3 h-20 object-cover rounded-lg" src="/assets/images/contact-im.png" alt="">
-            </div>
-          </div>
-    
-          <div class="contact-form w-[80%] mx-auto">
-            <form @submit.prevent="submit">
-              <div class="w-[100%] flex gap-2">
-                <input v-model="form.name" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Full Name....." required>
-                <input v-model="form.email" required class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="email" placeholder="Enter Email....">
-              </div>
-              <div class="w-[100%] flex gap-2 mt-4">
-                <input v-model="form.company" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="School or organisation..">
-                <input v-model="form.phone" class="w-full text-bold text-sm placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Enter Phone....">
-              </div>
-              <div class="w-[100%] mt-4">
-                <select v-model="form.country" id="countries" class="bg-[#FBF2E5] dark:bg-gray-800 opacity-75 border border-[#E0D8CD] dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400">
-                  <option value="">Choose a country</option>
-                  <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
-                </select>
-    
-                <input v-model="form.message" class="h-20 w-full text-bold text-xs placeholder-gray-800 dark:placeholder-gray-400 bg-[#FBF2E5] dark:bg-gray-800 dark:text-white mt-4 rounded-lg opacity-75 p-2.5 border border-[#E0D8CD] dark:border-gray-600" type="text" placeholder="Start typing.." required>
-                <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hidden">
-              </div>
-    
-              <div class="mt-4 flex justify-between">
-                <div class="flex items-center">
-                  <input id="link-checkbox" type="checkbox" value="" required class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                  <label for="link-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I agree to be contacted by email about my message.</label>
+</script>
+
+<template>
+    <section id="contact" class="contact">
+        <div class="contact__inner">
+            <header class="contact__head">
+                <div>
+                    <p class="contact__eyebrow">Contact</p>
+                    <h2 class="contact__title">Tell us what you <em>need</em>.</h2>
                 </div>
-                <Button :disabled="sending">{{ sending ? 'sending...' : 'send' }}</Button>
-              </div>
-              <p v-if="status" class="mt-3 text-sm" :class="status.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" role="status">{{ status.text }}</p>
-            </form>
-          </div>
-        </section>
-      </section>
-    </template>
-    
-    <style>
-    /* Media query for laptop medium size screens */
-    @media screen and (min-width: 1024px) and (max-width: 1440px) {
-        .contact-section-wrapper {
-            margin-left: 200px;
-            margin-right: 200px;
+                <p class="contact__lede">
+                    Questions about an account, a class, an institution or a course? Send a message and we'll reply by email.
+                </p>
+            </header>
+
+            <div class="contact__grid">
+                <aside class="contact__aside">
+                    <p class="contact__aside-label">Before you write</p>
+
+                    <details v-for="faq in faqs" :key="faq.q">
+                        <summary>{{ faq.q }}</summary>
+                        <p>{{ faq.a }}</p>
+                    </details>
+
+                    <p class="contact__hint">
+                        Reporting a problem? Tell us the page and what you expected to happen, so we can reproduce it.
+                    </p>
+                </aside>
+
+                <form class="contact__form" @submit.prevent="submit">
+                    <div class="contact__field">
+                        <label for="contact-topic">What is this about?</label>
+                        <select id="contact-topic" v-model="form.topic">
+                            <option v-for="topic in topics" :key="topic.value" :value="topic.value">
+                                {{ topic.label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="contact__row">
+                        <div class="contact__field">
+                            <label for="contact-name">Your name</label>
+                            <input
+                                id="contact-name"
+                                v-model="form.name"
+                                type="text"
+                                maxlength="120"
+                                autocomplete="name"
+                                required
+                                :aria-invalid="!!errors.name"
+                            >
+                            <p v-if="errors.name" class="contact__error">{{ errors.name }}</p>
+                        </div>
+
+                        <div class="contact__field">
+                            <label for="contact-email">Email</label>
+                            <input
+                                id="contact-email"
+                                v-model="form.email"
+                                type="email"
+                                autocomplete="email"
+                                required
+                                :aria-invalid="!!errors.email"
+                            >
+                            <p v-if="errors.email" class="contact__error">{{ errors.email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="contact__field">
+                        <label for="contact-organisation">
+                            School or organisation <span>optional</span>
+                        </label>
+                        <input
+                            id="contact-organisation"
+                            v-model="form.organisation"
+                            type="text"
+                            maxlength="120"
+                            autocomplete="organization"
+                        >
+                    </div>
+
+                    <div class="contact__field">
+                        <label for="contact-message">Message</label>
+                        <textarea
+                            id="contact-message"
+                            v-model="form.message"
+                            rows="6"
+                            minlength="5"
+                            maxlength="5000"
+                            required
+                            placeholder="Tell us what you need help with."
+                            :aria-invalid="!!errors.message"
+                        ></textarea>
+                        <div class="contact__meta">
+                            <p v-if="errors.message" class="contact__error">{{ errors.message }}</p>
+                            <p class="contact__count" aria-hidden="true">{{ form.message.length }}/5000</p>
+                        </div>
+                    </div>
+
+                    <input
+                        v-model="form.website"
+                        type="text"
+                        name="website"
+                        tabindex="-1"
+                        autocomplete="off"
+                        aria-hidden="true"
+                        class="hidden"
+                    >
+
+                    <div class="contact__actions">
+                        <p>We use your email only to reply to this message.</p>
+                        <Button type="submit" :disabled="sending" class="contact__send">
+                            {{ sending ? 'Sending…' : 'Send message' }}
+                        </Button>
+                    </div>
+
+                    <p
+                        v-if="status"
+                        class="contact__status"
+                        :class="status.ok ? 'contact__status--ok' : 'contact__status--error'"
+                        :role="status.ok ? 'status' : 'alert'"
+                    >
+                        {{ status.text }}
+                    </p>
+                </form>
+            </div>
+        </div>
+    </section>
+</template>
+
+<style scoped>
+    .contact {
+        --contact-card: #fbf2e5;
+        --contact-ink: hsl(var(--foreground));
+        --contact-muted: hsl(var(--muted-foreground));
+        --contact-rule: hsl(var(--foreground) / 0.14);
+        --contact-accent: hsl(var(--primary));
+        --contact-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+        --contact-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+        background: hsl(var(--background));
+        color: var(--contact-ink);
+        padding: clamp(4.5rem, 8vw, 7rem) 0;
+        scroll-margin-top: 5rem;
+    }
+
+    :global(.dark) .contact {
+        --contact-card: hsl(var(--card));
+        --contact-rule: hsl(var(--foreground) / 0.16);
+        --contact-muted: hsl(var(--muted-foreground) / 0.85);
+    }
+
+    .contact__inner {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .contact__head {
+        display: grid;
+        gap: 1.75rem;
+        border-top: 1px solid var(--contact-rule);
+        padding-top: 1.75rem;
+        margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+    }
+
+    @media (min-width: 900px) {
+        .contact__head {
+            grid-template-columns: minmax(0, 1fr) 22rem;
+            align-items: end;
+            gap: 3rem;
         }
     }
-    
-    /* Media query for large size laptop screen */
-    @media screen and (min-width: 1441px) and (max-width: 1920px) {
-        .contact-section-wrapper {
-            margin-left: 200px;
-            margin-right: 200px;
-        }
-    
-        .contact-info-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-    
-        .contact-form {
-            grid-column: 2 / span 3;
+
+    .contact__eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0 0 1.25rem;
+        color: var(--contact-muted);
+        font-family: var(--contact-mono);
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+
+    .contact__eyebrow::before {
+        content: '';
+        width: 1.75rem;
+        height: 1px;
+        background: var(--contact-accent);
+    }
+
+    .contact__title {
+        margin: 0;
+        font-family: var(--contact-serif);
+        font-weight: 400;
+        font-size: clamp(2.25rem, 4.8vw, 3.25rem);
+        line-height: 1.02;
+        letter-spacing: -0.015em;
+    }
+
+    .contact__title em {
+        font-style: italic;
+        color: var(--contact-accent);
+    }
+
+    .contact__lede {
+        margin: 0;
+        max-width: 38ch;
+        color: var(--contact-muted);
+        font-size: 0.9375rem;
+        line-height: 1.7;
+    }
+
+    .contact__grid {
+        display: grid;
+        gap: 2.5rem;
+    }
+
+    @media (min-width: 960px) {
+        .contact__grid {
+            grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+            gap: 4rem;
+            align-items: start;
         }
     }
-    
-    /* Media query for tablet size and large mobile phones */
-    @media screen and (min-width: 768px) and (max-width: 1023px) {
-        .contact-form {
-            margin-top: 100px;
+
+    .contact__aside {
+        order: 1;
+    }
+
+    .contact__form {
+        order: 0;
+    }
+
+    @media (min-width: 960px) {
+        .contact__aside,
+        .contact__form {
+            order: 0;
         }
     }
-    
-    @media screen and (max-width: 768px) {
-        /* Styles for mobile devices */
-        .contact-form {
-            margin-top: 50px;
+
+    .contact__aside-label {
+        margin: 0 0 0.5rem;
+        color: var(--contact-muted);
+        font-family: var(--contact-mono);
+        font-size: 0.625rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+
+    .contact__aside details {
+        border-top: 1px solid var(--contact-rule);
+        padding: 1rem 0;
+    }
+
+    .contact__aside details:last-of-type {
+        border-bottom: 1px solid var(--contact-rule);
+    }
+
+    .contact__aside summary {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        cursor: pointer;
+        list-style: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        line-height: 1.45;
+    }
+
+    .contact__aside summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .contact__aside summary::after {
+        content: '+';
+        flex: none;
+        color: var(--contact-accent);
+        font-family: var(--contact-mono);
+        font-size: 0.8rem;
+    }
+
+    .contact__aside details[open] summary::after {
+        content: '–';
+    }
+
+    .contact__aside details p {
+        margin: 0.65rem 0 0;
+        color: var(--contact-muted);
+        font-size: 0.8125rem;
+        line-height: 1.8;
+    }
+
+    .contact__hint {
+        margin: 1.5rem 0 0;
+        color: var(--contact-muted);
+        font-size: 0.8125rem;
+        line-height: 1.75;
+    }
+
+    .contact__form {
+        background: var(--contact-card);
+        border: 1px solid var(--contact-rule);
+        border-radius: 1rem;
+        padding: clamp(1.5rem, 3vw, 2.25rem);
+    }
+
+    .contact__row {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    @media (min-width: 560px) {
+        .contact__row {
+            grid-template-columns: 1fr 1fr;
         }
     }
-    </style>
+
+    .contact__field {
+        margin-top: 1.25rem;
+    }
+
+    .contact__form > .contact__field:first-child {
+        margin-top: 0;
+    }
+
+    .contact__row .contact__field {
+        margin-top: 1.25rem;
+    }
+
+    .contact__field label {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.45rem;
+        color: var(--contact-ink);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .contact__field label span {
+        color: var(--contact-muted);
+        font-family: var(--contact-mono);
+        font-size: 0.5625rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .contact__field input,
+    .contact__field select,
+    .contact__field textarea {
+        display: block;
+        width: 100%;
+        border: 1px solid var(--contact-rule);
+        border-radius: 0.5rem;
+        background: hsl(var(--background));
+        color: var(--contact-ink);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        padding: 0.65rem 0.8rem;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    :global(.dark) .contact__field input,
+    :global(.dark) .contact__field select,
+    :global(.dark) .contact__field textarea {
+        background: hsl(var(--background) / 0.45);
+    }
+
+    .contact__field textarea {
+        resize: vertical;
+        min-height: 8.5rem;
+    }
+
+    .contact__field input::placeholder,
+    .contact__field textarea::placeholder {
+        color: hsl(var(--muted-foreground) / 0.75);
+    }
+
+    .contact__field input:focus,
+    .contact__field select:focus,
+    .contact__field textarea:focus {
+        outline: none;
+        border-color: var(--contact-accent);
+        box-shadow: 0 0 0 3px hsl(var(--primary) / 0.14);
+    }
+
+    .contact__field input[aria-invalid='true'],
+    .contact__field textarea[aria-invalid='true'] {
+        border-color: hsl(var(--destructive));
+    }
+
+    .contact__meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 0.35rem;
+    }
+
+    .contact__error {
+        margin: 0.35rem 0 0;
+        color: hsl(var(--destructive));
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .contact__count {
+        margin: 0 0 0 auto;
+        color: var(--contact-muted);
+        font-family: var(--contact-mono);
+        font-size: 0.625rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .contact__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .contact__actions p {
+        margin: 0;
+        max-width: 30ch;
+        color: var(--contact-muted);
+        font-size: 0.6875rem;
+        line-height: 1.6;
+    }
+
+    .contact__send {
+        min-width: 10rem;
+    }
+
+    .contact__status {
+        margin: 1rem 0 0;
+        border-radius: 0.5rem;
+        padding: 0.7rem 0.85rem;
+        font-size: 0.8125rem;
+        line-height: 1.5;
+    }
+
+    .contact__status--ok {
+        background: hsl(150 60% 94%);
+        color: hsl(152 60% 24%);
+    }
+
+    .contact__status--error {
+        background: hsl(var(--destructive) / 0.1);
+        color: hsl(var(--destructive));
+    }
+
+    :global(.dark) .contact__status--ok {
+        background: hsl(150 40% 18%);
+        color: hsl(150 60% 78%);
+    }
+
+    @media (max-width: 640px) {
+        .contact__inner {
+            padding: 0 1.25rem;
+        }
+    }
+</style>

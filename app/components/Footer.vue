@@ -1,84 +1,297 @@
 <script setup lang="ts">
-    // 3. Simple function to get the current year for the copyright notice
-    const currentYear = new Date().getFullYear(); 
-    </script>
-    
-    <template>
-        <footer 
-            class="border-t border-border pt-16 pb-8 px-6 md:px-8 bg-[#fff0e8] text-foreground dark:bg-muted dark:text-muted-foreground transition-colors duration-300"
-        >
-            <div class="max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-y-12 md:gap-x-8 mb-16">
-                    
-                    <div class="md:col-span-5 lg:col-span-6 max-w-md">
-                        <h3 class="text-lg font-semibold mb-2 text-foreground">Keep up to date</h3>
-                        <p class="mb-4 text-muted-foreground text-sm">Join our quarterly newsletter, "You've got mail."</p>
-                        <div class="mt-4 flex space-x-2">
-                            <input type="email" placeholder="Enter email address..."
-                                   class="flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md flex items-center justify-center font-medium hover:bg-primary/90 transition-colors text-sm h-10 shrink-0">
-                                    Subscribe
-                            </button>
-                        </div>
-                    </div>
-        
-                    <div class="hidden md:block md:col-span-1 lg:col-span-1"></div>
-        
-                    <div
-                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 col-span-1 md:col-span-6 lg:col-span-5 gap-y-8 sm:gap-x-6 md:gap-x-8">
-                        
-                        <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Company</h3>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">About</a></li>
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Careers</a></li>
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Press</a></li>
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Product</h3>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Features</a></li>
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Docs</a></li>
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Legal</h3>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a></li>
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</a></li>
-                                 <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Sitemap</a></li>
-                            </ul>
-                        </div>
+    const currentYear = new Date().getFullYear();
+
+    const apiRepo = 'https://github.com/FoucFlow/focusflow-api';
+    const webRepo = 'https://github.com/Mubaraklouis/Focusflow-frontend';
+
+    const groups = [
+        {
+            label: 'Learn',
+            links: [
+                { label: 'Browse courses', to: '/courses' },
+                { label: 'My learning', to: '/learn' },
+                { label: 'Quiz history', to: '/quizzes' },
+            ],
+        },
+        {
+            label: 'Teach',
+            links: [
+                { label: 'Create a course', to: '/learn/new' },
+                { label: 'Your courses', to: '/teacher/courses' },
+                { label: 'Institutions', to: '/institutions' },
+            ],
+        },
+        {
+            label: 'FocusFlow',
+            links: [
+                { label: 'Contact us', to: '/#contact' },
+                { label: 'Backend on GitHub', href: apiRepo },
+                { label: 'Web app on GitHub', href: webRepo },
+            ],
+        },
+    ];
+</script>
+
+<template>
+    <footer class="footer">
+        <div class="footer__inner">
+            <div class="footer__top">
+                <div class="footer__brand">
+                    <NuxtLink to="/" class="footer__mark">FocusFlow</NuxtLink>
+                    <p class="footer__statement">Your own material, turned into <em>short courses</em>.</p>
+                    <p class="footer__blurb">
+                        Create a course from your slides, PDFs and videos, or join one and learn a unit at a time.
+                    </p>
+                    <div class="footer__actions">
+                        <NuxtLink to="/register" class="footer__cta footer__cta--primary">Create a free account</NuxtLink>
+                        <NuxtLink to="/#contact" class="footer__cta footer__cta--outline">Contact us</NuxtLink>
                     </div>
                 </div>
-        
-                <div class="pt-8 border-t border-border">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <div class="flex items-center space-x-2 mb-4 md:mb-0">
-                           <span class="font-semibold text-primary text-sm mr-2">FocusFlow</span>
-                            <p class="text-xs text-muted-foreground">
-                                © **{{ currentYear }}**. All Rights Reserved.
-                            </p>
-                        </div>
-                        <div class="flex space-x-4 items-center">
-                            <a href="#" class="text-muted-foreground hover:text-primary transition-colors" aria-label="Facebook">
-                               <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg>
-                            </a>
-                            <a href="#" class="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
-                               <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                            </a>
-                            <a href="#" class="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.354-.2 6.782-2.618 6.782-6.98.059-1.28.073-1.689.073-4.947s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.689-.073-4.948-.073zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                            </a>
-                             <a href="#" class="text-muted-foreground hover:text-primary transition-colors" aria-label="X / Twitter">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            </a>
-                        </div>
+
+                <nav class="footer__links" aria-label="Footer">
+                    <div v-for="group in groups" :key="group.label" class="footer__group">
+                        <p class="footer__group-label">{{ group.label }}</p>
+                        <ul>
+                            <li v-for="link in group.links" :key="link.label">
+                                <NuxtLink v-if="link.to" :to="link.to">{{ link.label }}</NuxtLink>
+                                <a v-else :href="link.href" target="_blank" rel="noopener noreferrer">
+                                    {{ link.label }}<span class="footer__external" aria-hidden="true">↗</span>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
+                </nav>
+            </div>
+
+            <div class="footer__bottom">
+                <p>© {{ currentYear }} FocusFlow. All rights reserved.</p>
+                <div class="footer__meta">
+                    <a :href="`${apiRepo}/blob/main/LICENSE`" target="_blank" rel="noopener noreferrer">Open source · AGPL-3.0</a>
+                    <a :href="webRepo" target="_blank" rel="noopener noreferrer" class="footer__github" aria-label="FocusFlow on GitHub">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                    </a>
                 </div>
             </div>
-        </footer>
-    </template>
+        </div>
+    </footer>
+</template>
+
+<style scoped>
+    .footer {
+        --footer-bg: #fbf2e5;
+        --footer-ink: hsl(var(--foreground));
+        --footer-muted: hsl(var(--muted-foreground));
+        --footer-rule: hsl(var(--foreground) / 0.14);
+        --footer-accent: hsl(var(--primary));
+        --footer-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+        --footer-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+        background: var(--footer-bg);
+        color: var(--footer-ink);
+        border-top: 1px solid var(--footer-rule);
+        padding: clamp(3.5rem, 7vw, 5.5rem) 0 1.75rem;
+    }
+
+    :global(.dark) .footer {
+        --footer-bg: #0f1729;
+        --footer-rule: hsl(var(--foreground) / 0.16);
+        --footer-muted: hsl(var(--muted-foreground) / 0.85);
+    }
+
+    .footer__inner {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .footer__top {
+        display: grid;
+        gap: 3.5rem;
+    }
+
+    @media (min-width: 960px) {
+        .footer__top {
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.35fr);
+            gap: 5rem;
+        }
+    }
+
+    .footer__brand {
+        max-width: 30rem;
+    }
+
+    .footer__mark {
+        display: inline-block;
+        font-family: var(--footer-serif);
+        font-size: 1.75rem;
+        line-height: 1;
+        letter-spacing: -0.01em;
+        color: var(--footer-ink);
+        text-decoration: none;
+    }
+
+    .footer__statement {
+        margin: 1.5rem 0 0;
+        font-family: var(--footer-serif);
+        font-weight: 400;
+        font-size: clamp(1.6rem, 3vw, 2.15rem);
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+    }
+
+    .footer__statement em {
+        font-style: italic;
+        color: var(--footer-accent);
+    }
+
+    .footer__blurb {
+        margin: 0.9rem 0 0;
+        max-width: 38ch;
+        color: var(--footer-muted);
+        font-size: 0.875rem;
+        line-height: 1.75;
+    }
+
+    .footer__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+
+    .footer__cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 2.5rem;
+        padding: 0 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+
+    .footer__cta--primary {
+        background: var(--footer-accent);
+        color: hsl(var(--primary-foreground));
+    }
+
+    .footer__cta--primary:hover {
+        background: hsl(var(--primary) / 0.9);
+    }
+
+    .footer__cta--outline {
+        border: 1px solid var(--footer-rule);
+        color: var(--footer-ink);
+    }
+
+    .footer__cta--outline:hover {
+        border-color: var(--footer-accent);
+        color: var(--footer-accent);
+    }
+
+    .footer__links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2.25rem 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+        .footer__links {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    .footer__group-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0 0 1.1rem;
+        color: var(--footer-muted);
+        font-family: var(--footer-mono);
+        font-size: 0.625rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .footer__group-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--footer-rule);
+    }
+
+    .footer__links ul {
+        display: grid;
+        gap: 0.65rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .footer__links a {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        color: var(--footer-ink);
+        font-size: 0.8125rem;
+        line-height: 1.4;
+        text-decoration: none;
+        transition: color 150ms ease;
+    }
+
+    .footer__links a:hover {
+        color: var(--footer-accent);
+    }
+
+    .footer__external {
+        color: var(--footer-muted);
+        font-family: var(--footer-mono);
+        font-size: 0.625rem;
+    }
+
+    .footer__bottom {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: clamp(3rem, 6vw, 4.5rem);
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--footer-rule);
+        color: var(--footer-muted);
+        font-size: 0.75rem;
+    }
+
+    .footer__meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .footer__meta a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 150ms ease;
+    }
+
+    .footer__meta a:hover {
+        color: var(--footer-accent);
+    }
+
+    .footer__github {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    @media (max-width: 640px) {
+        .footer__inner {
+            padding: 0 1.25rem;
+        }
+    }
+</style>
