@@ -67,10 +67,6 @@ const toggleMobileMenu = () => {
                             class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Blog</a>
                     </li>
                     <li>
-                        <a href="#pricing"
-                            class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Pricing</a>
-                    </li>
-                    <li>
                         <a href="#contact"
                             class="nav-link block border-b border-border py-2 pl-3 pr-4 text-foreground lg:border-0 lg:p-0">Contact</a>
                     </li>

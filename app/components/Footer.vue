@@ -40,7 +40,6 @@
                             <h3 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Product</h3>
                             <ul class="space-y-2">
                                 <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Features</a></li>
-                                <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Pricing</a></li>
                                 <li><a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">Docs</a></li>
                             </ul>
                         </div>
