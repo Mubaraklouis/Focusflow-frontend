@@ -14,6 +14,8 @@ import useGoogleAuth from '~/composables/Auth/useGoogleAuth';
 
 const {form,submit,status} = await useLogin()
 const { initiateGoogleAuth } = useGoogleAuth()
+const route = useRoute()
+const authError = computed(() => typeof route.query.error === 'string' ? route.query.error : '')
 
 useHead({
     title: 'Log in',
@@ -25,6 +27,10 @@ useHead({
         description="Continue your learning journey"
         variant="card"
     >
+        <div v-if="authError" class="mb-6 rounded-lg border border-red-200 bg-red-100 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
+            {{ authError }}
+        </div>
+
         <!-- Social Log-in Buttons -->
         <div class="flex flex-col gap-3 mb-8">
             <Button 
