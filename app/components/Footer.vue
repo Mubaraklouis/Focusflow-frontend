@@ -10,7 +10,7 @@
             links: [
                 { label: 'Browse courses', to: '/courses' },
                 { label: 'My learning', to: '/learn' },
-                { label: 'Quiz history', to: '/quizzes' },
+                { label: 'Quizzes', to: '/quizzes' },
             ],
         },
         {

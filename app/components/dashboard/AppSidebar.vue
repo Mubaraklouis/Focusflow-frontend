@@ -60,7 +60,7 @@ const navigationItems = computed<NavItem[]>(() => {
         { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
         { title: 'My Learning', icon: BookOpen, href: '/learn' },
         { title: 'Discover Courses', icon: Compass, href: '/courses' },
-        { title: 'Quiz History', icon: ListTodo, href: '/quizzes' },
+        { title: 'Quizzes', icon: ListTodo, href: '/quizzes' },
         { title: 'Institutions', icon: Building2, href: '/institutions' },
     ];
 
