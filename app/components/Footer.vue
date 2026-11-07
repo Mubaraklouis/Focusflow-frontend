@@ -17,7 +17,7 @@
             label: 'Teach',
             links: [
                 { label: 'Create a course', to: '/learn/new' },
-                { label: 'Your courses', to: '/teacher/courses' },
+                { label: 'Your courses', to: '/learn' },
                 { label: 'Institutions', to: '/institutions' },
             ],
         },

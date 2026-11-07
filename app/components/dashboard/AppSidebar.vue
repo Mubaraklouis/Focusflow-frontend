@@ -12,7 +12,6 @@ import {
     PanelLeftOpen,
     ChevronRight,
     Shield,
-    GraduationCap,
     Users,
     BarChart3,
     Compass,
@@ -64,13 +63,6 @@ const navigationItems = computed<NavItem[]>(() => {
         { title: 'Quiz History', icon: ListTodo, href: '/quizzes' },
         { title: 'Institutions', icon: Building2, href: '/institutions' },
     ];
-
-    // Teacher-specific items
-    if (userRole.value === 'teacher' || userRole.value === 'admin') {
-        items.push(
-            { title: 'My Teaching', icon: GraduationCap, href: '/teacher/courses' },
-        );
-    }
 
     // Admin-specific items
     if (userRole.value === 'admin') {

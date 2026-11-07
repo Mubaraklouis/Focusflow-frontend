@@ -351,6 +351,53 @@ export interface Category {
   description: string
 }
 
+/** One test in a course the learner joined (GET /api/learn/quizzes). */
+export interface QuizRow {
+  course_id: number
+  course_title: string
+  unit_id: number
+  unit_title: string
+  questions: number
+  pass_mark: number
+  attempts_used: number
+  max_attempts: number
+  best_score: number | null
+  passed: boolean
+  last_attempt_id: number | null
+  can_start: boolean
+  reason?: string
+  locked: boolean
+}
+
+/** One attempt the learner made, with its score and where the feedback is. */
+export interface QuizAttemptRow {
+  id: number
+  course_id: number
+  course_title: string
+  unit_id: number
+  unit_title: string
+  number: number
+  status: 'in_progress' | 'marking' | 'review' | 'done'
+  score_percent: number
+  passed: boolean
+  started_at: string
+  submitted_at: string | null
+  auto_submitted: boolean
+  feedback_count: number
+}
+
+export interface MyQuizzes {
+  quizzes: QuizRow[]
+  attempts: QuizAttemptRow[]
+  stats: { available: number; attempts: number; average_score: number; passed: number }
+}
+
+export interface BrowseParams {
+  q?: string
+  category?: number | null
+  sort?: 'newest' | 'popular'
+}
+
 /** The API's message from a failed $fetch, for showing to the user. */
 export function apiError(e: any, fallback = 'Something went wrong. Please try again.'): string {
   return e?.data?.data?.message || e?.data?.message || e?.data?.data?.error || e?.message || fallback
@@ -364,8 +411,14 @@ export function useLearn() {
 
   return {
     me: () => get<MyLearning>('me'),
-    browse: (q?: string) => get<(LearnCourse & { units: number; learners: number; cover?: string })[]>('browse', q ? { q } : undefined),
+    browse: (params: BrowseParams = {}) =>
+      get<(LearnCourse & { units: number; learners: number; cover?: string })[]>('browse', {
+        q: params.q || undefined,
+        category: params.category || undefined,
+        sort: params.sort && params.sort !== 'newest' ? params.sort : undefined,
+      }),
     categories: () => get<Category[]>('categories'),
+    quizzes: () => get<MyQuizzes>('quizzes'),
     course: (id: number) => get<CreatorView | LearnerView>(`courses/${id}`),
     unit: (uid: number) => get<Unit>(`units/${uid}`),
 

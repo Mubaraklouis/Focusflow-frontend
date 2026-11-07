@@ -39,13 +39,19 @@ const breadcrumbs = computed(() => [
   { title: info.value?.unit.title || 'Test', href: route.path, current: true },
 ])
 
-const load = async () => {
+const load = async (openQuery = true) => {
   error.value = ''
   try {
     const [t, o] = await Promise.all([api.test(unitId), api.course(courseId)])
     if (t.role === 'creator') return navigateTo(`/learn/${courseId}/quiz/${unitId}`, { replace: true })
     info.value = t
     if (o.role === 'learner') outline.value = o
+    // A link from the quizzes page names the attempt it wants to show.
+    const wanted = openQuery ? Number(route.query.attempt) : NaN
+    if (Number.isFinite(wanted) && wanted > 0 && t.attempts.some((a) => a.id === wanted)) {
+      await openAttempt(wanted)
+      return
+    }
     const open = t.in_progress_attempt_id ?? (t.attempts[0] && t.attempts[0].status !== 'done' ? t.attempts[0].id : null)
     if (open) await openAttempt(open)
   } catch (e: any) {
@@ -303,7 +309,7 @@ const needsReplies = computed(() => attempt.value?.status === 'explain' && !!att
 
 const tryAgain = () => {
   attempt.value = null
-  load()
+  load(false)
 }
 const dateText = (iso: string | null) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '')
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`

@@ -1,208 +1,194 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useHead } from '#imports';
-import { Button } from '@/components/ui/button';
-import {
-  ArrowRight,
-  BookOpenCheck,
-  CheckCircle2,
-  Loader2,
-  Trophy,
-  XCircle,
-} from 'lucide-vue-next';
-import { useProfile } from '~/composables/Profile';
-import type { QuizAttempt } from '~/interfaces/lesson-quiz';
+import { computed, onMounted, ref } from 'vue'
+import { useHead } from '#imports'
+import { Button } from '@/components/ui/button'
+import { ArrowRight, Award, BookOpenCheck, CheckCircle2, Loader2, RefreshCw, Trophy } from 'lucide-vue-next'
+import { useLearn, apiError, type MyQuizzes, type QuizAttemptRow, type QuizRow } from '~/composables/learn/useLearn'
+import StatCard from '~/components/dashboard/StatCard.vue'
 
-/**
- * @module pages/quizzes
- * Quiz-history feed. Lists every attempt the learner has submitted, newest
- * first. Each row links to the existing `/courses/quiz/[attemptId]`
- * results page (which also exposes the retake button).
- */
-
-useHead({ title: 'Quiz history · FocusFlow' });
-definePageMeta({
-  layout: false,
-  middleware: ['auth'],
-});
+// Quizzes: what you can take in the courses you joined, and every attempt
+// with its score and feedback. Results open on the quiz page with that
+// attempt loaded, so the whole breakdown is in one place.
+useHead({ title: 'Quizzes · FocusFlow' })
+definePageMeta({ layout: false, middleware: ['auth'] })
 
 const breadcrumbs = [
   { title: 'Home', href: '/' },
-  { title: 'Quiz history', href: '/quizzes', current: true },
-];
+  { title: 'Quizzes', href: '/quizzes', current: true },
+]
 
-const { profile } = useProfile();
-const attempts = ref<QuizAttempt[]>([]);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
-
-const userId = computed<number | null>(() => {
-  const id = profile.value?.id;
-  if (typeof id === 'number') return id;
-  if (typeof id === 'string' && id && !isNaN(Number(id))) return Number(id);
-  return null;
-});
+const api = useLearn()
+const data = ref<MyQuizzes | null>(null)
+const loading = ref(true)
+const error = ref('')
 
 const load = async () => {
-  if (!userId.value) {
-    isLoading.value = false;
-    return;
-  }
-  isLoading.value = true;
-  error.value = null;
+  loading.value = true
+  error.value = ''
   try {
-    const response = await $fetch<{ data: QuizAttempt[] }>('/api/quiz-attempts', {
-      params: { user_id: userId.value, limit: 50 },
-    });
-    attempts.value = Array.isArray(response?.data) ? response.data : [];
-  } catch (err: any) {
-    error.value = err?.data?.message || err?.message || 'Failed to load history.';
+    data.value = await api.quizzes()
+  } catch (e) {
+    error.value = apiError(e)
   } finally {
-    isLoading.value = false;
+    loading.value = false
   }
-};
+}
+onMounted(load)
 
-onMounted(() => {
-  // Wait for the profile composable to hydrate so we know userId.
-  const interval = setInterval(() => {
-    if (userId.value) {
-      clearInterval(interval);
-      load();
-    }
-  }, 50);
-  // Don't loop forever if the profile is genuinely empty.
-  setTimeout(() => clearInterval(interval), 3_000);
-});
+const quizzes = computed(() => data.value?.quizzes ?? [])
+const attempts = computed(() => data.value?.attempts ?? [])
+const stats = computed(() => data.value?.stats)
+const open = computed(() => quizzes.value.filter((q) => !q.locked && !q.passed))
 
-const tone = (score: number) => {
-  if (score >= 85) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 50) return 'text-primary';
-  return 'text-destructive';
-};
-const Icon = (status: QuizAttempt['status'], score: number) => {
-  if (status === 'evaluating') return Loader2;
-  if (status === 'failed') return XCircle;
-  if (score >= 85) return Trophy;
-  if (score >= 50) return BookOpenCheck;
-  return CheckCircle2;
-};
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+const quizHref = (q: QuizRow) => `/learn/${q.course_id}/test/${q.unit_id}`
+const attemptHref = (a: QuizAttemptRow) => `/learn/${a.course_id}/test/${a.unit_id}?attempt=${a.id}`
+
+const quizAction = (q: QuizRow) => {
+  if (q.locked) return 'Locked'
+  if (q.passed) return 'Review'
+  if (q.can_start) return q.attempts_used ? 'Try again' : 'Start'
+  return 'View'
+}
+
+const scoreTone = (score: number) => {
+  if (score >= 85) return 'text-emerald-600 dark:text-emerald-400'
+  if (score >= 50) return 'text-primary'
+  return 'text-destructive'
+}
+
+const statusLabel = (a: QuizAttemptRow) => {
+  if (a.status === 'done') return a.passed ? 'Passed' : 'Not passed'
+  if (a.status === 'review') return 'With your teacher'
+  if (a.status === 'marking') return 'Being marked'
+  return 'In progress'
+}
+
+const formatDate = (iso: string | null) =>
+  iso
+    ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : ''
+
+const meta = (q: QuizRow) => {
+  const parts = [`${q.questions} question${q.questions === 1 ? '' : 's'}`, `pass ${q.pass_mark}%`]
+  parts.push(q.max_attempts ? `${q.attempts_used} of ${q.max_attempts} attempts used` : `${q.attempts_used} attempt${q.attempts_used === 1 ? '' : 's'}, unlimited`)
+  return parts.join(' · ')
+}
 </script>
 
 <template>
   <NuxtLayout name="app-layout" :breadcrumbs="breadcrumbs">
-    <div class="container mx-auto max-w-3xl px-4 py-6">
-      <header class="mb-6 flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Quiz history
-          </p>
-          <h1 class="mt-0.5 text-2xl font-semibold leading-tight text-foreground">
-            Your past quizzes
-          </h1>
-          <p class="mt-1 max-w-prose text-sm text-muted-foreground">
-            Every attempt you've submitted, newest first. Click a row to see the
-            full breakdown — including correct answers and feedback — and
-            re-take from there.
-          </p>
+    <div class="mx-auto max-w-5xl px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">Quizzes</h1>
+          <p class="mt-1 text-[15px] text-muted-foreground">What you can take, what you have done, and what to fix.</p>
         </div>
+        <Button variant="gray" size="lg" class="gap-1.5" :disabled="loading" @click="load">
+          <RefreshCw class="h-4 w-4" :class="loading ? 'animate-spin' : ''" />
+          Refresh
+        </Button>
       </header>
 
-      <div
-        v-if="isLoading"
-        class="rounded-xl bg-card p-8 text-center text-sm text-muted-foreground"
-      >
-        <Loader2 class="mx-auto h-5 w-5 animate-spin text-primary" />
-        <p class="mt-3">Loading your history…</p>
-      </div>
-
-      <div
-        v-else-if="error"
-        class="rounded-xl bg-destructive/5 p-6 text-sm text-destructive"
-      >
-        {{ error }}
-      </div>
-
-      <div
-        v-else-if="attempts.length === 0"
-        class="rounded-xl bg-card p-12 text-center"
-      >
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <BookOpenCheck class="h-5 w-5 text-muted-foreground" />
+      <div v-if="loading && !data" class="space-y-6" aria-busy="true">
+        <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div v-for="i in 4" :key="i" class="h-28 animate-pulse rounded-2xl bg-muted" />
         </div>
-        <h2 class="mt-4 text-base font-semibold text-card-foreground">No quizzes yet</h2>
-        <p class="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground">
-          Finish a lesson and submit your first quiz — it'll show up here.
-        </p>
-        <NuxtLink to="/courses" class="mt-5 inline-block">
-          <Button class="gap-2">
-            Browse courses
-            <ArrowRight class="h-4 w-4" />
-          </Button>
-        </NuxtLink>
+        <div class="h-40 animate-pulse rounded-2xl bg-muted" />
+        <div class="h-56 animate-pulse rounded-2xl bg-muted" />
       </div>
 
-      <ol v-else class="space-y-2">
-        <li v-for="a in attempts" :key="a.id">
-          <NuxtLink
-            :to="`/courses/quiz/${a.id}`"
-            class="group flex items-center gap-3 rounded-xl bg-card p-4 ring-1 ring-border shadow-sm transition-all hover:-translate-y-px hover:shadow"
-          >
-            <span
-              class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted/60"
-              :class="tone(a.total_score)"
-            >
-              <component
-                :is="Icon(a.status, a.total_score)"
-                class="h-4 w-4"
-                :class="a.status === 'evaluating' ? 'animate-spin' : ''"
-              />
-            </span>
+      <div v-else-if="error" class="flex flex-wrap items-center gap-3 rounded-2xl bg-destructive/10 p-4 text-[15px] text-destructive">
+        <span>{{ error }}</span>
+        <Button variant="gray" size="lg" @click="load">Try again</Button>
+      </div>
 
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-medium text-card-foreground">
-                {{ a.lesson_title || `Lesson ${a.video_id}` }}
-              </p>
-              <p class="mt-0.5 text-xs text-muted-foreground">
-                <span
-                  v-if="a.set_number && a.set_number > 1"
-                  class="mr-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-                >
-                  Set {{ a.set_number }}
+      <template v-else>
+        <section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard label="Available" :value="stats?.available ?? 0" hint="In your courses" :icon="BookOpenCheck" tone="text-primary" />
+          <StatCard label="Finished" :value="stats?.attempts ?? 0" hint="Submitted" :icon="CheckCircle2" tone="text-emerald-600 dark:text-emerald-400" />
+          <StatCard label="Average" :value="`${Math.round(stats?.average_score ?? 0)}%`" hint="Across results" :icon="Trophy" :tone="stats?.attempts ? scoreTone(stats.average_score) : 'text-muted-foreground'" />
+          <StatCard label="Passed" :value="stats?.passed ?? 0" hint="Different quizzes" :icon="Award" tone="text-amber-600 dark:text-amber-400" />
+        </section>
+
+        <!-- Open quizzes -->
+        <section class="mt-10">
+          <div class="mb-3 flex items-baseline justify-between gap-3 px-1">
+            <h2 class="text-[17px] font-semibold">Ready to take</h2>
+            <span class="text-[13px] text-muted-foreground">{{ open.length }} open</span>
+          </div>
+
+          <div v-if="!quizzes.length" class="ff-group p-6">
+            <p class="text-[15px] text-muted-foreground">
+              There are no quizzes in the courses you have joined yet. When a course creator adds a test, it shows up here.
+            </p>
+            <NuxtLink to="/courses" class="mt-3 inline-block"><Button size="lg" variant="tinted">Discover courses</Button></NuxtLink>
+          </div>
+
+          <ul v-else class="ff-group">
+            <li v-for="q in quizzes" :key="q.unit_id" class="ff-item">
+              <NuxtLink :to="quizHref(q)" class="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-foreground/[0.03]">
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[12px] font-medium text-primary">{{ q.course_title }}</span>
+                  <span class="mt-0.5 block truncate text-[15px] font-medium">{{ q.unit_title || 'Quiz' }}</span>
+                  <span class="mt-0.5 block text-[13px] text-muted-foreground">{{ meta(q) }}</span>
+                  <span v-if="q.locked" class="mt-1 block text-[13px] text-muted-foreground">Finish the earlier units to open this quiz.</span>
+                  <span v-else-if="!q.can_start && q.reason" class="mt-1 block text-[13px] text-muted-foreground">{{ q.reason }}</span>
                 </span>
-                {{ formatDate(a.created_at) }}
-              </p>
-            </div>
+                <span class="shrink-0 text-right">
+                  <span v-if="q.best_score != null" class="block text-[15px] font-semibold tabular-nums" :class="scoreTone(q.best_score)">{{ Math.round(q.best_score) }}%</span>
+                  <span v-else-if="q.passed" class="block text-[13px] font-medium text-emerald-600 dark:text-emerald-400">Passed</span>
+                  <span class="mt-0.5 inline-block rounded-full bg-primary/10 px-3 py-1 text-[13px] font-semibold text-primary">{{ quizAction(q) }}</span>
+                </span>
+              </NuxtLink>
+            </li>
+          </ul>
+        </section>
 
-            <div class="flex-shrink-0 text-right">
-              <p
-                v-if="a.status === 'completed'"
-                class="text-base font-semibold"
-                :class="tone(a.total_score)"
-              >
-                {{ Math.round(a.total_score) }}%
-              </p>
-              <p v-else-if="a.status === 'evaluating'" class="text-[11px] uppercase tracking-wider text-muted-foreground">
-                Evaluating
-              </p>
-              <p v-else class="text-[11px] uppercase tracking-wider text-destructive">
-                Failed
-              </p>
-              <p class="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                MCQ {{ Math.round(a.mcq_score) }}%
-              </p>
-            </div>
+        <!-- Results -->
+        <section class="mt-10">
+          <div class="mb-3 flex items-baseline justify-between gap-3 px-1">
+            <h2 class="text-[17px] font-semibold">Your results</h2>
+            <span class="text-[13px] text-muted-foreground">{{ attempts.length }} attempt{{ attempts.length === 1 ? '' : 's' }}</span>
+          </div>
 
-            <ArrowRight class="h-4 w-4 flex-shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground" />
-          </NuxtLink>
-        </li>
-      </ol>
+          <div v-if="!attempts.length" class="ff-group p-6 text-[15px] text-muted-foreground">
+            Nothing submitted yet. Take a quiz above and your score, answers and feedback will appear here.
+          </div>
+
+          <ol v-else class="ff-group">
+            <li v-for="a in attempts" :key="a.id" class="ff-item">
+              <NuxtLink :to="attemptHref(a)" class="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-foreground/[0.03]">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60 text-[12px] font-semibold tabular-nums"
+                  :class="a.status === 'done' ? scoreTone(a.score_percent) : 'text-muted-foreground'">
+                  <template v-if="a.status === 'done'">{{ Math.round(a.score_percent) }}%</template>
+                  <Loader2 v-else-if="a.status === 'marking'" class="h-4 w-4 animate-spin" />
+                  <span v-else>…</span>
+                </span>
+
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[15px] font-medium">{{ a.unit_title || 'Quiz' }}</span>
+                  <span class="mt-0.5 block truncate text-[13px] text-muted-foreground">
+                    {{ a.course_title }}
+                    <template v-if="a.number > 1"> · attempt {{ a.number }}</template>
+                    <template v-if="formatDate(a.submitted_at)"> · {{ formatDate(a.submitted_at) }}</template>
+                  </span>
+                  <span v-if="a.feedback_count" class="mt-1 block text-[13px] text-muted-foreground">
+                    {{ a.feedback_count }} feedback note{{ a.feedback_count === 1 ? '' : 's' }}
+                  </span>
+                </span>
+
+                <span class="shrink-0 text-right">
+                  <span class="block text-[13px] font-medium" :class="a.status === 'done' ? (a.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive') : 'text-muted-foreground'">
+                    {{ statusLabel(a) }}
+                  </span>
+                  <span class="mt-0.5 block text-[12px] text-muted-foreground">Result and feedback</span>
+                </span>
+                <ArrowRight class="h-4 w-4 shrink-0 text-muted-foreground/50" />
+              </NuxtLink>
+            </li>
+          </ol>
+        </section>
+      </template>
     </div>
   </NuxtLayout>
 </template>
